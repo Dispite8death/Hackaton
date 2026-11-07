@@ -42,6 +42,8 @@ class NewsItem:
     text: str = ""
     event_date: date | None = None
     event_date_source: str = ""     # regex | llm | ""
+    event_date_status: str = "unknown"  # algorithm | agreement | review | unknown
+    event_date_candidates: dict[str, str | None] = field(default_factory=dict)
     delay_days: int | None = None
     factcheck: list[dict] = field(default_factory=list)
 

@@ -1,0 +1,1626 @@
+{
+  "model": "gemini-2.5-flash",
+  "gateway": "https://blackroute.ironborn.cc/v1",
+  "started": "2026-11-07T17:52:10.974277+11:00",
+  "dataset_sha256": "0ef1b44c3e514cb3b1eef7202e26f0657853da1378cd31a51b40a47ce3392c19",
+  "system_sha256": "146f032b5775cb80e7cf4a60ef29ec8e033f59c6cf9f00c15c1d40a6ae3bf923",
+  "web_search": "off",
+  "prices_usd_per_token": {
+    "prompt": "0.00000027",
+    "completion": "0.00000225",
+    "image": "0",
+    "request": "0",
+    "input_cache_read": "0"
+  },
+  "max_tokens": 2048,
+  "rows": [
+    {
+      "id": "school-01",
+      "origin": "saved_news",
+      "expected": "2026-05-25",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 586,
+        "prompt_tokens": 722,
+        "total_tokens": 1308,
+        "completion_tokens_details": {
+          "reasoning_tokens": 305,
+          "text_tokens": 281
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 722
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00151344",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-05-25",
+      "annotations": [],
+      "seconds": 3.469,
+      "response": {
+        "event_date": "2026-05-25",
+        "event_date_basis": "Относительная дата «Сегодня» привязана к дате публикации.",
+        "claims": [
+          {
+            "claim": "В школе прошел День открытых дверей для будущих первоклассников.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В школе было особенно шумно и весело.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В гости пришли будущие первоклассники.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ребята познакомились с будущими учителями, заглянули в классы и узнали, как проходит школьная жизнь.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-05-25",
+      "correct": true
+    },
+    {
+      "id": "school-02",
+      "origin": "saved_news",
+      "expected": "2026-05-22",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 685,
+        "prompt_tokens": 839,
+        "total_tokens": 1524,
+        "completion_tokens_details": {
+          "reasoning_tokens": 366,
+          "text_tokens": 319
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 839
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00176778",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-05-22",
+      "annotations": [],
+      "seconds": 3.742,
+      "response": {
+        "event_date": "2026-05-22",
+        "event_date_basis": "Указано «Сегодня», что относительно даты публикации (2026-05-22) означает 2026-05-22.",
+        "claims": [
+          {
+            "claim": "В 6 классе прошёл увлекательный классный час, посвящённый футболу.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ученики узнали об эволюции и развитии футбола в России и мире, а также об историческом контексте становления этого вида спорта.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Была проведена тематическая викторина, посвященная футболу, для учащихся школы.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Все участники получили памятные подарки от организаторов.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-05-22",
+      "correct": true
+    },
+    {
+      "id": "school-03",
+      "origin": "saved_news",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 970,
+        "prompt_tokens": 895,
+        "total_tokens": 1865,
+        "completion_tokens_details": {
+          "reasoning_tokens": 502,
+          "text_tokens": 468
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 895
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00242415",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": null,
+      "annotations": [],
+      "seconds": 6.031,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "В тексте указан только срок подачи заявки для получения сертификата (до 3 ноября 2026 года), но не дата проведения самой акции. Акция описана как продолжительное мероприятие.",
+        "claims": [
+          {
+            "claim": "Всероссийская акция «Уничтоженное детство. Геноцид советского народа со стороны нацистов и их пособников в годы Великой Отечественной войны 1941–1945 годов» проводится.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Методические рекомендации по проведению Акции размещены на официальном сайте Национального центра исторической памяти при Президенте Российской Федерации по ссылке: https://russiancip.ru/events/vserossiyskaya-aktsiya-unichtozhennoe-detstvo-genotsid-sovetskogo-naroda-so-storony-natsistov-i-ikh-posobnikov-v-gody-velikoy-otechestvennoy-voyny/",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Участникам Акции будет направлен электронный сертификат, подтверждающий участие.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Для получения электронного сертификата необходимо заполнить форму обратной связи на сайте Национального центра исторической памяти при Президенте Российской Федерации до 3 ноября 2026 года включительно по ссылке: https://clck.ru/3WA68H.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": null,
+      "correct": true
+    },
+    {
+      "id": "school-04",
+      "origin": "saved_news",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 1083,
+        "prompt_tokens": 865,
+        "total_tokens": 1948,
+        "completion_tokens_details": {
+          "reasoning_tokens": 732,
+          "text_tokens": 351
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 865
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00267030",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": null,
+      "annotations": [],
+      "seconds": 5.16,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "Основное событие (олимпиада) длилось с 22 сентября по 25 октября, что является периодом, а не одной датой.",
+        "claims": [
+          {
+            "claim": "С 22 сентября по 25 октября при поддержке нацпроекта «Инфраструктура для жизни» прошла Всероссийская онлайн-олимпиада «Безопасные дороги».",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В этом году участников стало на 10% больше, чем в 2025-м.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Общая аудитория олимпиады, которую проводят уже семь лет, превысила 34 млн человек.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Максимальный балл за задания о переходе проезжей части и железнодорожных путей, а также об использовании маршрутных транспортных средств получили меньше 10% участников.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": null,
+      "correct": true
+    },
+    {
+      "id": "school-05",
+      "origin": "saved_news",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 1020,
+        "prompt_tokens": 876,
+        "total_tokens": 1896,
+        "completion_tokens_details": {
+          "reasoning_tokens": 729,
+          "text_tokens": 291
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 876
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00253152",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": null,
+      "annotations": [],
+      "seconds": 5.449,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "Новость является поздравлением с праздником, а не описанием мероприятия учреждения. Дата праздника не является датой события учреждения.",
+        "claims": [
+          {
+            "claim": "4 ноября мы отмечаем один из самых важных государственных праздников — День народного единства.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "сила России — в единстве её народов, в уважении к истории и культуре нашей многонациональной страны.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В нашей гимназии особенно ценят это чувство общности",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "мы растём, учимся и творим как одна большая семья.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": null,
+      "correct": true
+    },
+    {
+      "id": "school-07",
+      "origin": "saved_news",
+      "expected": "2026-09-21",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 735,
+        "prompt_tokens": 848,
+        "total_tokens": 1583,
+        "completion_tokens_details": {
+          "reasoning_tokens": 361,
+          "text_tokens": 374
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 848
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00188271",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-09-21",
+      "annotations": [],
+      "seconds": 4.493,
+      "response": {
+        "event_date": "2026-09-21",
+        "event_date_basis": "Указана конкретная дата проведения мероприятия: '21 сентября наша школа стала очной площадкой'. Год взят из названия проекта 'Атомный диктант-2026'.",
+        "claims": [
+          {
+            "claim": "«Атомный диктант» – ежегодный международный просветительский проект Союза «Атомные города» при поддержке Госкорпорации «Росатом» и Министерства энергетики РФ.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "21 сентября наша школа стала очной площадкой международного просветительского проекта «Атомный диктант-2026».",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В диктанте приняли участие больше 100 учеников 8-11 классов гимназии.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Организаторами диктанта в нашей школе стали учителя физики Анна Валерьевна и Глеб Алексеевич.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-09-21",
+      "correct": true
+    },
+    {
+      "id": "school-20",
+      "origin": "saved_news",
+      "expected": "2026-10-23",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 1043,
+        "prompt_tokens": 936,
+        "total_tokens": 1979,
+        "completion_tokens_details": {
+          "reasoning_tokens": 697,
+          "text_tokens": 346
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 936
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00259947",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-10-23",
+      "annotations": [],
+      "seconds": 5.222,
+      "response": {
+        "event_date": "2026-10-23",
+        "event_date_basis": "Указана дата '23 октября'. Год взят из даты публикации, так как в тексте не указан.",
+        "claims": [
+          {
+            "claim": "23 октября в школе прошла благотворительная ярмарка \"Золотая осень\".",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ученики и родители 1-11 классов приготовили много вкусных русских блюд, нарядили столовую школы, накрыли столы, оформили стенд \"Русские народные блюда\", ребята начальной школы нарисовали яркие плакаты.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Для малышей был организован мастер-класс по украшению пряников.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Удалось собрать больше 20 тысяч рублей, которые будут отправлены в поддержку бойцов СВО.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-10-23",
+      "correct": true
+    },
+    {
+      "id": "school-21",
+      "origin": "saved_news",
+      "expected": "2026-10-21",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 748,
+        "prompt_tokens": 846,
+        "total_tokens": 1594,
+        "completion_tokens_details": {
+          "reasoning_tokens": 419,
+          "text_tokens": 329
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 846
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00191142",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-10-21",
+      "annotations": [],
+      "seconds": 3.785,
+      "response": {
+        "event_date": "2026-10-21",
+        "event_date_basis": "Указана дата '21 октября' без года. Год взят из даты публикации.",
+        "claims": [
+          {
+            "claim": "21 октября в школе прошел урок гражданственности \"В единстве - сила России\".",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Урок гражданственности подготовил и провел учитель истории Апсатаров В.Я.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "На занятии ребята смотрели отрывки из фильмов о народном ополчении 1612 года.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Урок закончился небольшим квизом, на котором ребята закрепили знания о Смуте, народном ополчении, Кузьме Минине и Дмитрии Пожарском.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-10-21",
+      "correct": true
+    },
+    {
+      "id": "school-22",
+      "origin": "saved_news",
+      "expected": "2026-10-29",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 1165,
+        "prompt_tokens": 900,
+        "total_tokens": 2065,
+        "completion_tokens_details": {
+          "reasoning_tokens": 829,
+          "text_tokens": 336
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 900
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00286425",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-10-29",
+      "annotations": [],
+      "seconds": 5.172,
+      "response": {
+        "event_date": "2026-10-29",
+        "event_date_basis": "Дата лекции указана в тексте новости и заголовке",
+        "claims": [
+          {
+            "claim": "29 октября в рамках проекта Российского общества «Знание» для старшеклассников состоялась лекция на тему «Вербовка подростков: как тебя втягивают и как это остановить».",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "На занятии ребята разобрали, какие психологические приемы используют манипуляторы в сети.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "На занятии ребята разобрали, почему важно не принимать решения под давлением и не идти на поводу у «быстрых» просьб.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "На занятии ребята разобрали, как правильно действовать, если вы столкнулись с подозрительным собеседником.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-10-29",
+      "correct": true
+    },
+    {
+      "id": "school-24",
+      "origin": "saved_news",
+      "expected": "2026-11-04",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 759,
+        "prompt_tokens": 733,
+        "total_tokens": 1492,
+        "completion_tokens_details": {
+          "reasoning_tokens": 453,
+          "text_tokens": 306
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 733
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00190566",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-11-04",
+      "annotations": [],
+      "seconds": 4.998,
+      "response": {
+        "event_date": "2026-11-04",
+        "event_date_basis": "Указана дата проведения мероприятия: '4 ноября'. Год взят из даты публикации, так как событие в будущем относительно публикации.",
+        "claims": [
+          {
+            "claim": "Первый семейный спортивный фестиваль ГТО состоится 4 ноября в 10:00.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Для участия в фестивале необходимо зарегистрироваться на официальном сайте комплекса ГТО — GTO.RU.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Для участия в фестивале необходимо иметь УИН (уникальный идентификационный номер).",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Фестиваль предназначен для семей Сусуманского округа.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-11-04",
+      "correct": true
+    },
+    {
+      "id": "school-25",
+      "origin": "saved_news",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 717,
+        "prompt_tokens": 747,
+        "total_tokens": 1464,
+        "completion_tokens_details": {
+          "reasoning_tokens": 510,
+          "text_tokens": 207
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 747
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00181494",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": null,
+      "annotations": [],
+      "seconds": 3.963,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "Текст описывает рекомендацию, а не конкретное событие, привязанное к дате. Дата в заголовке не датирует событие.",
+        "claims": [
+          {
+            "claim": "Правительственная комиссия Магаданской области рекомендует родителям к совместному просмотру серию видеороликов по детской безопасности.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Цель [серии видеороликов] — наглядно показать последствия беспечности и дать алгоритмы действий в опасных ситуациях.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": null,
+      "correct": true
+    },
+    {
+      "id": "school-regression",
+      "origin": "saved_news",
+      "expected": "2026-09-29",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 530,
+        "prompt_tokens": 655,
+        "total_tokens": 1185,
+        "completion_tokens_details": {
+          "reasoning_tokens": 296,
+          "text_tokens": 234
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 655
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00136935",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-09-29",
+      "annotations": [],
+      "seconds": 3.836,
+      "response": {
+        "event_date": "2026-09-29",
+        "event_date_basis": "Дата прямо указана в тексте новости. Год взят из даты публикации.",
+        "claims": [
+          {
+            "claim": "29 сентября состоялась встреча с инспектором ПДН Ольского района.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Детям еще раз напомнили о поведении в школе, на улице, о рисках и вредных привычках.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ученики просмотрели небольшой видеоролик.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-09-29",
+      "correct": true
+    },
+    {
+      "id": "garden-01",
+      "origin": "saved_news",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 783,
+        "prompt_tokens": 775,
+        "total_tokens": 1558,
+        "completion_tokens_details": {
+          "reasoning_tokens": 478,
+          "text_tokens": 305
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 775
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00197100",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-11-04",
+      "annotations": [],
+      "seconds": 4.116,
+      "response": {
+        "event_date": "2026-11-04",
+        "event_date_basis": "Дата празднования Дня народного единства, к которому готовился детский сад.",
+        "claims": [
+          {
+            "claim": "04 ноября 2026 года вся наша многонациональная страна отмечает День народного единства.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Наш детский сад тоже принял участие в подготовке к празднику.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "в нашем саду есть воспитанники разных национальностей",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "мы решили выпустить поздравительную открытку для родителей, где на родных языках наших воспитанников звучит фраза: «День народного единства».",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-11-04",
+      "correct": false
+    },
+    {
+      "id": "garden-02",
+      "origin": "saved_news",
+      "expected": "2026-10-23",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 578,
+        "prompt_tokens": 773,
+        "total_tokens": 1351,
+        "completion_tokens_details": {
+          "reasoning_tokens": 283,
+          "text_tokens": 295
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 773
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00150921",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-10-23",
+      "annotations": [],
+      "seconds": 4.248,
+      "response": {
+        "event_date": "2026-10-23",
+        "event_date_basis": "Дата события указана в тексте как '23 октября'. Год взят из даты публикации.",
+        "claims": [
+          {
+            "claim": "23 октября дети подготовительной к школе группы №2 посетили Магаданский областной краеведческий музей.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Тематическая экскурсия называлась 'У медведя во бору...'",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Педагог: Кулебакина Анна Ивановна.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Учитель-логопед: Гудзь Татьяна Викторовна.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-10-23",
+      "correct": true
+    },
+    {
+      "id": "garden-03",
+      "origin": "saved_news",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 564,
+        "prompt_tokens": 666,
+        "total_tokens": 1230,
+        "completion_tokens_details": {
+          "reasoning_tokens": 426,
+          "text_tokens": 138
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 666
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00144882",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": null,
+      "annotations": [],
+      "seconds": 4.099,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "Основное событие (выборы) длится несколько дней (18, 19, 20 сентября 2026 года), схема допускает только одну дату.",
+        "claims": [
+          {
+            "claim": "Выборы депутатов государственной думы состоятся 18, 19, 20 сентября 2026 года.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": null,
+      "correct": true
+    },
+    {
+      "id": "garden-04",
+      "origin": "saved_news",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 966,
+        "prompt_tokens": 858,
+        "total_tokens": 1824,
+        "completion_tokens_details": {
+          "reasoning_tokens": 649,
+          "text_tokens": 317
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 858
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00240516",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": null,
+      "annotations": [],
+      "seconds": 4.931,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "Текст описывает общие, текущие педагогические практики и использует относительные указания времени («сегодня», «вечером»), не привязанные к конкретной дате события.",
+        "claims": [
+          {
+            "claim": "Родители часто спрашивают: «Чем вы занимались сегодня?»",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Наши «Звездочки» ни минуты не сидят на месте",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В игре дети учатся справляться с эмоциями — радостью победы и легкой грустью от проигрыша.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Мы чередуем активные забавы со спокойными играми, чтобы маленькие моторчики успевали перезарядиться.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": null,
+      "correct": true
+    },
+    {
+      "id": "garden-05",
+      "origin": "saved_news",
+      "expected": "2026-09-28",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 901,
+        "prompt_tokens": 727,
+        "total_tokens": 1628,
+        "completion_tokens_details": {
+          "reasoning_tokens": 601,
+          "text_tokens": 300
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 727
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00222354",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-09-28",
+      "annotations": [],
+      "seconds": 4.145,
+      "response": {
+        "event_date": "2026-09-28",
+        "event_date_basis": "Указано «Сегодня» относительно даты публикации.",
+        "claims": [
+          {
+            "claim": "Для воспитанников детского сада прошло тематическое занятие со старшим инспектором ГРпоИАЗ по правилам пользования ДУУ.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Инспектор объяснил детям, как правильно переходить дорогу.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Инспектор объяснил детям, где можно играть.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Инспектор объяснил детям, почему важно использовать светоотражающие элементы, а также о необходимости использования детского удерживающего устройства.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-09-28",
+      "correct": true
+    },
+    {
+      "id": "garden-06",
+      "origin": "saved_news",
+      "expected": "2026-09-01",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 677,
+        "prompt_tokens": 893,
+        "total_tokens": 1570,
+        "completion_tokens_details": {
+          "reasoning_tokens": 324,
+          "text_tokens": 353
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 893
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00176436",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-09-01",
+      "annotations": [],
+      "seconds": 3.196,
+      "response": {
+        "event_date": "2026-09-01",
+        "event_date_basis": "Дата начала реализации проекта «Добрые игры» указана в тексте.",
+        "claims": [
+          {
+            "claim": "С 1 сентября 2026 года в системе дошкольного образования появится новый проект «Добрые игры».",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Проект «Добрые игры» разработан Институтом изучения детства, семьи и воспитания по аналогии с внеурочными занятиями «Разговоры о важном», но адаптирован специально для детей детсадовского возраста.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "«Добрые игры» предполагают проведение занятий с детьми от 3 до 7 лет в детских садах Российской Федерации.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Комплект методических материалов для педагогов и практических материалов для родителей носит рекомендательный характер и размещен на сайте https://добрыеигры.рф/",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-09-01",
+      "correct": true
+    },
+    {
+      "id": "garden-07",
+      "origin": "saved_news",
+      "expected": "2026-04-27",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 755,
+        "prompt_tokens": 752,
+        "total_tokens": 1507,
+        "completion_tokens_details": {
+          "reasoning_tokens": 416,
+          "text_tokens": 339
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 752
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00190179",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-04-27",
+      "annotations": [],
+      "seconds": 3.586,
+      "response": {
+        "event_date": "2026-04-27",
+        "event_date_basis": "Дата события '27 апреля' без указания года, год взят из года публикации.",
+        "claims": [
+          {
+            "claim": "27 апреля в детском саду прошли познавательные беседы по безопасности дорожного движения.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Инспектор ГИБДД города Магадана Павел Валерьевич Саакян побывал в гостях у воспитанников подготовительных и старших групп.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Павел Валерьевич Саакян рассказал ребятам о правилах перехода улицы, дорожных знаках и о важности использования светоотражающих элементов.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Встреча прошла в формате живого диалога, где дети активно отвечали на вопросы и делились своими знаниями.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-04-27",
+      "correct": true
+    },
+    {
+      "id": "garden-08",
+      "origin": "saved_news",
+      "expected": "2026-09-01",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 567,
+        "prompt_tokens": 724,
+        "total_tokens": 1291,
+        "completion_tokens_details": {
+          "reasoning_tokens": 268,
+          "text_tokens": 299
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 724
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00147123",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-09-01",
+      "annotations": [],
+      "seconds": 2.753,
+      "response": {
+        "event_date": "2026-09-01",
+        "event_date_basis": "Дата начала работы дежурной группы указана в тексте новости.",
+        "claims": [
+          {
+            "claim": "С 1 сентября 2026г. в детском саду МАДОУ № 3 начинает работу дежурная группа.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Существует Приказ Об организации работы дежурных групп.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Существует Положение об организации работы дежурной группы в МАДОУ № 3.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Размер файла Приказа Об организации работы дежурных групп составляет 0,3 Мб.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-09-01",
+      "correct": true
+    },
+    {
+      "id": "garden-09",
+      "origin": "saved_news",
+      "expected": "2026-09-03",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 864,
+        "prompt_tokens": 813,
+        "total_tokens": 1677,
+        "completion_tokens_details": {
+          "reasoning_tokens": 476,
+          "text_tokens": 388
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 813
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00216351",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-09-03",
+      "annotations": [],
+      "seconds": 5.182,
+      "response": {
+        "event_date": "2026-09-03",
+        "event_date_basis": "Указано '3 сентября' в тексте, год взят из даты публикации.",
+        "claims": [
+          {
+            "claim": "3 сентября в МБДОУ «Светлячок» прошли тематические мероприятия, призванные почтить память жертв террористических актов и сформировать у детей основы безопасного поведения.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Памятная дата (День солидарности в борьбе с терроризмом) установлена в России в память о трагических событиях в Беслане (2004 год).",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В рамках мероприятий педагоги провели тематические беседы с воспитанниками о том, что такое терроризм, почему он опасен и как важно беречь мир.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В рамках мероприятий педагоги провели занятия по безопасности, напомнив детям правила: не трогать чужие или бесхозные предметы; не уходить с незнакомыми людьми; сразу обращаться к взрослым в любой непонятной или опасной ситуации.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-09-03",
+      "correct": true
+    },
+    {
+      "id": "garden-10",
+      "origin": "saved_news",
+      "expected": "2026-11-20",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 395,
+        "prompt_tokens": 682,
+        "total_tokens": 1077,
+        "completion_tokens_details": {
+          "reasoning_tokens": 146,
+          "text_tokens": 249
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 682
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00107289",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-11-20",
+      "annotations": [],
+      "seconds": 2.179,
+      "response": {
+        "event_date": "2026-11-20",
+        "event_date_basis": "Дата проведения пункта бесплатной правовой помощи указана в тексте новости.",
+        "claims": [
+          {
+            "claim": "20 ноября 2026 года на базе детского сада будет организован пункт бесплатной правовой помощи.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Пункт бесплатной правовой помощи будет организован в рамках Всероссийского дня помощи детям.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В пункте бесплатной правовой помощи можно будет получить консультации по вопросам защиты прав и законных интересов детей и семьи.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-11-20",
+      "correct": true
+    },
+    {
+      "id": "garden-11",
+      "origin": "saved_news",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 1430,
+        "prompt_tokens": 835,
+        "total_tokens": 2265,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1109,
+          "text_tokens": 321
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 835
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00344295",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": null,
+      "annotations": [],
+      "seconds": 9.455,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "Дата проведения тематического занятия указана как «в преддверии праздника «Дня народного единства» (4 ноября), что не позволяет установить конкретный день события.",
+        "claims": [
+          {
+            "claim": "В преддверии праздника «Дня народного единства» в подготовительной к школе группе «Золотой ключик» было проведено тематическое занятие, посвященное этой дате.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В ходе занятия дети в доступной форме познакомились с историей возникновения праздника.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В завершении занятия, сделали раскраски-гармошки с народами России.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Педагог: Сахнова Алёна Сергеевна",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": null,
+      "correct": true
+    },
+    {
+      "id": "garden-12",
+      "origin": "saved_news",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 609,
+        "prompt_tokens": 672,
+        "total_tokens": 1281,
+        "completion_tokens_details": {
+          "reasoning_tokens": 348,
+          "text_tokens": 261
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 672
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00155169",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": null,
+      "annotations": [],
+      "seconds": 3.134,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "Основное событие (голосование) длится несколько дней (18, 19, 20 сентября 2026 года), схема допускает только одну дату.",
+        "claims": [
+          {
+            "claim": "Выборы депутатов Государственной думы состоятся в сентябре 2026 года.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В сентябре 2026 года в России пройдет масштабная избирательная кампания - единый день голосования.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Голосование продлится три дня - 18, 19, 20 сентября.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": null,
+      "correct": true
+    },
+    {
+      "id": "synthetic-full-date",
+      "origin": "synthetic",
+      "expected": "2026-11-05",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 363,
+        "prompt_tokens": 591,
+        "total_tokens": 954,
+        "completion_tokens_details": {
+          "reasoning_tokens": 247,
+          "text_tokens": 116
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 591
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00097632",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2026-11-05",
+      "annotations": [],
+      "seconds": 2.979,
+      "response": {
+        "event_date": "2026-11-05",
+        "event_date_basis": "Дата события прямо указана в тексте: \"5 ноября 2026 года\".",
+        "claims": [
+          {
+            "claim": "5 ноября 2026 года ученики посетили музей.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2026-11-05",
+      "correct": true
+    },
+    {
+      "id": "synthetic-new-year",
+      "origin": "synthetic",
+      "expected": "2025-12-31",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 376,
+        "prompt_tokens": 588,
+        "total_tokens": 964,
+        "completion_tokens_details": {
+          "reasoning_tokens": 262,
+          "text_tokens": 114
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 588
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00100476",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2025-12-31",
+      "annotations": [],
+      "seconds": 2.307,
+      "response": {
+        "event_date": "2025-12-31",
+        "event_date_basis": "Относительная дата 'Вчера' от даты публикации 2026-01-01.",
+        "claims": [
+          {
+            "claim": "В школе состоялся новогодний концерт.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2025-12-31",
+      "correct": true
+    },
+    {
+      "id": "synthetic-missing",
+      "origin": "synthetic",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 283,
+        "prompt_tokens": 597,
+        "total_tokens": 880,
+        "completion_tokens_details": {
+          "reasoning_tokens": 143,
+          "text_tokens": 140
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 597
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00079794",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": null,
+      "annotations": [],
+      "seconds": 2.574,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "Дата экскурсии не указана в тексте.",
+        "claims": [
+          {
+            "claim": "Ученики посетили музей",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ученики познакомились с экспозицией",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": null,
+      "correct": true
+    },
+    {
+      "id": "synthetic-historical-year",
+      "origin": "synthetic",
+      "expected": "2024-11-05",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 723,
+        "prompt_tokens": 602,
+        "total_tokens": 1325,
+        "completion_tokens_details": {
+          "reasoning_tokens": 505,
+          "text_tokens": 218
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 602
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00178929",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2024-11-05",
+      "annotations": [],
+      "seconds": 3.284,
+      "response": {
+        "event_date": "2024-11-05",
+        "event_date_basis": "Дата проведения первого фестиваля науки указана в тексте: '5 ноября 2024 года'.",
+        "claims": [
+          {
+            "claim": "5 ноября 2024 года школа провела первый фестиваль науки.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Школа провела фестиваль науки.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Фестиваль науки был первым.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2024-11-05",
+      "correct": true
+    },
+    {
+      "id": "synthetic-two-events",
+      "origin": "synthetic",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 482,
+        "prompt_tokens": 605,
+        "total_tokens": 1087,
+        "completion_tokens_details": {
+          "reasoning_tokens": 332,
+          "text_tokens": 150
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 605
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00124785",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": null,
+      "annotations": [],
+      "seconds": 3.4,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "Описаны два равнозначных события с разными датами (3 ноября и 5 ноября).",
+        "claims": [
+          {
+            "claim": "3 ноября состоялась встреча с писателем.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "5 ноября состоялась встреча с художником.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": null,
+      "correct": true
+    },
+    {
+      "id": "synthetic-future-new-year",
+      "origin": "synthetic",
+      "expected": "2027-01-05",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 606,
+        "prompt_tokens": 597,
+        "total_tokens": 1203,
+        "completion_tokens_details": {
+          "reasoning_tokens": 498,
+          "text_tokens": 108
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 597
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00152469",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": true,
+      "raw_event_date": "2027-01-05",
+      "annotations": [],
+      "seconds": 5.033,
+      "response": {
+        "event_date": "2027-01-05",
+        "event_date_basis": "Дата проведения концерта указана в тексте новости.",
+        "claims": [
+          {
+            "claim": "Школьный концерт состоится 5 января 2027 года.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "predicted": "2027-01-05",
+      "correct": true
+    }
+  ]
+}

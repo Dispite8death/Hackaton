@@ -115,3 +115,25 @@ def test_settings_from_env(monkeypatch):
     assert s.provider == "openai" and s.model == "local-model" and s.effective_web_search() == "off"
     monkeypatch.setenv("AUDIT_LLM_WEB_SEARCH", "google")
     assert LLMSettings.from_env().effective_web_search() == "google"
+
+
+def test_optional_reasoning_effort_for_local_model(monkeypatch):
+    from audit.llm import LLMSettings, OpenAICompatChecker
+
+    # Existing cloud requests must retain their previous request shape.
+    assert "reasoning_effort" not in OpenAICompatChecker(_settings())._body("test")
+    monkeypatch.setenv("AUDIT_LLM_REASONING_EFFORT", "none")
+    cfg = LLMSettings.from_env(provider="openai", base_url="http://127.0.0.1:11434/v1/",
+                               model="qwen3.5:9b-q4_K_M", web_search="off")
+    body = OpenAICompatChecker(cfg)._body("test")
+    assert body["reasoning_effort"] == "none"
+    assert "tools" not in body
+
+
+def test_offline_prompt_and_cache_are_separate():
+    from audit.llm import OpenAICompatChecker, SYSTEM, SYSTEM_OFFLINE, _cache_file
+
+    offline = OpenAICompatChecker(_settings(model="qwen3.5:9b-q4_K_M", web_search="off"))
+    assert offline._body("test")["messages"][0]["content"] == SYSTEM_OFFLINE
+    assert OpenAICompatChecker(_settings())._body("test")["messages"][0]["content"] == SYSTEM
+    assert _cache_file("model", "text", system=SYSTEM) != _cache_file("model", "text", system=SYSTEM_OFFLINE)

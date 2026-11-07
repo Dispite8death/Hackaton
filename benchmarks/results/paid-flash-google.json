@@ -1,0 +1,266 @@
+{
+  "model": "gemini-2.5-flash",
+  "gateway": "https://blackroute.ironborn.cc/v1",
+  "started": "2026-11-07T17:54:59.757640+11:00",
+  "dataset_sha256": "0ef1b44c3e514cb3b1eef7202e26f0657853da1378cd31a51b40a47ce3392c19",
+  "system_sha256": "483b38271d0369bb4dceafb0a7477e24ccbaad4e05378b43ec59aa7a3d94bc10",
+  "web_search": "google",
+  "prices_usd_per_token": {
+    "prompt": "0.00000027",
+    "completion": "0.00000225",
+    "image": "0",
+    "request": "0",
+    "input_cache_read": "0"
+  },
+  "max_tokens": 2048,
+  "rows": [
+    {
+      "id": "school-05",
+      "origin": "saved_news",
+      "expected": null,
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 1303,
+        "prompt_tokens": 680,
+        "total_tokens": 1983,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1021,
+          "text_tokens": 282
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 680
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00311535",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": false,
+      "annotations": [
+        {
+          "end_index": 305,
+          "start_index": 8,
+          "title": "bfstranachudes.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGz2XFkb2Um3Ba0XG1P19elefSRACDS6FdthoKN2jC48PhFmhPUdeXyFrATreyS2eGn_F4lXaaL54G62wirF2aJb7gVJ1htURhefA9GA211CPN232mCiK6pliflrAZYoQ-fd5TWjqjeiEp-Ajn1Pd6CsA=="
+        },
+        {
+          "end_index": 320,
+          "start_index": 8,
+          "title": "wikipedia.org",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKfwK75NLjGVj78pOSHpI-PehB08D-a5ukrCD8TefclP8MQQUsJkvVfTlxuP9IwgA4CrmbUKsEJqmSvOl8VESOh5bi4r5nfCdaQbmmXQk6ciu_-AhgR2VTjwsXb2HEigIeXp7xnSx069s8kXmsw2ASZtxWLgc8zMNX3e6QacvMbYb35yPX2rqb6rzfjluBfiSfX8SCp5Do9JTS82V8UzZLwxMMYwZujDp16gyztTRtjBOGOPnN0p3bdQgIZP-MjYD7XK-iWyriSjN-jdw3Mbnb5waKPuRVQyZ1aQ=="
+        },
+        {
+          "end_index": 331,
+          "start_index": 8,
+          "title": "calend.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZR1Bmeh0klKk_mru1mQzkrSQCpwja6Q9t5K_yJ-2B3NuUh7sKybz2lzRR-MpNBMxaBAgq_XHqHIAml65sJTuSTsROLxCHQkoQwE4MzaeoMObK1c0zvXl5pMREgiQKOY_J"
+        },
+        {
+          "end_index": 345,
+          "start_index": 8,
+          "title": "gosuslugi.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4GW5by8pN7U6VJ3_sZlKJ75XfRoR5TVmy5tLh7YjOsRyEMcnlvv75MVp5uQsVcP33c3-cseYkjR3zxsezdIyuwNfkta-LRoUk0ocnWp5ZogsNWdyaEWu7NuhWEZXjpbyK32n69K9Z0fQM4ynmfiNibIEejDUrba7E47tnEB9qfkFcPBQArhA4XHbWzewoX9A5zh8rQwXuVTnaRP5OcSZcoCI9IXM="
+        },
+        {
+          "end_index": 356,
+          "start_index": 8,
+          "title": "rs.gov.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_LZlGlbbety47v4vhKra_wCV9DItD4LZNcX-JWozI6LYRIhbqQTrkralMspUg2IJLzbt3oJvkKq4IcxIsQtnEzh8tei3YnuDi4UAGpjuSA-9jxlh4wYM6Oij1MBPNQrRhdnXVI9ViKhs2AI_Z8yEBs5cH2FPOaxrBj04g"
+        },
+        {
+          "end_index": 366,
+          "start_index": 8,
+          "title": "trip.com",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGo2FCClH9M3RIov1UTLNaGYe2Ylt8Vm8PuYndhI5-Rxs2JTTXARMGIKIOUSAxgHYWAcpGigTS4C-j4BHKMsusxSUBzXLdr07478ZB4OVrzcELFTePPonByxblPBk4AChEcB7qmhil"
+        },
+        {
+          "end_index": 385,
+          "start_index": 8,
+          "title": "historyrussia.org",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGDbOg04cYMLmA3vQBxCgmLKE0YoGXBSU7cc8hKC6hW7zIzbWL6h_ARya_Cg-IqUyxOm616H6ceNKdS4G1Lm-cAg8LvnIU37VGxrUZrqM9DQRupxbhAOMlJV_8jR2c613Q_hsAiTokKMC1-jyRS80O-RRBnBrn2i2EdUYi5j6bmoWToNIo8eio3M_4WPJ7wpQMnkqDDfjUJpqRykVT_RJi7Ug=="
+        },
+        {
+          "end_index": 759,
+          "start_index": 8,
+          "title": "bfstranachudes.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGz2XFkb2Um3Ba0XG1P19elefSRACDS6FdthoKN2jC48PhFmhPUdeXyFrATreyS2eGn_F4lXaaL54G62wirF2aJb7gVJ1htURhefA9GA211CPN232mCiK6pliflrAZYoQ-fd5TWjqjeiEp-Ajn1Pd6CsA=="
+        },
+        {
+          "end_index": 774,
+          "start_index": 8,
+          "title": "wikipedia.org",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFKfwK75NLjGVj78pOSHpI-PehB08D-a5ukrCD8TefclP8MQQUsJkvVfTlxuP9IwgA4CrmbUKsEJqmSvOl8VESOh5bi4r5nfCdaQbmmXQk6ciu_-AhgR2VTjwsXb2HEigIeXp7xnSx069s8kXmsw2ASZtxWLgc8zMNX3e6QacvMbYb35yPX2rqb6rzfjluBfiSfX8SCp5Do9JTS82V8UzZLwxMMYwZujDp16gyztTRtjBOGOPnN0p3bdQgIZP-MjYD7XK-iWyriSjN-jdw3Mbnb5waKPuRVQyZ1aQ=="
+        },
+        {
+          "end_index": 785,
+          "start_index": 8,
+          "title": "calend.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGZR1Bmeh0klKk_mru1mQzkrSQCpwja6Q9t5K_yJ-2B3NuUh7sKybz2lzRR-MpNBMxaBAgq_XHqHIAml65sJTuSTsROLxCHQkoQwE4MzaeoMObK1c0zvXl5pMREgiQKOY_J"
+        },
+        {
+          "end_index": 799,
+          "start_index": 8,
+          "title": "gosuslugi.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQG4GW5by8pN7U6VJ3_sZlKJ75XfRoR5TVmy5tLh7YjOsRyEMcnlvv75MVp5uQsVcP33c3-cseYkjR3zxsezdIyuwNfkta-LRoUk0ocnWp5ZogsNWdyaEWu7NuhWEZXjpbyK32n69K9Z0fQM4ynmfiNibIEejDUrba7E47tnEB9qfkFcPBQArhA4XHbWzewoX9A5zh8rQwXuVTnaRP5OcSZcoCI9IXM="
+        },
+        {
+          "end_index": 810,
+          "start_index": 8,
+          "title": "rs.gov.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF_LZlGlbbety47v4vhKra_wCV9DItD4LZNcX-JWozI6LYRIhbqQTrkralMspUg2IJLzbt3oJvkKq4IcxIsQtnEzh8tei3YnuDi4UAGpjuSA-9jxlh4wYM6Oij1MBPNQrRhdnXVI9ViKhs2AI_Z8yEBs5cH2FPOaxrBj04g"
+        },
+        {
+          "end_index": 820,
+          "start_index": 8,
+          "title": "trip.com",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGGo2FCClH9M3RIov1UTLNaGYe2Ylt8Vm8PuYndhI5-Rxs2JTTXARMGIKIOUSAxgHYWAcpGigTS4C-j4BHKMsusxSUBzXLdr07478ZB4OVrzcELFTePPonByxblPBk4AChEcB7qmhil"
+        }
+      ],
+      "seconds": 7.432,
+      "response": {
+        "event_date": "2026-11-04",
+        "event_date_basis": "Указана в тексте новости как дата празднования.",
+        "claims": [
+          {
+            "claim": "День народного единства отмечается 4 ноября.",
+            "status": "confirmed",
+            "source": "ИИ (gemini-2.5-flash) + Google Search: bfstranachudes.ru, wikipedia.org, calend.ru, gosuslugi.ru, rs.gov.ru, trip.com, historyrussia.org",
+            "note": "Многочисленные источники подтверждают, что День народного единства ежегодно отмечается 4 ноября."
+          },
+          {
+            "claim": "День народного единства является государственным праздником.",
+            "status": "confirmed",
+            "source": "ИИ (gemini-2.5-flash) + Google Search: bfstranachudes.ru, wikipedia.org, calend.ru, gosuslugi.ru, rs.gov.ru, trip.com",
+            "note": "Источники однозначно указывают, что День народного единства является государственным праздником в России."
+          }
+        ]
+      },
+      "predicted": "2026-11-04",
+      "correct": false
+    },
+    {
+      "id": "school-07",
+      "origin": "saved_news",
+      "expected": "2026-09-21",
+      "http_status": 200,
+      "usage": {
+        "completion_tokens": 1673,
+        "prompt_tokens": 652,
+        "total_tokens": 2325,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1023,
+          "text_tokens": 650
+        },
+        "prompt_tokens_details": {
+          "text_tokens": 652
+        }
+      },
+      "cost_headers": {},
+      "token_tariff_usd": "0.00394029",
+      "returned_model": "gemini-2.5-flash",
+      "finish_reason": "stop",
+      "raw_event_date_present": false,
+      "annotations": [
+        {
+          "end_index": 692,
+          "start_index": 675,
+          "title": "mos.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEjAihEW0F3gLKgOST4_d-T690SMK6cLO8A_2Yihr9Iq9Xp7odMDsHxdYm9ITlSu-mqp9VpjSq0hSiZl00sCrDnODij8ZjpFNnKbNXkh5zV7sE2LVLEI9YxJRPsdnRuTzFSn34uMCxAS_HhC_-5KRWi"
+        },
+        {
+          "end_index": 703,
+          "start_index": 675,
+          "title": "amursu.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGV75luqowPtqWcTTqcjOVUYG_2YG1jDwBfhfYbuGa3ADBwayeL7lRhxguuCGjPJp-8IzLEXxW1GDp997KrXyBd_gsDoZc_HkRKWtY2sJ7lO4CrQuaRCMcAqamiNySuc42bmkzcESOOlEYPqsAe49KxCRl8Tg=="
+        },
+        {
+          "end_index": 717,
+          "start_index": 675,
+          "title": "gosuslugi.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGvgWrDTolAcKYi0K_OlVxR90fHG056qt3wMmHlcYsGjbqQtIIu01B2QVrbYzTtTtuuk7oXPq_7MnmnTfbdiMriCI-zHjMVXM2s7023iEkI_TpW_g69qVxB7lLwHYIfll3_FPl4jM14q-m8XL0pBDWRk9UMN2-GDgSUF_pg-GMRPmU_CECVJQqu7Q=="
+        },
+        {
+          "end_index": 728,
+          "start_index": 675,
+          "title": "gubkin.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQEF_y73q7oJbIOcNxi3LwBu21LO4iujkFpy6JJpuJp4xngAyeUPTWEJOtMeexRR2x1jPY_fysZJ_fGLYPMlVqXISph48SWQvw2Ev_jnqbrwPumN1KkIApwWJnkl22MLxrslRnUxgd0u"
+        },
+        {
+          "end_index": 738,
+          "start_index": 675,
+          "title": "yanao.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFRZcMlX1KNt4RWC0H11V5Sv-dFl_QZiGq-tbRRLPRiiZrBOssQakh7LMd7wzGRPEsb-9qlUwuM5CqZSRWesrrCUojk3l14t6DhsdAdnVHbITkCSy3PFFLsSNsmFUW6bxy8BC-3uVONuoAbAr5BJA=="
+        },
+        {
+          "end_index": 746,
+          "start_index": 675,
+          "title": "mid.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF9BP3fgnd_59Z47QYGhjNSei5ioryb3LhlGaFe90NboYCmwLBA0OmY9PNbFz6PUUEK-FkP4K_vr70ykKfw1uh6XeLElotv6nmWNJS7G-O032ltJeV6n2b1EXj6kXN3o49U3b8nHjEBsQThy0wFxzxg2O7CQyFKY2lMbe7e"
+        },
+        {
+          "end_index": 761,
+          "start_index": 675,
+          "title": "abatskinfo.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFj9zhpCCFaS61Xn5dbjPE351ta1BbbBBnhZqDqTepccCA0z-6cYWv70eIbwTNHxTZ0RCNquoxnYDqRN40ARtYSv0mVE9ZQfbTJWQugDdHBBTEjXnSZ-7YveK5y-s6VcIGe"
+        },
+        {
+          "end_index": 1539,
+          "start_index": 1513,
+          "title": "kaluga-poisk.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFuH3aTF0KPd1R6FrGT9_WPx-w3DSAlpEQuFPmEu9z4d_l8klt4R-EZ3FAfQSIg7BwSVp0aau2cJB2R0yc6jk46EHvcRfJbEOnU-F93Id_t-KmD4YOOucWY28wzFfKP3LHg0eSGoHiiCtdifyac-ZSrE_wmHp923CysP0YCxlTFOAhIkT_H9blQ3sOBs6gtkz763Xw9NxBoAr1C8SETZ8CKBP8="
+        },
+        {
+          "end_index": 1553,
+          "start_index": 1513,
+          "title": "gosuslugi.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBJDIv0uhdtsubQUjAOuhek0mT8VDvi9afDPaWM5FjiNnlSLCY-PFiBXQydBTuKUQddbNkBXeEsH_79Qc4jN8Hu8ekV7RyYpWGxG5N3zeKpJ0_TANL2FTcKLUaFGpJgXBu34tAYdMozfM6vFkzZHOwbEn4qLFK4BShrH9vMnQarYtHmZPfUrmJe-rh2rNEvXxGDebZ_WPst7o="
+        },
+        {
+          "end_index": 1927,
+          "start_index": 1833,
+          "title": "kaluga-poisk.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFuH3aTF0KPd1R6FrGT9_WPx-w3DSAlpEQuFPmEu9z4d_l8klt4R-EZ3FAfQSIg7BwSVp0aau2cJB2R0yc6jk46EHvcRfJbEOnU-F93Id_t-KmD4YOOucWY28wzFfKP3LHg0eSGoHiiCtdifyac-ZSrE_wmHp923CysP0YCxlTFOAhIkT_H9blQ3sOBs6gtkz763Xw9NxBoAr1C8SETZ8CKBP8="
+        },
+        {
+          "end_index": 2077,
+          "start_index": 1833,
+          "title": "gosuslugi.ru",
+          "url": "https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQGBJDIv0uhdtsubQUjAOuhek0mT8VDvi9afDPaWM5FjiNnlSLCY-PFiBXQydBTuKUQddbNkBXeEsH_79Qc4jN8Hu8ekV7RyYpWGxG5N3zeKpJ0_TANL2FTcKLUaFGpJgXBu34tAYdMozfM6vFkzZHOwbEn4qLFK4BShrH9vMnQarYtHmZPfUrmJe-rh2rNEvXxGDebZ_WPst7o="
+        }
+      ],
+      "seconds": 7.742,
+      "response": {
+        "event_date": "2026-09-21",
+        "event_date_basis": "Указано в тексте новости: \"21 сентября наша школа стала очной площадкой международного просветительского проекта «Атомный диктант-2026»\".",
+        "claims": [
+          {
+            "claim": "«Атомный диктант» – ежегодный международный просветительский проект Союза «Атомные города» при поддержке Госкорпорации «Росатом» и Министерства энергетики РФ.",
+            "status": "confirmed",
+            "source": "ИИ (gemini-2.5-flash) + Google Search: mos.ru, amursu.ru, gosuslugi.ru, gubkin.ru, yanao.ru, mid.ru, abatskinfo.ru",
+            "note": "Многочисленные источники подтверждают, что «Атомный диктант» является ежегодным международным просветительским проектом, организованным Союзом организаций атомной отрасли «Атомные города» при поддержке Госкорпорации «Росатом» и Министерства энергетики РФ."
+          },
+          {
+            "claim": "21 сентября наша школа стала очной площадкой международного просветительского проекта «Атомный диктант-2026».",
+            "status": "confirmed",
+            "source": "ИИ (gemini-2.5-flash) + Google Search: kaluga-poisk.ru, gosuslugi.ru",
+            "note": "Несколько источников указывают, что 21 сентября 2026 года было одной из дат проведения очного этапа «Атомного диктанта-2026» на различных площадках. Например, в Калуге 21 сентября проходила очная часть, и на Госуслугах также упоминается проведение диктанта 21 сентября в одной из школ."
+          },
+          {
+            "claim": "В диктанте приняли участие больше 100 учеников 8-11 классов гимназии.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash) + Google Search: mos.ru, amursu.ru, gosuslugi.ru, gubkin.ru, yanao.ru, mid.ru, abatskinfo.ru, kaluga-poisk.ru",
+            "note": "Информация о количестве участников в конкретной гимназии не может быть проверена по открытым источникам."
+          },
+          {
+            "claim": "Организаторами диктанта в нашей школе стали учителя физики Анна Валерьевна и Глеб Алексеевич.",
+            "status": "unverified",
+            "source": "ИИ (gemini-2.5-flash) + Google Search: mos.ru, amursu.ru, gosuslugi.ru, gubkin.ru, yanao.ru, mid.ru, abatskinfo.ru, kaluga-poisk.ru",
+            "note": "Информация о конкретных учителях-организаторах в данной школе не может быть проверена по открытым источникам."
+          }
+        ]
+      },
+      "predicted": "2026-09-21",
+      "correct": true
+    }
+  ]
+}

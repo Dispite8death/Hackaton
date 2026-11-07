@@ -62,6 +62,17 @@ SYSTEM = (
     "Отвечай по-русски, кратко."
 )
 
+SYSTEM_OFFLINE = (
+    "Ты — аудитор текста новости образовательного учреждения. Анализируй ТОЛЬКО переданный текст. "
+    "У тебя нет веб-поиска и доступа к внешним источникам. Не утверждай, что искал или проверял источники. "
+    "Не придумывай ссылки. Определи дату описанного события, отдельно от даты публикации. "
+    "Для даты без года используй год публикации, если контекст не указывает другой год; "
+    "не подставляй год из своих знаний. Если дату события установить нельзя — event_date=null. "
+    "В event_date_basis кратко объясни вывод. Выдели до 4 проверяемых утверждений из текста. "
+    "У каждого status=unverified, source — пустая строка, note — 'Внешняя проверка не выполнялась'. "
+    "Не оценивай истинность утверждений по памяти. Отвечай по-русски, только JSON по заданной схеме."
+)
+
 
 class LLMChecker:
     def __init__(self, model: str = DEFAULT_MODEL, max_searches: int = 3):
@@ -153,6 +164,7 @@ class LLMSettings:
     json_mode: str = "json_object"  # json_object | json_schema | off
     timeout: float = 120
     max_tokens: int = 4000
+    reasoning_effort: str = ""     # optional; Ollama: none disables thinking
 
     @classmethod
     def from_env(cls, **override) -> "LLMSettings":
@@ -163,7 +175,8 @@ class LLMSettings:
                 api_key=e("AUDIT_LLM_API_KEY", ""), model=e("AUDIT_LLM_MODEL", ""),
                 web_search=e("AUDIT_LLM_WEB_SEARCH", "auto").lower(),
                 json_mode=e("AUDIT_LLM_JSON_MODE", "json_object").lower(),
-                timeout=float(e("AUDIT_LLM_TIMEOUT", "120")), max_tokens=int(e("AUDIT_LLM_MAX_TOKENS", "4000")))
+                timeout=float(e("AUDIT_LLM_TIMEOUT", "120")), max_tokens=int(e("AUDIT_LLM_MAX_TOKENS", "4000")),
+                reasoning_effort=e("AUDIT_LLM_REASONING_EFFORT", ""))
         for k, v in override.items():
             if v not in (None, ""):
                 setattr(s, k, v)
@@ -205,11 +218,14 @@ class OpenAICompatChecker:
         self.model = cfg.model
         self.timeout = cfg.timeout
         self.grounding = cfg.effective_web_search() == "google"
+        self.system = SYSTEM if self.grounding else SYSTEM_OFFLINE
         self.usage = {"input_tokens": 0, "output_tokens": 0, "requests": 0, "web_searches": 0}
 
     def _body(self, prompt: str) -> dict:
         body = {"model": self.model, "max_tokens": self.cfg.max_tokens, "temperature": 0,
-                "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}]}
+                "messages": [{"role": "system", "content": self.system}, {"role": "user", "content": prompt}]}
+        if self.cfg.reasoning_effort:
+            body["reasoning_effort"] = self.cfg.reasoning_effort
         if self.grounding:
             body["tools"] = [{"googleSearch": {}}]
         elif self.cfg.json_mode == "json_object":
@@ -239,6 +255,8 @@ class OpenAICompatChecker:
                 if "tools" in body:
                     body.pop("tools")
                     self.grounding = False
+                    self.system = SYSTEM_OFFLINE
+                    body["messages"][0]["content"] = self.system
                 else:
                     body.pop("response_format")
                 continue
@@ -253,7 +271,10 @@ class OpenAICompatChecker:
                   f"Заголовок: {title}\n\nТекст новости:\n{text[:6000]}\n\n"
                   "Верни ТОЛЬКО JSON без пояснений по схеме: "
                   + json.dumps(SCHEMA["properties"], ensure_ascii=False))
-        cache = _cache_file(f"{self.cfg.base_url}|{self.model}|{self.grounding}", prompt)
+        identity = f"{self.cfg.base_url}|{self.model}|{self.grounding}"
+        if self.cfg.reasoning_effort:
+            identity += f"|reasoning={self.cfg.reasoning_effort}"
+        cache = _cache_file(identity, prompt, system=self.system)
         if cache.exists():
             self.usage["cached"] = self.usage.get("cached", 0) + 1
             return _normalize(json.loads(cache.read_text(encoding="utf-8")))
@@ -279,6 +300,8 @@ class OpenAICompatChecker:
             if src.lower() in ("", "null", "none", "-"):
                 src = sources
             c["source"] = f"{label}: {src[:200] or 'источник не найден'}"
+            if not self.grounding and not cites:
+                c["source"] = f"{label}: внешняя проверка не выполнялась"
             if c.get("status") not in ("confirmed", "contradiction", "unverified"):
                 c["status"] = "unverified"
             if not cites and c["status"] != "unverified":
@@ -296,12 +319,12 @@ class OpenAICompatChecker:
 GatewayChecker = OpenAICompatChecker   # обратная совместимость
 
 
-def _cache_file(model: str, prompt: str):
+def _cache_file(model: str, prompt: str, system: str = SYSTEM):
     """Ответы ИИ кэшируются по (модель, текст запроса): повторный прогон не тратит токены."""
     import hashlib
     from pathlib import Path
 
-    h = hashlib.sha1(f"{model}\n{SYSTEM}\n{prompt}".encode("utf-8")).hexdigest()
+    h = hashlib.sha1(f"{model}\n{system}\n{prompt}".encode("utf-8")).hexdigest()
     return Path(os.environ.get("AUDIT_CACHE_DIR", ".cache")) / "llm" / f"{h}.json"
 
 

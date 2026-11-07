@@ -37,6 +37,7 @@
   <div class="stat"><span>Новостей за последний год</span><b>{{ m.news_last_year|default("—") }}</b></div>
   <div class="stat"><span>Перерывов более 14 дней (учебный период)</span><b>{{ m.news_gaps|default("—") }}</b></div>
   <div class="stat"><span>Проверено на срок публикации</span><b>{{ m.news_checked|default(0) }} (с датой события: {{ m.news_with_event_date|default(0) }})</b></div>
+  <div class="stat"><span>Даты требуют проверки</span><b>{{ m.news_event_date_review|default(0) }}</b></div>
   <div class="stat"><span>Опубликовано позже 24 ч</span><b>{{ m.news_late|default(0) }}</b></div>
   <div class="stat"><span>Факт-чекинг: подтверждено / расхождений</span><b>{{ m.news_facts_confirmed|default(0) }} / {{ m.news_facts_contradiction|default(0) }}</b></div>
  </div>
@@ -78,8 +79,8 @@
 <h2>Проверка новостей: срок публикации и факты</h2>
 <div class="tablewrap"><table><thead><tr><th>Новость</th><th>Опубликована</th><th>Дата события</th><th class="num">Задержка</th><th>Факт-чекинг</th></tr></thead><tbody>
 {% for n in news_checked %}<tr><td><a href="{{ n.url }}" target="_blank">{{ n.title }}</a></td><td>{{ n.published|d }}</td>
- <td>{{ n.event_date|d }}{% if n.event_date_source %}<div class="small muted">{{ n.event_date_source }}</div>{% endif %}</td>
- <td class="num">{% if n.delay_days is not none %}{% if n.delay_days > 1 %}<b class="g-bad">+{{ n.delay_days }} дн.</b>{% else %}в срок{% endif %}{% else %}<span class="muted">дата не указана</span>{% endif %}</td>
+ <td>{{ n.event_date|d }}{% if n.event_date_source %}<div class="small muted">{{ n.event_date_source }}</div>{% endif %}{% if n.event_date_status == "review" %}<div class="small">Алгоритм: {{ n.event_date_candidates.get('algorithm')|d }} · ИИ: {{ n.event_date_candidates.get('model')|d }}</div>{% endif %}</td>
+ <td class="num">{% if n.event_date_status == "review" %}<span class="muted">требуется проверка</span>{% elif n.delay_days is not none %}{% if n.delay_days > 1 %}<b class="g-bad">+{{ n.delay_days }} дн.</b>{% else %}в срок{% endif %}{% else %}<span class="muted">дата не указана</span>{% endif %}</td>
  <td class="small">{% for c in n.factcheck %}<div class="fc-{{ c.status }}">{{ {"confirmed":"✓","contradiction":"✗","unverified":"?"}[c.status] }} {{ c.claim }} — {{ c.note }}<span class="muted"> ({{ c.source }})</span></div>{% else %}<span class="muted">—</span>{% endfor %}</td></tr>{% endfor %}
 </tbody></table></div>
 {% endif %}

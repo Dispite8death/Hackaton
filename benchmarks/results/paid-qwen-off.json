@@ -1,0 +1,29 @@
+{
+  "model": "qwen3-235b-a22b-instruct-2507-maas",
+  "gateway": "https://blackroute.ironborn.cc/v1",
+  "started": "2026-11-07T17:52:24.344571+11:00",
+  "dataset_sha256": "0ef1b44c3e514cb3b1eef7202e26f0657853da1378cd31a51b40a47ce3392c19",
+  "system_sha256": "146f032b5775cb80e7cf4a60ef29ec8e033f59c6cf9f00c15c1d40a6ae3bf923",
+  "web_search": "off",
+  "prices_usd_per_token": {
+    "prompt": "0.0000000639",
+    "completion": "0.00000009",
+    "image": "0",
+    "request": "0",
+    "input_cache_read": "0"
+  },
+  "max_tokens": 2048,
+  "rows": [
+    {
+      "id": "school-01",
+      "origin": "saved_news",
+      "expected": "2026-05-25",
+      "http_status": 404,
+      "error": "HTTP 404",
+      "seconds": 0.607,
+      "response": null,
+      "predicted": null,
+      "correct": false
+    }
+  ]
+}

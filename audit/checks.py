@@ -15,6 +15,7 @@ from .extract import (PHOTO_STUB_URL, extract_article_text, extract_documents, e
                       extract_persons, find_placeholders, has_empty_docs_block, lines_of, main_content,
                       page_title, person_detail, soup_of, text_of)
 from .factcheck import extract_event_date, offline_factcheck
+from .event_dates import reconcile_event_dates
 from .fetcher import Fetcher, Page
 from .models import Document, Finding, NewsItem, Person, SiteResult
 
@@ -209,13 +210,22 @@ class SiteAuditor:
         for i, n in enumerate(recent):
             body = f"{n.title}\n{n.text or n.snippet}"
             n.event_date, n.event_date_source = extract_event_date(body, n.published)
+            algorithm_date = n.event_date
+            model_date, model_checked = None, False
+            n.delay_days = None
             n.factcheck = offline_factcheck(body, n.published)
             if self.llm and i < self.o.llm_news_per_site and n.text:
                 res = self.llm.check_news(n.title, n.text, n.published, self.r.name)
                 if res:
-                    if res.get("event_date") and res["event_date"] <= n.published.date() + timedelta(days=1):
-                        n.event_date, n.event_date_source = res["event_date"], "ИИ: " + res.get("event_date_basis", "")[:80]
+                    model_checked = True
+                    model_date = res.get("event_date")
                     n.factcheck += res.get("claims", [])
+            decision = reconcile_event_dates(algorithm_date, model_date, model_checked=model_checked)
+            n.event_date = decision.value
+            n.event_date_status = decision.status
+            n.event_date_candidates = decision.candidates
+            if decision.status == "review":
+                n.event_date_source = "Алгоритм и ИИ дали разные результаты; требуется проверка"
             if n.event_date:
                 with_date += 1
                 n.delay_days = (n.published.date() - n.event_date).days
@@ -223,6 +233,7 @@ class SiteAuditor:
                     late.append(n)
             contradictions += [(n, c) for c in n.factcheck if c["status"] == "contradiction"]
         m.update(news_checked=len(recent), news_with_event_date=with_date, news_late=len(late),
+                 news_event_date_review=sum(n.event_date_status == "review" for n in recent),
                  news_factchecked=sum(1 for n in recent if n.factcheck),
                  news_facts_confirmed=sum(1 for n in recent for c in n.factcheck if c["status"] == "confirmed"),
                  news_facts_contradiction=len(contradictions))
@@ -233,8 +244,9 @@ class SiteAuditor:
             self.add(S, f"{len(late)} из {with_date} проверенных новостей опубликованы позже 24 часов после события",
                      "high" if share >= 0.5 else "medium",
                      "Размещать новость в течение суток после мероприятия.", url, ev, "news_late")
-        if len(recent) >= 3 and with_date / len(recent) < 0.3:
-            self.add(S, f"В {len(recent) - with_date} из {len(recent)} свежих новостей не указана дата события",
+        resolved = [n for n in recent if n.event_date_status != "review"]
+        if len(resolved) >= 3 and with_date / len(resolved) < 0.3:
+            self.add(S, f"В {len(resolved) - with_date} из {len(resolved)} свежих новостей не указана дата события",
                      "low", "Указывать в тексте новости дату проведения мероприятия — это помогает читателям "
                             "и позволяет контролировать срок публикации.", url, check="news_no_event_date")
         if contradictions:

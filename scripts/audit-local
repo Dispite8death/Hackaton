@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+project_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$project_dir"
+local_model=""
+if [[ "${1:-}" == "--model" ]]; then
+    if [[ $# -lt 2 ]]; then echo 'Usage: audit-local [--model MODEL] COMMAND' >&2; exit 2; fi
+    case "$2" in
+        qwen3.5:9b-q4_K_M|qwen3:14b-q4_K_M) local_model="$2" ;;
+        *) echo 'Choose one of the two evaluated local model tags.' >&2; exit 2 ;;
+    esac
+    shift 2
+fi
+# Never inherit the cloud profile for a local launch.
+set -a
+source profiles/ollama.env
+set +a
+if [[ -n "$local_model" ]]; then export AUDIT_LLM_MODEL="$local_model"; fi
+export AUDIT_CACHE_DIR=".cache/local-ollama/${AUDIT_LLM_MODEL//:/_}"
+unset ANTHROPIC_API_KEY
+export NO_PROXY=127.0.0.1,localhost
+export no_proxy="$NO_PROXY"
+for argument in "$@"; do
+    case "$argument" in
+        --llm-provider*|--llm-base-url*|--llm-model*|--llm-web-search*)
+            echo 'Local wrapper fixes the model endpoint. Use python -m audit for another profile.' >&2
+            exit 2
+            ;;
+    esac
+done
+exec .venv/bin/python -m audit "$@"

@@ -1,0 +1,1402 @@
+{
+  "model": "qwen3:14b-q4_K_M",
+  "thinking": false,
+  "started_at": "2026-11-07T17:42:25.245239+11:00",
+  "dataset_sha256": "0ef1b44c3e514cb3b1eef7202e26f0657853da1378cd31a51b40a47ce3392c19",
+  "system_prompt": "Ты — аудитор текста новости образовательного учреждения. Анализируй ТОЛЬКО переданный текст. У тебя нет веб-поиска и доступа к внешним источникам. Не утверждай, что искал или проверял источники. Не придумывай ссылки. Определи дату описанного события, отдельно от даты публикации. Для даты без года используй год публикации, если контекст не указывает другой год; не подставляй год из своих знаний. Если дату события установить нельзя — event_date=null. В event_date_basis кратко объясни вывод. Выдели до 4 проверяемых утверждений из текста. У каждого status=unverified, source — пустая строка, note — 'Внешняя проверка не выполнялась'. Не оценивай истинность утверждений по памяти. Отвечай по-русски, только JSON по заданной схеме.\nПравило выбора даты: нужна дата основного конкретного события новости, включая объявленное будущее событие. Дата праздника в поздравлении или исторической справке не является датой мероприятия учреждения. Дата документа, срок регистрации, дата заголовка и риторическое «сегодня» сами по себе не датируют событие. Если основное событие длится несколько дней либо описаны несколько равноправных событий — верни null, поскольку схема допускает только одну дату. Если сведений недостаточно, также верни null. Относительные даты «сегодня» и «вчера» считай относительно даты публикации, если они действительно датируют событие.",
+  "system_sha256": "146f032b5775cb80e7cf4a60ef29ec8e033f59c6cf9f00c15c1d40a6ae3bf923",
+  "model_info": {
+    "thinking": {
+      "values": [
+        false,
+        true
+      ],
+      "default": true
+    },
+    "license": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n   Copyright 2024 Alibaba Cloud\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n       http://www.apache.org/licenses/LICENSE-2.0\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.",
+    "modelfile": "# Modelfile generated by \"ollama show\"\n# To build a new Modelfile based on this, replace FROM with:\n# FROM qwen3:14b-q4_K_M\n\nFROM /var/lib/ollama/models/blobs/sha256-a8cc1361f3145dc01f6d77c6c82c9116b9ffe3c97b34716fe20418455876c40e\nTEMPLATE \"\"\"\n{{- $lastUserIdx := -1 -}}\n{{- range $idx, $msg := .Messages -}}\n{{- if eq $msg.Role \"user\" }}{{ $lastUserIdx = $idx }}{{ end -}}\n{{- end }}\n{{- if or .System .Tools }}<|im_start|>system\n{{ if .System }}\n{{ .System }}\n{{- end }}\n{{- if .Tools }}\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{{- range .Tools }}\n{\"type\": \"function\", \"function\": {{ .Function }}}\n{{- end }}\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\n</tool_call>\n{{- end -}}\n<|im_end|>\n{{ end }}\n{{- range $i, $_ := .Messages }}\n{{- $last := eq (len (slice $.Messages $i)) 1 -}}\n{{- if eq .Role \"user\" }}<|im_start|>user\n{{ .Content }}\n{{- if and $.IsThinkSet (eq $i $lastUserIdx) }}\n   {{- if $.Think -}}\n      {{- \" \"}}/think\n   {{- else -}}\n      {{- \" \"}}/no_think\n   {{- end -}}\n{{- end }}<|im_end|>\n{{ else if eq .Role \"assistant\" }}<|im_start|>assistant\n{{ if (and $.IsThinkSet (and .Thinking (or $last (gt $i $lastUserIdx)))) -}}\n<think>{{ .Thinking }}</think>\n{{ end -}}\n{{ if .Content }}{{ .Content }}\n{{- else if .ToolCalls }}<tool_call>\n{{ range .ToolCalls }}{\"name\": \"{{ .Function.Name }}\", \"arguments\": {{ .Function.Arguments }}}\n{{ end }}</tool_call>\n{{- end }}{{ if not $last }}<|im_end|>\n{{ end }}\n{{- else if eq .Role \"tool\" }}<|im_start|>user\n<tool_response>\n{{ .Content }}\n</tool_response><|im_end|>\n{{ end }}\n{{- if and (ne .Role \"assistant\") $last }}<|im_start|>assistant\n{{ if and $.IsThinkSet (not $.Think) -}}\n<think>\n\n</think>\n\n{{ end -}}\n{{ end }}\n{{- end }}\"\"\"\nPARAMETER repeat_penalty 1\nPARAMETER stop <|im_start|>\nPARAMETER stop <|im_end|>\nPARAMETER temperature 0.6\nPARAMETER top_k 20\nPARAMETER top_p 0.95\nLICENSE \"\"\"                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n   Copyright 2024 Alibaba Cloud\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n       http://www.apache.org/licenses/LICENSE-2.0\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\"\"\"\n",
+    "parameters": "top_k                          20\ntop_p                          0.95\nrepeat_penalty                 1\nstop                           \"<|im_start|>\"\nstop                           \"<|im_end|>\"\ntemperature                    0.6",
+    "template": "\n{{- $lastUserIdx := -1 -}}\n{{- range $idx, $msg := .Messages -}}\n{{- if eq $msg.Role \"user\" }}{{ $lastUserIdx = $idx }}{{ end -}}\n{{- end }}\n{{- if or .System .Tools }}<|im_start|>system\n{{ if .System }}\n{{ .System }}\n{{- end }}\n{{- if .Tools }}\n\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{{- range .Tools }}\n{\"type\": \"function\", \"function\": {{ .Function }}}\n{{- end }}\n</tools>\n\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\n<tool_call>\n{\"name\": <function-name>, \"arguments\": <args-json-object>}\n</tool_call>\n{{- end -}}\n<|im_end|>\n{{ end }}\n{{- range $i, $_ := .Messages }}\n{{- $last := eq (len (slice $.Messages $i)) 1 -}}\n{{- if eq .Role \"user\" }}<|im_start|>user\n{{ .Content }}\n{{- if and $.IsThinkSet (eq $i $lastUserIdx) }}\n   {{- if $.Think -}}\n      {{- \" \"}}/think\n   {{- else -}}\n      {{- \" \"}}/no_think\n   {{- end -}}\n{{- end }}<|im_end|>\n{{ else if eq .Role \"assistant\" }}<|im_start|>assistant\n{{ if (and $.IsThinkSet (and .Thinking (or $last (gt $i $lastUserIdx)))) -}}\n<think>{{ .Thinking }}</think>\n{{ end -}}\n{{ if .Content }}{{ .Content }}\n{{- else if .ToolCalls }}<tool_call>\n{{ range .ToolCalls }}{\"name\": \"{{ .Function.Name }}\", \"arguments\": {{ .Function.Arguments }}}\n{{ end }}</tool_call>\n{{- end }}{{ if not $last }}<|im_end|>\n{{ end }}\n{{- else if eq .Role \"tool\" }}<|im_start|>user\n<tool_response>\n{{ .Content }}\n</tool_response><|im_end|>\n{{ end }}\n{{- if and (ne .Role \"assistant\") $last }}<|im_start|>assistant\n{{ if and $.IsThinkSet (not $.Think) -}}\n<think>\n\n</think>\n\n{{ end -}}\n{{ end }}\n{{- end }}",
+    "template_source": "go_template",
+    "details": {
+      "parent_model": "",
+      "format": "gguf",
+      "family": "qwen3",
+      "families": [
+        "qwen3"
+      ],
+      "parameter_size": "14.8B",
+      "quantization_level": "Q4_K_M"
+    },
+    "model_info": {
+      "general.architecture": "qwen3",
+      "general.basename": "Qwen3",
+      "general.file_type": 15,
+      "general.parameter_count": 14768307200,
+      "general.quantization_version": 2,
+      "general.size_label": "14B",
+      "general.type": "model",
+      "qwen3.attention.head_count": 40,
+      "qwen3.attention.head_count_kv": 8,
+      "qwen3.attention.key_length": 128,
+      "qwen3.attention.layer_norm_rms_epsilon": 1e-06,
+      "qwen3.attention.value_length": 128,
+      "qwen3.block_count": 40,
+      "qwen3.context_length": 40960,
+      "qwen3.embedding_length": 5120,
+      "qwen3.feed_forward_length": 17408,
+      "qwen3.rope.freq_base": 1000000,
+      "tokenizer.ggml.add_bos_token": false,
+      "tokenizer.ggml.bos_token_id": 151643,
+      "tokenizer.ggml.eos_token_id": 151645,
+      "tokenizer.ggml.merges": [],
+      "tokenizer.ggml.model": "gpt2",
+      "tokenizer.ggml.padding_token_id": 151643,
+      "tokenizer.ggml.pre": "qwen2",
+      "tokenizer.ggml.token_type": [],
+      "tokenizer.ggml.tokens": []
+    },
+    "capabilities": [
+      "completion",
+      "tools",
+      "thinking"
+    ],
+    "modified_at": "2026-11-07T17:42:17.989546386+11:00"
+  },
+  "configuration": {
+    "context": 8192,
+    "parallel": 1,
+    "max_tokens": 2048
+  },
+  "rows": [
+    {
+      "id": "school-01",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "today",
+      "expected": "2026-05-25",
+      "predicted": "2026-05-25",
+      "correct": true,
+      "heuristic": "2026-05-25",
+      "heuristic_basis": "относительная дата («вчера/сегодня»)",
+      "seconds": 23.35,
+      "response": {
+        "event_date": "2026-05-25",
+        "event_date_basis": "Дата публикации указана как 2026-05-25, а в тексте говорится, что событие произошло «сегодня».",
+        "claims": [
+          {
+            "claim": "В школе прошел День открытых дверей для будущих первоклассников.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "К школе пришли будущие первоклассники.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ребята познакомились с будущими учителями и заглянули в классы.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Школа ждёт, когда эти ребята станут настоящими учениками.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-02",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "today",
+      "expected": "2026-05-22",
+      "predicted": "2026-05-22",
+      "correct": true,
+      "heuristic": "2026-05-22",
+      "heuristic_basis": "относительная дата («вчера/сегодня»)",
+      "seconds": 5.758,
+      "response": {
+        "event_date": "2026-05-22",
+        "event_date_basis": "Дата публикации указана как 2026-05-22, а в тексте события описаны как «сегодня», что соответствует дате публикации.",
+        "claims": [
+          {
+            "claim": "Сегодня в 6 классе прошёл увлекательный классный час, посвящённый футболу!",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ученики узнали об эволюции и развитии футбола в России и мире, а также об историческом контексте становления этого вида спорта.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Мы провели тематическую викторину посвященную футболу для учащихся школы, и это было незабываемо! 🎉",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Все участники получили памятные подарки от организаторов.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-03",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "deadline_only",
+      "expected": null,
+      "predicted": "2026-11-03",
+      "correct": false,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 8.52,
+      "response": {
+        "event_date": "2026-11-03",
+        "event_date_basis": "Дата публикации указана как 2026-11-03, и в тексте упоминается, что форма обратной связи должна быть заполнена до 3 ноября 2026 года включительно, что соответствует дате публикации.",
+        "claims": [
+          {
+            "claim": "Методические рекомендации по проведению Акции размещены на официальном сайте Национального центра исторической памяти при Президенте Российской Федерации по ссылке: https://russiancip.ru/events/vserossiyskaya-aktsiya-unichtozhennoe-detstvo-genotsid-sovetskogo-naroda-so-storony-natsistov-i-ikh-posobnikov-v-gody-velikoy-otechestvennoy-voyny/",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Участникам Акции будет направлен электронный сертификат, подтверждающий участие.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Для его получения необходимо заполнить форму обратной связи на сайте Национального центра исторической памяти при Президенте Российской Федерации до 3 ноября 2026 года включительно по ссылке: https://clck.ru/3WA68H.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Всероссийская акция «Уничтоженное детство. Геноцид советского народа со стороны нацистов и их пособников в годы Великой Отечественной войны 1941–1945 годов» (далее –Акция).",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-04",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "range",
+      "expected": null,
+      "predicted": "2026-10-29",
+      "correct": false,
+      "heuristic": "2026-09-22",
+      "heuristic_basis": "дата в тексте",
+      "seconds": 7.882,
+      "response": {
+        "event_date": "2026-10-29",
+        "event_date_basis": "Дата публикации указана как 2026-10-29, и в тексте не указано, что событие относится к другому году. Дата события не указана явно, но так как публикация произошла 29 октября 2026 года, и в тексте говорится о прошедшей олимпиаде, дата события определена как дата публикации.",
+        "claims": [
+          {
+            "claim": "С 22 сентября по 25 октября при поддержке нацпроекта «Инфраструктура для жизни» прошла Всероссийская онлайн-олимпиада «Безопасные дороги».",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ученики 1-9 классов освежили и закрепили знания о правилах поведения на дорогах.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В этом году участников стало на 10% больше, чем в 2025-м, а общая аудитория олимпиады, которую проводят уже семь лет, превысила 34 млн человек.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "На примере реальных дорожных ситуаций школьники разбирали, как безопасно вести себя пешеходам, пассажирам, велосипедистам и пользователям средств индивидуальной мобильности.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-05",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "holiday_background",
+      "expected": null,
+      "predicted": "2026-11-04",
+      "correct": false,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 5.788,
+      "response": {
+        "event_date": "2026-11-04",
+        "event_date_basis": "Дата события указана в тексте: «4 ноября мы отмечаем один из самых важных государственных праздников — День народного единства»",
+        "claims": [
+          {
+            "claim": "4 ноября мы отмечаем один из самых важных государственных праздников — День народного единства",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В нашей гимназии особенно ценят это чувство общности: мы растём, учимся и творим как одна большая семья",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Пусть дух единства помогает нам и дальше поддерживать друг друга, воплощать самые смелые идеи и гордиться тем, что мы — часть великой истории нашей Родины",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Желаем каждому из вас мира, добра, гармонии в семье и радости в сердце",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-07",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "explicit_day_month",
+      "expected": "2026-09-21",
+      "predicted": "2026-09-21",
+      "correct": true,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 6.178,
+      "response": {
+        "event_date": "2026-09-21",
+        "event_date_basis": "Упомянута дата 21 сентября в тексте как дата проведения «Атомного диктанта-2026»",
+        "claims": [
+          {
+            "claim": "«Атомный диктант» – ежегодный международный просветительский проект Союза «Атомные города» при поддержке Госкорпорации «Росатом» и Министерства энергетики РФ.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "21 сентября наша школа стала очной площадкой международного просветительского проекта «Атомный диктант-2026».",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В диктанте приняли участие больше 100 учеников 8-11 классов гимназии.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Организаторами диктанта в нашей школе стали учителя физики Анна Валерьевна и Глеб Алексеевич.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-20",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "explicit_day_month",
+      "expected": "2026-10-23",
+      "predicted": "2026-10-23",
+      "correct": true,
+      "heuristic": "2026-10-23",
+      "heuristic_basis": "дата в тексте",
+      "seconds": 5.046,
+      "response": {
+        "event_date": "2026-10-23",
+        "event_date_basis": "Дата события указана в тексте: '23 октября в преддверии Дня народного единства в школе прошла благотворительная ярмарка \"Золотая осень\"'.",
+        "claims": [
+          {
+            "claim": "Ученики и родители 1-11 классов приготовили много вкусных русских блюд",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Был организован мастер-класс по украшению пряников",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Удалось собрать больше 20 тысяч рублей",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Выручка будет отправлена в поддержку бойцов СВО",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-21",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "explicit_day_month",
+      "expected": "2026-10-21",
+      "predicted": "2026-10-21",
+      "correct": true,
+      "heuristic": "2026-10-21",
+      "heuristic_basis": "дата в тексте",
+      "seconds": 4.796,
+      "response": {
+        "event_date": "2026-10-21",
+        "event_date_basis": "Дата события указана в тексте: '21 октября в школе прошел урок гражданственности...'",
+        "claims": [
+          {
+            "claim": "21 октября в школе прошел урок гражданственности \"В единстве - сила России\", который подготовил и провел учитель истории Апсатаров В.Я.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Урок начался с исполнения гимна Российской Федерации",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "На занятии ребята смотрели отрывки из фильмов о народном ополчении 1612 года",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Урок закончился мотивирующим роликом и мудрой притчей о силе единства",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-22",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "explicit_day_month",
+      "expected": "2026-10-29",
+      "predicted": "2025-10-29",
+      "correct": false,
+      "heuristic": "2026-10-29",
+      "heuristic_basis": "дата в тексте",
+      "seconds": 6.612,
+      "response": {
+        "event_date": "2025-10-29",
+        "event_date_basis": "Дата события указана в тексте: «29 октября» и соответствует году, предшествующему году публикации, так как мероприятие прошло «на каникулах», что в контексте соответствует осенним каникулам 2025 года.",
+        "claims": [
+          {
+            "claim": "29 октября в рамках проекта Российского общества «Знание» для старшеклассников состоялась лекция на тему «Вербовка подростков: как тебя втягивают и как это остановить».",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "На занятии ребята разобрали психологические приемы, используемые манипуляторами в сети.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ребята обсудили, почему важно не принимать решения под давлением и не идти на поводу у «быстрых» просьб.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Участники лекции узнали, как правильно действовать, если они столкнулись с подозрительным собеседником.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-24",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "future",
+      "expected": "2026-11-04",
+      "predicted": "2026-11-04",
+      "correct": true,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 4.113,
+      "response": {
+        "event_date": "2026-11-04",
+        "event_date_basis": "Дата события указана в тексте: '4 ноября'",
+        "claims": [
+          {
+            "claim": "Приглашаем семьи Сусуманского округа принять участие в первом семейном спортивном фестивале ГТО",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Фестиваль состоится 4 ноября в 10:00",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Для участия необходимо зарегистрироваться на официальном сайте комплекса ГТО — GTO.RU",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Участники должны иметь УИН (уникальный идентификационный номер)",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-25",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "title_not_event",
+      "expected": null,
+      "predicted": "2026-10-27",
+      "correct": false,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 5.907,
+      "response": {
+        "event_date": "2026-10-27",
+        "event_date_basis": "Дата указана в заголовке и соответствует дате события, описанного в тексте.",
+        "claims": [
+          {
+            "claim": "Правительственная комиссия Магаданской области рекомендует родителям к совместному просмотру серии видеороликов по детской безопасности.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Цель — наглядно показать последствия беспечности и дать алгоритмы действий в опасных ситуациях.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Информация о мероприятии размещена в социальных сетях с хештегами #Сусуманскийрайон, #Сусуманскиймуниципальныйокруг, #Сусумансегодня, #Сусуман, #СМО, #Образование, #МБОУСОШ№1гСусумана.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Мероприятие связано с Муниципальнм бюджетным общеобразовательным учреждением \"Средняя общеобразовательная школа №1 г.Сусумана\".",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "school-regression",
+      "origin": "saved_news",
+      "kind": "school",
+      "category": "explicit_day_month",
+      "expected": "2026-09-29",
+      "predicted": "2026-09-29",
+      "correct": true,
+      "heuristic": "2026-09-29",
+      "heuristic_basis": "дата в тексте",
+      "seconds": 4.534,
+      "response": {
+        "event_date": "2026-09-29",
+        "event_date_basis": "Дата события указана в тексте новости: '29 сентября состоялась встреча...'",
+        "claims": [
+          {
+            "claim": "29 сентября состоялась встреча с инспектором ПДН Ольского района.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Детям еще раз напомнили о поведении в школе, на улице, о рисках и вредных привычках.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ученики просмотрели небольшой видеоролик",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Встреча прошла в Муниципальному казенному общеобразовательному учреждению «Начальная школа – детский сад с.Гадля»",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-01",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "holiday_background",
+      "expected": null,
+      "predicted": "2026-11-04",
+      "correct": false,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 5.413,
+      "response": {
+        "event_date": "2026-11-04",
+        "event_date_basis": "Дата события указана в тексте: «04 ноября 2026 года вся наша многонациональная страна отмечает День народного единства».",
+        "claims": [
+          {
+            "claim": "04 ноября 2026 года вся наша многонациональная страна отмечает День народного единства.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Наш детский сад тоже принял участие в подготовке к празднику.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В нашем саду есть воспитанники разных национальностей.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Выпущена поздравительная открытка для родителей, где на родных языках наших воспитанников звучит фраза: «День народного единства».",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-02",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "explicit_day_month",
+      "expected": "2026-10-23",
+      "predicted": "2026-10-23",
+      "correct": true,
+      "heuristic": "2026-10-23",
+      "heuristic_basis": "дата в тексте",
+      "seconds": 5.43,
+      "response": {
+        "event_date": "2026-10-23",
+        "event_date_basis": "Дата события указана в тексте: '23 октября дети подготовительной к школе группы №2 посетили Магаданский областной краеведческий музей нашего города.'",
+        "claims": [
+          {
+            "claim": "23 октября дети подготовительной к школе группы №2 посетили Магаданский областной краеведческий музей нашего города.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Тематическая экскурсия \"У медведя во бору...\"",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Цель данной экскурсии - расширить знания о природе и культуре края, о местных растениях (ягодах, грибах) и животных, их особенностях и значении в жизни людей.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Для детей была проведена интересная и познавательная экскурсия.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-03",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "range",
+      "expected": null,
+      "predicted": "2026-09-18",
+      "correct": false,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 3.907,
+      "response": {
+        "event_date": "2026-09-18",
+        "event_date_basis": "Упомянуты даты выборов 18, 19, 20 сентября 2026 года",
+        "claims": [
+          {
+            "claim": "Выборы депутатов государственной думы 18,19,20 сентября 2026 года.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Твой голос - сила России!",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "http://www.cikrf.ru/analog/ediny-den-golosovaniya2026/",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "На этой странице",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-04",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "generic_today",
+      "expected": null,
+      "predicted": null,
+      "correct": true,
+      "heuristic": "2026-08-06",
+      "heuristic_basis": "относительная дата («вчера/сегодня»)",
+      "seconds": 5.24,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "В тексте не указано конкретное событие с датой, описаны общие аспекты образовательной деятельности, а не конкретное мероприятие.",
+        "claims": [
+          {
+            "claim": "Родители часто спрашивают: «Чем вы занимались сегодня?»",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Мы чередуем активные забавы со спокойными играми, чтобы маленькие моторчики успевали перезарядиться.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "А вечером делимся идеями таких игр, в которые можно поиграть всей семьей на прогулке.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Наши «Звездочки» ни минуты не сидят на месте, и вот почему это важно:",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-05",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "today",
+      "expected": "2026-09-28",
+      "predicted": "2026-09-28",
+      "correct": true,
+      "heuristic": "2026-09-28",
+      "heuristic_basis": "относительная дата («вчера/сегодня»)",
+      "seconds": 5.071,
+      "response": {
+        "event_date": "2026-09-28",
+        "event_date_basis": "Дата публикации указана как 2026-09-28, а в тексте говорится, что событие произошло «сегодня», что соответствует дате публикации.",
+        "claims": [
+          {
+            "claim": "Для воспитанников детского сада прошло тематическое занятие со старшим инспектором ГРпоИАЗ.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась."
+          },
+          {
+            "claim": "Инспектор объяснил детям, как правильно переходить дорогу, где можно играть и почему важно использовать светоотражающие элементы.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась."
+          },
+          {
+            "claim": "Такие встречи помогают закрепить знания, формируют ответственность за свою безопасность и учат уважать правила.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась."
+          },
+          {
+            "claim": "На этой странице размещена фотогалерея и описание.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась."
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-06",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "future",
+      "expected": "2026-09-01",
+      "predicted": "2026-09-01",
+      "correct": true,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 6.026,
+      "response": {
+        "event_date": "2026-09-01",
+        "event_date_basis": "Упомянута дата 1 сентября 2026 года, с которой проект «Добрые игры» будет внедрён в системе дошкольного образования.",
+        "claims": [
+          {
+            "claim": "С 1 сентября 2026 года в системе дошкольного образования появится новый проект «Добрые игры».",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Проект «Добрые игры» разработан Институтом изучения детства, семьи и воспитания.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Комплект методических материалов для педагогов и практических материалов для родителей носит рекомендательный характер и размещен на сайте https://добрыеигры.рф/",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "«Добрые игры» предполагают проведение занятий с детьми от 3 до 7 лет в детских садах Российской Федерации.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-07",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "explicit_day_month",
+      "expected": "2026-04-27",
+      "predicted": "2026-04-27",
+      "correct": true,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 5.156,
+      "response": {
+        "event_date": "2026-04-27",
+        "event_date_basis": "Дата события указана в тексте: '27 апреля в нашем саду прошли познавательные беседы...'",
+        "claims": [
+          {
+            "claim": "27 апреля в нашем саду прошли познавательные беседы по безопасности дорожного движения.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В гостях у воспитанников подготовительных и старших групп побывал инспектор ГИБДД города Магадана — Павел Валерьевич Саакян.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Он рассказал ребятам о правилах перехода улицы, дорожных знаках и о том, почему важно использовать светоотражающие элементы.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Встреча прошла в формате живого диалога: дети активно отвечали на вопросы и делились своими знаниями.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-08",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "explicit_full",
+      "expected": "2026-09-01",
+      "predicted": "2026-09-01",
+      "correct": true,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 5.23,
+      "response": {
+        "event_date": "2026-09-01",
+        "event_date_basis": "Упоминание в тексте: 'с 1 сентября 2026г. в нашем детском саду начинает работу дежурная группа'.",
+        "claims": [
+          {
+            "claim": "С 1 сентября 2026 года начинает работу дежурная группа в МАДОУ № 3.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась."
+          },
+          {
+            "claim": "Документы, связанные с организацией работы дежурной группы, доступны для скачивания.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась."
+          },
+          {
+            "claim": "Документы включают приказ об организации работы дежурных групп и положение об организации работы дежурной группы.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась."
+          },
+          {
+            "claim": "На странице размещена фотогалерея и описание дежурной группы.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась."
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-09",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "explicit_day_month",
+      "expected": "2026-09-03",
+      "predicted": "2026-09-03",
+      "correct": true,
+      "heuristic": "2026-09-03",
+      "heuristic_basis": "дата в тексте",
+      "seconds": 6.699,
+      "response": {
+        "event_date": "2026-09-03",
+        "event_date_basis": "Дата события указана в первом предложении текста: «3 сентября, в День солидарности в борьбе с терроризмом...»",
+        "claims": [
+          {
+            "claim": "3 сентября, в День солидарности в борьбе с терроризмом, в МБДОУ «Светлячок» прошли тематические мероприятия",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Памятная дата, установленная в России в память о трагических событиях в Беслане (2004 год)",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "педагоги провели тематические беседы с воспитанниками о том, что такое терроризм, почему он опасен и как важно беречь мир",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "занятия по безопасности: в доступной игровой форме детям напомнили ключевые правила: не трогать чужие или бесхозные предметы; не уходить с незнакомыми людьми; сразу обращаться к взрослым в любой непонятной или опасной ситуации",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-10",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "future",
+      "expected": "2026-11-20",
+      "predicted": "2026-11-20",
+      "correct": true,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 4.222,
+      "response": {
+        "event_date": "2026-11-20",
+        "event_date_basis": "Упомянута в тексте: '20 ноября 2026 года, в рамках Всероссийского дня помощи детям'",
+        "claims": [
+          {
+            "claim": "20 ноября 2026 года, в рамках Всероссийского дня помощи детям, на базе нашего детского сада будет организован пункт бесплатной правовой помощи",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Вы сможете получить консультации по вопросам защиты прав и законных интересов детей и семьи",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Мы рядом, чтобы помочь!",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "На этой странице",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-11",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "holiday_background",
+      "expected": null,
+      "predicted": "2026-11-04",
+      "correct": false,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 5.415,
+      "response": {
+        "event_date": "2026-11-04",
+        "event_date_basis": "Дата события указана в тексте: «4 ноября вся наша Россия отмечает День народного единства»",
+        "claims": [
+          {
+            "claim": "4 ноября вся наша Россия отмечает День народного единства",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В подготовительной к школе группе «Золотой ключик» было проведено тематическое занятие, посвященное Дню народного единства",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Дети вспомнили о том, как велика и красива наша Родина, как богата событиями её история",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В завершении занятия, сделали раскраски-гармошки с народами России",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "garden-12",
+      "origin": "saved_news",
+      "kind": "kindergarten",
+      "category": "range",
+      "expected": null,
+      "predicted": "2026-09-18",
+      "correct": false,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 4.404,
+      "response": {
+        "event_date": "2026-09-18",
+        "event_date_basis": "Упомянута дата голосования 18, 19, 20 сентября 2026 года, которая является основным событием новости.",
+        "claims": [
+          {
+            "claim": "Выборы депутатов Государственной думы состоятся в сентябре 2026 года.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Голосование продлится три дня - 18, 19, 20 сентября.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "В сентябре 2026 года в России пройдет масштабная избирательная кампания - единый день голосования.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "На этой странице",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "synthetic-full-date",
+      "origin": "synthetic",
+      "kind": "synthetic",
+      "category": "explicit_full",
+      "expected": "2026-11-05",
+      "predicted": "2026-11-05",
+      "correct": true,
+      "heuristic": "2026-11-05",
+      "heuristic_basis": "дата в тексте",
+      "seconds": 3.928,
+      "response": {
+        "event_date": "2026-11-05",
+        "event_date_basis": "Указана в тексте новости: '5 ноября 2026 года ученики посетили музей.'",
+        "claims": [
+          {
+            "claim": "5 ноября 2026 года ученики посетили музей.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Экскурсия состоялась 5 ноября 2026 года.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Учреждение организовало посещение музея.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Ученики посетили музей в 2026 году.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "synthetic-new-year",
+      "origin": "synthetic",
+      "kind": "synthetic",
+      "category": "relative_cross_year",
+      "expected": "2025-12-31",
+      "predicted": "2025-12-31",
+      "correct": true,
+      "heuristic": "2025-12-31",
+      "heuristic_basis": "относительная дата («вчера/сегодня»)",
+      "seconds": 1.691,
+      "response": {
+        "event_date": "2025-12-31",
+        "event_date_basis": "Упоминание 'вчера' относительно даты публикации 2026-01-01",
+        "claims": [
+          {
+            "claim": "Вчера в школе состоялся новогодний концерт.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "synthetic-missing",
+      "origin": "synthetic",
+      "kind": "synthetic",
+      "category": "missing",
+      "expected": null,
+      "predicted": null,
+      "correct": true,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 3.782,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "Дата события не указана в тексте, только упоминается, что экскурсия состоялась, но конкретная дата не сообщается",
+        "claims": [
+          {
+            "claim": "Ученики посетили музей и познакомились с экспозицией",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Дата экскурсии не сообщается",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Учреждение: Искусственный контрольный пример",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Дата публикации: 2026-11-07 12:00",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "synthetic-historical-year",
+      "origin": "synthetic",
+      "kind": "synthetic",
+      "category": "explicit_other_year",
+      "expected": "2024-11-05",
+      "predicted": "2024-11-05",
+      "correct": true,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 4.275,
+      "response": {
+        "event_date": "2024-11-05",
+        "event_date_basis": "Упомянута в тексте: '5 ноября 2024 года наша школа провела первый фестиваль науки.'",
+        "claims": [
+          {
+            "claim": "5 ноября 2024 года наша школа провела первый фестиваль науки.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Публикуем воспоминания: 5 ноября 2024 года наша школа провела первый фестиваль науки.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Школа провела первый фестиваль науки.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Фестиваль науки проводился в 2024 году.",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "synthetic-two-events",
+      "origin": "synthetic",
+      "kind": "synthetic",
+      "category": "multiple_events",
+      "expected": null,
+      "predicted": null,
+      "correct": true,
+      "heuristic": "2026-11-03",
+      "heuristic_basis": "дата в тексте",
+      "seconds": 3.563,
+      "response": {
+        "event_date": null,
+        "event_date_basis": "В тексте описаны два события, происходивших 3 и 5 ноября, но не указано, какое из них является основным для отчёта",
+        "claims": [
+          {
+            "claim": "3 ноября состоялась встреча с писателем",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "5 ноября состоялась встреча с художником",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Обе встречи одинаково важны для отчёта",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Встречи состоялись в ноябре",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    },
+    {
+      "id": "synthetic-future-new-year",
+      "origin": "synthetic",
+      "kind": "synthetic",
+      "category": "future",
+      "expected": "2027-01-05",
+      "predicted": "2027-01-05",
+      "correct": true,
+      "heuristic": null,
+      "heuristic_basis": "",
+      "seconds": 3.463,
+      "response": {
+        "event_date": "2027-01-05",
+        "event_date_basis": "Дата события указана в тексте новости",
+        "claims": [
+          {
+            "claim": "Школьный концерт состоится 5 января 2027 года",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Приглашение на концерт было опубликовано 29 декабря 2026 года",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Учреждение организует концерт",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          },
+          {
+            "claim": "Концерт состоится в январе",
+            "status": "unverified",
+            "source": "ИИ (qwen3:14b-q4_K_M), без веб-поиска: внешняя проверка не выполнялась",
+            "note": "Внешняя проверка не выполнялась"
+          }
+        ]
+      },
+      "error": null
+    }
+  ],
+  "summary": {
+    "total": 30,
+    "correct": 21,
+    "accuracy": 0.7,
+    "dated_correct": 18,
+    "dated_total": 19,
+    "null_correct": 3,
+    "null_total": 11,
+    "wrong_dates": 9,
+    "missed_dates": 0,
+    "api_errors": 0,
+    "median_seconds": 5.193,
+    "total_seconds": 171.399,
+    "by_origin": {
+      "synthetic": {
+        "correct": 6,
+        "total": 6
+      },
+      "saved_news": {
+        "correct": 15,
+        "total": 24
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 26423,
+    "output_tokens": 9261,
+    "requests": 30,
+    "web_searches": 0
+  },
+  "ollama_ps": "NAME                ID              SIZE     PROCESSOR    CONTEXT    RUNNER      UNTIL              \nqwen3:14b-q4_K_M    bdbd181c33f2    10 GB    100% GPU     8192       llamacpp    9 minutes from now    \n",
+  "heuristic_summary": {
+    "total": 30,
+    "correct": 19,
+    "accuracy": 0.6333,
+    "dated_correct": 11,
+    "dated_total": 19,
+    "null_correct": 8,
+    "null_total": 11,
+    "wrong_dates": 3,
+    "missed_dates": 8,
+    "api_errors": 0,
+    "median_seconds": 0.0,
+    "total_seconds": 0,
+    "by_origin": {
+      "synthetic": {
+        "correct": 3,
+        "total": 6
+      },
+      "saved_news": {
+        "correct": 16,
+        "total": 24
+      }
+    }
+  },
+  "gpu_total_peak_mib": 11673,
+  "transient_raw_results": "/My_repos/Hackaton/.cache/benchmarks/20261107-174225/results.json"
+}
