@@ -1,0 +1,2 @@
+# Каждый понедельник в 06:00 (время сервера). Для ИИ-факт-чекинга: AUDIT_EXTRA_ARGS="--llm" и ANTHROPIC_API_KEY.
+0 6 * * 1  cd /opt/gosweb-audit && ./deploy/run_audit.sh >> /var/log/gosweb-audit.log 2>&1

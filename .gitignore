@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.cache/
+.pytest_cache/
+reports/*
+!reports/latest/
+# исходные материалы, не относящиеся к решению
+downloads/
+.env
+reports/latest/results.json

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Аудит сайтов образовательных организаций — {{ summary.audit_date|d }}</title>
+{% include "_style.html" %}
+</head><body><div class="wrap">
+<h1>Аудит сайтов школ и детских садов Магаданской области</h1>
+<p class="sub">Платформа «Госвеб». Дата проверки: <b>{{ summary.audit_date|d }}</b> · проверено сайтов: {{ kpi.total }}
+ ({{ kpi.schools }} школ, {{ kpi.kindergartens }} детских садов) · время работы краулера: {{ (summary.duration_sec // 60) }} мин {{ summary.duration_sec % 60 }} с
+ {% if summary.llm %} · ИИ-факт-чекинг: {{ summary.llm.model }} ({{ summary.llm.requests }} запросов){% endif %}</p>
+
+<div class="kpis">
+ <div class="kpi"><b>{{ kpi.avg_score }}</b><span>средний балл из 100</span></div>
+ <div class="kpi"><b class="g-bad">{{ kpi.critical }}</b><span>критичных замечаний</span></div>
+ <div class="kpi"><b class="g-warn">{{ kpi.high }}</b><span>замечаний высокой важности</span></div>
+ <div class="kpi"><b>{{ kpi.stale_news }}</b><span>сайтов без новостей более 14 дней</span></div>
+ <div class="kpi"><b>{{ kpi.no_events_q }}</b><span>школ без мероприятий в текущем квартале</span></div>
+ <div class="kpi"><b>{{ kpi.placeholders }}</b><span>сайтов с неубранными заглушками</span></div>
+ <div class="kpi"><b>{{ kpi.photo_stub }}</b><span>сайтов с силуэтами вместо фото</span></div>
+ <div class="kpi"><b>{{ kpi.unavailable }}</b><span>сайтов недоступно</span></div>
+</div>
+
+<h2>Эталонные сайты</h2>
+<div class="grid2">
+{% for kind, r in refs.items() if r %}
+ <div class="card"><div class="muted small">{{ "Эталон для школ" if kind == "school" else "Эталон для детских садов" }}</div>
+  <b><a href="sites/{{ slug(r.domain) }}.html">{{ r.name }}</a></b><br>
+  <a class="small" href="https://{{ r.domain }}/" target="_blank">{{ r.domain }}</a> · балл <b>{{ r.score }}</b><br>
+  <span class="small muted">Сайт с наилучшим заполнением среди учреждений своего типа. С ним сравнивается перечень документов и структура разделов остальных сайтов.</span></div>
+{% endfor %}
+</div>
+
+{% if common %}
+<h2>Самые частые проблемы в регионе</h2>
+<div class="tablewrap"><table><thead><tr><th>Раздел</th><th>Проблема (пример формулировки)</th><th>Важность</th><th class="num">Сайтов</th></tr></thead><tbody>
+{% for c in common %}<tr><td>{{ c.section }}</td><td>{{ c.example }}</td><td><span class="badge b-{{ c.severity }}">{{ c.severity|sev }}</span></td><td class="num">{{ c.sites }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+
+<h2>Рейтинг учреждений</h2>
+<div class="filters noprint">
+ <input id="q" placeholder="Поиск по названию или адресу" oninput="flt()">
+ <select id="k" onchange="flt()"><option value="">Все типы</option><option value="school">Школы</option><option value="kindergarten">Детские сады</option></select>
+ <select id="g" onchange="flt()"><option value="">Любая оценка</option><option value="good">Хорошо</option><option value="ok">Удовлетворительно</option><option value="warn">Требует внимания</option><option value="bad">Критично</option></select>
+</div>
+<div class="tablewrap"><table id="rt"><thead><tr>
+ <th class="num">№</th><th>Учреждение</th><th>Балл</th><th class="num" title="Критичных">Крит.</th><th class="num" title="Высокой важности">Выс.</th>
+ <th class="num" title="Средней важности">Сред.</th><th class="num" title="Дней с последней новости">Новости, дн.</th><th>Что исправить в первую очередь</th></tr></thead><tbody>
+{% for r in sites %}
+<tr data-k="{{ r.kind }}" data-g="{{ r.grade_css }}" data-t="{{ (r.name ~ ' ' ~ r.domain)|lower }}">
+ <td class="num">{{ loop.index }}</td>
+ <td><a href="sites/{{ slug(r.domain) }}.html"><b>{{ r.name }}</b></a>{% if r.is_reference %} <span class="ref">эталон</span>{% endif %}<br>
+  <span class="small muted">{{ r.kind_label }} · {{ r.domain }}</span></td>
+ <td data-v="{{ r.score }}"><div class="score"><b class="g-{{ r.grade_css }}">{{ r.score }}</b><div class="bar"><i class="{{ r.grade_css }}" style="width:{{ r.score }}%"></i></div></div><span class="small g-{{ r.grade_css }}">{{ r.grade }}</span></td>
+ <td class="num">{{ r.count("critical") }}</td><td class="num">{{ r.count("high") }}</td><td class="num">{{ r.count("medium") }}</td>
+ <td class="num">{{ r.metrics.news_days_since_last if r.metrics.news_days_since_last is not none else "—" }}</td>
+ <td class="small">{% set p = priorities(r, 2) %}{% for f in p %}<div><span class="badge b-{{ f.severity }}">{{ f.severity|sev }}</span> {{ f.section }}: {{ f.problem }}</div>{% else %}<span class="muted">—</span>{% endfor %}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+
+<h2>Как проводилась проверка</h2>
+<div class="card small">
+<p>Краулер обходит каждый сайт из перечня: главную страницу, меню и карту сайта, затем разделы «Новости», «Мероприятия»,
+«Сведения об образовательной организации» (все подразделы и документы), «Педагогический состав» / «Наш коллектив» (карточки сотрудников),
+«Контакты», «Расписание», «О школе», «Педагогам и сотрудникам». Требования взяты из задания министерства, Приказа Рособрнадзора
+от 04.08.2023 № 1493 и памятки «Типичные ошибки заполнения сайтов».</p>
+<ul>
+ <li><b>Новости</b>: интервал между публикациями — не более 14 дней (за последний год); новость — не позднее суток после события
+  (дата события берётся из текста новости: «23 октября», «вчера», «сегодня»); факт-чекинг дат праздников, юбилеев, дней недели
+  {% if summary.llm %}и проверка фактов ИИ-агентом с веб-поиском{% endif %}.</li>
+ <li><b>Мероприятия</b>: наличие на текущий и следующий квартал; прошедшие мероприятия сверяются с новостями (новость в течение 2 недель).</li>
+ <li><b>Документы</b>: полный перечень документов собирается со всех подразделов, проверяется наличие 20 обязательных категорий
+  и сравнивается с эталонным сайтом и остальными сайтами региона.</li>
+ <li><b>Сотрудники</b>: фото (в том числе выявление картинок-силуэтов шаблона), уровень образования, контакты.</li>
+ <li><b>Заглушки</b>: демонстрационный текст шаблона («Укажите ФИО», «Заголовок мероприятия №1», «Примерно от 200 до 400 символов»…).</li>
+</ul>
+<p><b>Балл</b> = 100·e<sup>−штраф/80</sup>; штраф: критичное замечание — 15, высокое — 8, среднее — 3, низкое — 1 (не более 25 на раздел).
+<b>Эталон</b> — сайт с наибольшим баллом среди учреждений своего типа.</p>
+<p><b>Ограничения.</b> Если в новости не указана дата события, срок публикации не проверяется (это отмечается отдельно).
+Год у дат без года определяется по дню недели или ближайшей к публикации дате. Документ считается найденным по названию —
+содержимое файлов не проверяется. Качество фотографий (фон, освещение, деловой стиль) автоматически не оценивается,
+выявляются только отсутствующие фото и картинки-заглушки.</p>
+</div>
+<p class="small muted">Сформировано {{ summary.generated_at }} · HTTP-запросов: {{ summary.http.requests }}, из кэша: {{ summary.http.cache_hits }} ·
+ <a href="summary.xlsx">Excel</a> · <a href="findings.csv">CSV всех замечаний</a> · <a href="results.json">JSON</a></p>
+</div>
+<script>
+function flt(){const q=document.getElementById('q').value.toLowerCase(),k=document.getElementById('k').value,g=document.getElementById('g').value;
+document.querySelectorAll('#rt tbody tr').forEach(tr=>{tr.style.display=(!q||tr.dataset.t.includes(q))&&(!k||tr.dataset.k===k)&&(!g||tr.dataset.g===g)?'':'none'})}
+document.querySelectorAll('#rt th').forEach((th,i)=>th.addEventListener('click',()=>{const tb=th.closest('table').tBodies[0];
+const rows=[...tb.rows];const dir=th.dataset.dir=th.dataset.dir==='asc'?'desc':'asc';
+const val=r=>{const c=r.cells[i];const v=c.dataset.v??c.innerText.trim();const n=parseFloat(v);return isNaN(n)?v.toLowerCase():n};
+rows.sort((a,b)=>{const x=val(a),y=val(b);return (x>y?1:x<y?-1:0)*(dir==='asc'?1:-1)});rows.forEach(r=>tb.appendChild(r))}));
+</script>
+</body></html>

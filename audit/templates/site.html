@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ r.name }} — аудит сайта</title>
+{% include "_style.html" %}
+</head><body><div class="wrap">
+<p class="small noprint"><a href="../index.html">← Сводный рейтинг</a></p>
+<h1>{{ r.name }}</h1>
+<p class="sub">{{ r.kind_label }} · <a href="https://{{ r.domain }}/" target="_blank">{{ r.domain }}</a> · проверено {{ summary.audit_date|d }}
+ {% if r.is_reference %} · <span class="ref">эталонный сайт</span>{% endif %}</p>
+
+<div class="kpis">
+ <div class="kpi"><b class="g-{{ r.grade_css }}">{{ r.score }}</b><span>балл из 100 · {{ r.grade }}</span></div>
+ <div class="kpi"><b>{{ r.metrics.place }}</b><span>место из {{ total }}</span></div>
+ <div class="kpi"><b class="g-bad">{{ r.count("critical") }}</b><span>критичных</span></div>
+ <div class="kpi"><b class="g-warn">{{ r.count("high") }}</b><span>высокой важности</span></div>
+ <div class="kpi"><b>{{ r.count("medium") + r.count("low") }}</b><span>средних и низких</span></div>
+</div>
+
+{% if r.status != "ok" %}
+<div class="card"><b class="g-bad">Сайт недоступен:</b> {{ r.error }}. Остальные проверки не выполнялись.</div>
+{% endif %}
+
+{% if prio %}
+<h2>Исправить в первую очередь</h2>
+<div class="card"><ol class="prio">
+{% for f in prio %}<li><span class="badge b-{{ f.severity }}">{{ f.severity|sev }}</span> <b>{{ f.section }}.</b> {{ f.problem }}<br>
+ <span class="small">Что сделать: {{ f.recommendation }}</span>{% if f.url %} <a class="small noprint" href="{{ f.url }}" target="_blank">открыть страницу →</a>{% endif %}</li>{% endfor %}
+</ol></div>
+{% endif %}
+
+{% if r.status == "ok" %}
+<h2>Ключевые показатели</h2>
+{% set m = r.metrics %}
+<div class="grid2">
+ <div class="card"><h3>Новости</h3>
+  <div class="stat"><span>Последняя новость</span><b>{{ m.news_last|d }}{% if m.news_days_since_last is defined %} ({{ m.news_days_since_last }} дн. назад){% endif %}</b></div>
+  <div class="stat"><span>Новостей за последний год</span><b>{{ m.news_last_year|default("—") }}</b></div>
+  <div class="stat"><span>Перерывов более 14 дней (учебный период)</span><b>{{ m.news_gaps|default("—") }}</b></div>
+  <div class="stat"><span>Проверено на срок публикации</span><b>{{ m.news_checked|default(0) }} (с датой события: {{ m.news_with_event_date|default(0) }})</b></div>
+  <div class="stat"><span>Опубликовано позже 24 ч</span><b>{{ m.news_late|default(0) }}</b></div>
+  <div class="stat"><span>Факт-чекинг: подтверждено / расхождений</span><b>{{ m.news_facts_confirmed|default(0) }} / {{ m.news_facts_contradiction|default(0) }}</b></div>
+ </div>
+ {% if m.events_total is defined %}<div class="card"><h3>Мероприятия</h3>
+  <div class="stat"><span>Всего в разделе</span><b>{{ m.events_total }}</b></div>
+  <div class="stat"><span>В текущем квартале</span><b>{{ m.events_current_q }}</b></div>
+  <div class="stat"><span>В следующем квартале</span><b>{{ m.events_next_q }}</b></div>
+  <div class="stat"><span>Прошедших (за полгода) с новостью</span><b>{{ m.events_with_news|default(0) }} из {{ m.events_past_checked|default(0) }}</b></div>
+ </div>{% endif %}
+ <div class="card"><h3>Документы</h3>
+  <div class="stat"><span>Найдено документов на сайте</span><b>{{ m.docs_total|default(0) }}</b></div>
+  <div class="stat"><span>Обязательных категорий в наличии</span><b>{{ m.docs_required_present|default(0) }} из {{ m.docs_required_total|default(0) }}</b></div>
+  {% if ref and ref.domain != r.domain %}<div class="stat"><span>Эталон</span><b><a href="{{ ref.domain.split('.')[0] }}.html">{{ ref.domain.split('.')[0] }}</a> ({{ ref.score }})</b></div>{% endif %}
+ </div>
+ <div class="card"><h3>Сотрудники</h3>
+  {% for key, label in [("ped_staff","Педагогический состав"),("kollektiv","Наш коллектив")] %}{% if m[key ~ "_count"] is defined %}
+  <div class="stat"><span>{{ label }}: карточек</span><b>{{ m[key ~ "_count"] }}</b></div>
+  <div class="stat"><span>— без фото</span><b>{{ m[key ~ "_no_photo"] }}</b></div>
+  <div class="stat"><span>— без уровня образования (из {{ m[key ~ "_detail_checked"] }})</span><b>{{ m[key ~ "_no_education"] }}</b></div>
+  {% if r.kind == "kindergarten" %}<div class="stat"><span>— без контактов</span><b>{{ m[key ~ "_no_contacts"] }}</b></div>{% endif %}
+  {% endif %}{% endfor %}
+ </div>
+</div>
+{% endif %}
+
+<h2>Все замечания по разделам</h2>
+{% for section, items in sections %}
+<h3>{{ section }}</h3>
+<div class="tablewrap"><table><thead><tr><th style="width:110px">Важность</th><th>Проблема</th><th style="width:38%">Что сделать</th></tr></thead><tbody>
+{% for f in items %}<tr><td><span class="badge b-{{ f.severity }}">{{ f.severity|sev }}</span></td>
+ <td>{{ f.problem }}{% if f.url %} <a class="small noprint" href="{{ f.url }}" target="_blank">страница →</a>{% endif %}
+  {% if f.evidence %}<details{% if f.evidence|length <= 3 %} open{% endif %}><summary class="small">подробности ({{ f.evidence|length }})</summary><ul class="ev">{% for e in f.evidence %}<li>{{ e }}</li>{% endfor %}</ul></details>{% endif %}</td>
+ <td class="small">{{ f.recommendation }}</td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<div class="card">Замечаний нет.</div>
+{% endfor %}
+
+{% if news_checked %}
+<h2>Проверка новостей: срок публикации и факты</h2>
+<div class="tablewrap"><table><thead><tr><th>Новость</th><th>Опубликована</th><th>Дата события</th><th class="num">Задержка</th><th>Факт-чекинг</th></tr></thead><tbody>
+{% for n in news_checked %}<tr><td><a href="{{ n.url }}" target="_blank">{{ n.title }}</a></td><td>{{ n.published|d }}</td>
+ <td>{{ n.event_date|d }}{% if n.event_date_source %}<div class="small muted">{{ n.event_date_source }}</div>{% endif %}</td>
+ <td class="num">{% if n.delay_days is not none %}{% if n.delay_days > 1 %}<b class="g-bad">+{{ n.delay_days }} дн.</b>{% else %}в срок{% endif %}{% else %}<span class="muted">дата не указана</span>{% endif %}</td>
+ <td class="small">{% for c in n.factcheck %}<div class="fc-{{ c.status }}">{{ {"confirmed":"✓","contradiction":"✗","unverified":"?"}[c.status] }} {{ c.claim }} — {{ c.note }}<span class="muted"> ({{ c.source }})</span></div>{% else %}<span class="muted">—</span>{% endfor %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+
+{% if r.events %}
+<h2>Мероприятия на сайте</h2>
+<div class="tablewrap"><table><thead><tr><th>Мероприятие</th><th>Дата</th></tr></thead><tbody>
+{% for e in r.events[:30] %}<tr><td><a href="{{ e.url }}" target="_blank">{{ e.title }}</a></td><td>{{ e.start|d }}{% if e.end %} – {{ e.end|d }}{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
+
+{% if r.documents %}
+<h2>Найденные документы ({{ r.documents|length }})</h2>
+<details class="card"><summary>Показать перечень</summary><ol class="small">
+{% for d in r.documents %}<li><a href="{{ d.url }}" target="_blank">{{ d.title }}</a></li>{% endfor %}</ol></details>
+{% endif %}
+<p class="small muted">Страниц просмотрено: {{ r.pages_fetched }} · проверено {{ r.checked_at }}</p>
+</div></body></html>

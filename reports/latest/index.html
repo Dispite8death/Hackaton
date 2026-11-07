@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Аудит сайтов образовательных организаций — 07.11.2026</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1d2433;--muted:#5f6b7a;--line:#e3e6eb;--accent:#1f5fbf;
+--crit:#b3261e;--high:#d9480f;--med:#b07d00;--low:#5f6b7a;--good:#2b8a3e;--ok:#8a6d00;--warn:#c2410c;--bad:#b3261e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:26px;margin:0 0 4px}h2{font-size:20px;margin:32px 0 12px}h3{font-size:16px;margin:20px 0 8px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi b{display:block;font-size:28px;line-height:1.1}.kpi span{color:var(--muted);font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:#eef1f5;font-size:13px;color:#39424f;position:sticky;top:0;cursor:pointer;user-select:none}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap}
+.b-critical{background:var(--crit)}.b-high{background:var(--high)}.b-medium{background:var(--med)}.b-low{background:var(--low)}
+.g-good{color:var(--good)}.g-ok{color:var(--ok)}.g-warn{color:var(--warn)}.g-bad{color:var(--bad)}
+.score{display:flex;align-items:center;gap:8px;min-width:120px}
+.bar{flex:1;height:8px;background:#e9ecf0;border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%}
+.bar .good{background:var(--good)}.bar .ok{background:#e0b100}.bar .warn{background:#f08c3a}.bar .bad{background:var(--bad)}
+.ref{background:#e7f0ff;color:var(--accent);border-radius:6px;padding:1px 6px;font-size:12px;font-weight:600}
+.muted{color:var(--muted)}.small{font-size:13px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.filters input,.filters select{padding:7px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+details summary{cursor:pointer;color:var(--accent)}
+ul.ev{margin:6px 0 0 0;padding-left:18px;color:#39424f;font-size:13px}
+.prio li{margin:6px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.stat{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding:4px 0}
+.stat:last-child{border-bottom:0}
+.fc-confirmed{color:var(--good)}.fc-contradiction{color:var(--crit);font-weight:600}.fc-unverified{color:var(--muted)}
+.tablewrap{overflow-x:auto}
+@media print{body{background:#fff;font-size:12px}.filters,.noprint{display:none}.card,.kpi,table{border-color:#bbb}
+ th{position:static}a{color:#000}.wrap{padding:0}h2{page-break-after:avoid}tr{page-break-inside:avoid}}
+</style></head><body><div class="wrap">
+<h1>Аудит сайтов школ и детских садов Магаданской области</h1>
+<p class="sub">Платформа «Госвеб». Дата проверки: <b>07.11.2026</b> · проверено сайтов: 80
+ (40 школ, 40 детских садов) · время работы краулера: 11 мин 19 с
+ · ИИ-факт-чекинг: gemini-2.5-flash (120 запросов)</p>
+
+<div class="kpis">
+ <div class="kpi"><b>43</b><span>средний балл из 100</span></div>
+ <div class="kpi"><b class="g-bad">43</b><span>критичных замечаний</span></div>
+ <div class="kpi"><b class="g-warn">517</b><span>замечаний высокой важности</span></div>
+ <div class="kpi"><b>57</b><span>сайтов без новостей более 14 дней</span></div>
+ <div class="kpi"><b>36</b><span>школ без мероприятий в текущем квартале</span></div>
+ <div class="kpi"><b>47</b><span>сайтов с неубранными заглушками</span></div>
+ <div class="kpi"><b>64</b><span>сайтов с силуэтами вместо фото</span></div>
+ <div class="kpi"><b>0</b><span>сайтов недоступно</span></div>
+</div>
+
+<h2>Эталонные сайты</h2>
+<div class="grid2">
+ <div class="card"><div class="muted small">Эталон для школ</div>
+  <b><a href="sites/sh-talona-r44.html">Муниципальное казенное общеобразовательное учреждение «Основная общеобразовательная школа с.Талон»</a></b><br>
+  <a class="small" href="https://sh-talona-r44.gosweb.gosuslugi.ru/" target="_blank">sh-talona-r44.gosweb.gosuslugi.ru</a> · балл <b>70</b><br>
+  <span class="small muted">Сайт с наилучшим заполнением среди учреждений своего типа. С ним сравнивается перечень документов и структура разделов остальных сайтов.</span></div>
+ <div class="card"><div class="muted small">Эталон для детских садов</div>
+  <b><a href="sites/ds5-magadan-r44.html">Муниципальное автономное дошкольное образовательное учреждение &#34;Детский сад комбинированного вида № 5&#34;</a></b><br>
+  <a class="small" href="https://ds5-magadan-r44.gosweb.gosuslugi.ru/" target="_blank">ds5-magadan-r44.gosweb.gosuslugi.ru</a> · балл <b>76</b><br>
+  <span class="small muted">Сайт с наилучшим заполнением среди учреждений своего типа. С ним сравнивается перечень документов и структура разделов остальных сайтов.</span></div>
+</div>
+
+<h2>Самые частые проблемы в регионе</h2>
+<div class="tablewrap"><table><thead><tr><th>Раздел</th><th>Проблема (пример формулировки)</th><th>Важность</th><th class="num">Сайтов</th></tr></thead><tbody>
+<tr><td>Педагогический состав / коллектив</td><td>Вместо фотографии у 24 сотрудников стоит одинаковая картинка (силуэт-заглушка, клипарт или логотип)</td><td><span class="badge b-high">Высокая</span></td><td class="num">64</td></tr><tr><td>Документы</td><td>Не найден обязательный документ: Коллективный договор</td><td><span class="badge b-high">Высокая</span></td><td class="num">58</td></tr><tr><td>Новости</td><td>Последняя новость опубликована 03.06.2026 — 157 дн. назад (норматив: не реже 1 раза в 14 дней)</td><td><span class="badge b-critical">Критично</span></td><td class="num">54</td></tr><tr><td>Новости</td><td>За последний год 2 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 30 дн.)</td><td><span class="badge b-medium">Средняя</span></td><td class="num">51</td></tr><tr><td>Сравнение с эталоном</td><td>Нет документов, которые есть у эталонного сайта и у большинства учреждений (3)</td><td><span class="badge b-low">Низкая</span></td><td class="num">51</td></tr><tr><td>Педагогический состав</td><td>Не указан уровень образования у 1 из 40 проверенных сотрудников</td><td><span class="badge b-medium">Средняя</span></td><td class="num">47</td></tr><tr><td>Новости</td><td>Не убран демонстрационный контент шаблона: подсказка редактора «Примерно от … до … символов»</td><td><span class="badge b-high">Высокая</span></td><td class="num">47</td></tr><tr><td>Новости</td><td>Перерыв в публикации новостей в период летних каникул</td><td><span class="badge b-low">Низкая</span></td><td class="num">44</td></tr><tr><td>Документы</td><td>Не найден обязательный документ: Предписания органов контроля и отчёты об их исполнении</td><td><span class="badge b-low">Низкая</span></td><td class="num">37</td></tr><tr><td>Реализуемые образовательные программы</td><td>Неполные сведения о реализуемых программах: нет — нормативный срок обучения, электронное обучение / ДОТ</td><td><span class="badge b-medium">Средняя</span></td><td class="num">33</td></tr><tr><td>Документы</td><td>Не найден обязательный документ: Отчёт об исполнении плана ФХД / муниципального задания</td><td><span class="badge b-medium">Средняя</span></td><td class="num">33</td></tr><tr><td>Наш коллектив</td><td>Не указан уровень образования у 4 из 21 проверенных сотрудников</td><td><span class="badge b-medium">Средняя</span></td><td class="num">32</td></tr><tr><td>Педагогам и сотрудникам</td><td>Не заполнено 2 из 7 подразделов</td><td><span class="badge b-medium">Средняя</span></td><td class="num">31</td></tr><tr><td>Мероприятия</td><td>Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</td><td><span class="badge b-high">Высокая</span></td><td class="num">30</td></tr><tr><td>Мероприятия</td><td>Нет анонсов мероприятий на следующий квартал (1 кв. 2027)</td><td><span class="badge b-medium">Средняя</span></td><td class="num">30</td></tr></tbody></table></div>
+
+<h2>Рейтинг учреждений</h2>
+<div class="filters noprint">
+ <input id="q" placeholder="Поиск по названию или адресу" oninput="flt()">
+ <select id="k" onchange="flt()"><option value="">Все типы</option><option value="school">Школы</option><option value="kindergarten">Детские сады</option></select>
+ <select id="g" onchange="flt()"><option value="">Любая оценка</option><option value="good">Хорошо</option><option value="ok">Удовлетворительно</option><option value="warn">Требует внимания</option><option value="bad">Критично</option></select>
+</div>
+<div class="tablewrap"><table id="rt"><thead><tr>
+ <th class="num">№</th><th>Учреждение</th><th>Балл</th><th class="num" title="Критичных">Крит.</th><th class="num" title="Высокой важности">Выс.</th>
+ <th class="num" title="Средней важности">Сред.</th><th class="num" title="Дней с последней новости">Новости, дн.</th><th>Что исправить в первую очередь</th></tr></thead><tbody>
+<tr data-k="kindergarten" data-g="ok" data-t="муниципальное автономное дошкольное образовательное учреждение &#34;детский сад комбинированного вида № 5&#34; ds5-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">1</td>
+ <td><a href="sites/ds5-magadan-r44.html"><b>Муниципальное автономное дошкольное образовательное учреждение &#34;Детский сад комбинированного вида № 5&#34;</b></a> <span class="ref">эталон</span><br>
+  <span class="small muted">Детский сад · ds5-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="76"><div class="score"><b class="g-ok">76</b><div class="bar"><i class="ok" style="width:76%"></i></div></div><span class="small g-ok">Удовлетворительно</span></td>
+ <td class="num">0</td><td class="num">2</td><td class="num">2</td>
+ <td class="num">12</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Календарный учебный график</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="ok" data-t="муниципальное бюджетное дошкольное образовательное учреждение &#34;детский сад&#34; п. хасын ds-xasyn-r44.gosweb.gosuslugi.ru">
+ <td class="num">2</td>
+ <td><a href="sites/ds-xasyn-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение &#34;Детский сад&#34; п. Хасын</b></a><br>
+  <span class="small muted">Детский сад · ds-xasyn-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="70"><div class="score"><b class="g-ok">70</b><div class="bar"><i class="ok" style="width:70%"></i></div></div><span class="small g-ok">Удовлетворительно</span></td>
+ <td class="num">0</td><td class="num">3</td><td class="num">1</td>
+ <td class="num">3</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div><div><span class="badge b-high">Высокая</span> Педагогический состав / коллектив: Вместо фотографии у 3 сотрудников стоит одинаковая картинка (силуэт-заглушка, клипарт или логотип)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="ok" data-t="муниципальное автономное дошкольное образовательное учреждение &#34;детский сад №67 &#34; г. магадан, магаданская область ds67-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">3</td>
+ <td><a href="sites/ds67-magadan-r44.html"><b>Муниципальное автономное дошкольное образовательное учреждение &#34;Детский сад №67 &#34; г. Магадан, Магаданская область</b></a><br>
+  <span class="small muted">Детский сад · ds67-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="70"><div class="score"><b class="g-ok">70</b><div class="bar"><i class="ok" style="width:70%"></i></div></div><span class="small g-ok">Удовлетворительно</span></td>
+ <td class="num">0</td><td class="num">2</td><td class="num">4</td>
+ <td class="num">44</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 24.09.2026 — 44 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="school" data-g="ok" data-t="муниципальное казенное общеобразовательное учреждение «основная общеобразовательная школа с.талон» sh-talona-r44.gosweb.gosuslugi.ru">
+ <td class="num">4</td>
+ <td><a href="sites/sh-talona-r44.html"><b>Муниципальное казенное общеобразовательное учреждение «Основная общеобразовательная школа с.Талон»</b></a> <span class="ref">эталон</span><br>
+  <span class="small muted">Школа · sh-talona-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="70"><div class="score"><b class="g-ok">70</b><div class="bar"><i class="ok" style="width:70%"></i></div></div><span class="small g-ok">Удовлетворительно</span></td>
+ <td class="num">0</td><td class="num">1</td><td class="num">6</td>
+ <td class="num">1</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Педагогический состав / коллектив: Вместо фотографии у 10 сотрудников стоит одинаковая картинка (силуэт-заглушка, клипарт или логотип)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение города магадана &#34;детский сад присмотра и оздоровления № 4&#34; ds4-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">5</td>
+ <td><a href="sites/ds4-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение города Магадана &#34;Детский сад присмотра и оздоровления № 4&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds4-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="62"><div class="score"><b class="g-warn">62</b><div class="bar"><i class="warn" style="width:62%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">3</td><td class="num">4</td>
+ <td class="num">12</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Наш коллектив: Не указан уровень образования у 5 из 16 проверенных сотрудников</div><div><span class="badge b-high">Высокая</span> Педагогический состав / коллектив: Вместо фотографии у 16 сотрудников стоит одинаковая картинка (силуэт-заглушка, клипарт или логотип)</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение города магадана &#34;средняя общеобразовательная школа № 28&#34; sh28-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">6</td>
+ <td><a href="sites/sh28-magadan-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение города Магадана &#34;Средняя общеобразовательная школа № 28&#34;</b></a><br>
+  <span class="small muted">Школа · sh28-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="60"><div class="score"><b class="g-warn">60</b><div class="bar"><i class="warn" style="width:60%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">2</td><td class="num">3</td>
+ <td class="num">134</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 26.06.2026 — 134 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение - детский сад «светлячок» п. стекольный ds-svetlyachok-r44.gosweb.gosuslugi.ru">
+ <td class="num">7</td>
+ <td><a href="sites/ds-svetlyachok-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение - детский сад «Светлячок» п. Стекольный</b></a><br>
+  <span class="small muted">Детский сад · ds-svetlyachok-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="59"><div class="score"><b class="g-warn">59</b><div class="bar"><i class="warn" style="width:59%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">4</td><td class="num">3</td>
+ <td class="num">4</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: За последний год 4 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 36 дн.)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение «детский сад «берёзка» с.клёпка» ds-beryozka-klepka-r44.gosweb.gosuslugi.ru">
+ <td class="num">8</td>
+ <td><a href="sites/ds-beryozka-klepka-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение «Детский сад «Берёзка» с.Клёпка»</b></a><br>
+  <span class="small muted">Детский сад · ds-beryozka-klepka-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="58"><div class="score"><b class="g-warn">58</b><div class="bar"><i class="warn" style="width:58%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">5</td><td class="num">0</td>
+ <td class="num">40</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 28.09.2026 — 40 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: За последний год 6 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 51 дн.)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение &#34;детский сад комбинированного вида&#34; пос. усть-омчуг ds-ustomchug-r44.gosweb.gosuslugi.ru">
+ <td class="num">9</td>
+ <td><a href="sites/ds-ustomchug-r44.html"><b>МУНИЦИПАЛЬНОЕ БЮДЖЕТНОЕ ДОШКОЛЬНОЕ ОБРАЗОВАТЕЛЬНОЕ УЧРЕЖДЕНИЕ &#34;ДЕТСКИЙ САД КОМБИНИРОВАННОГО ВИДА&#34; ПОС. УСТЬ-ОМЧУГ</b></a><br>
+  <span class="small muted">Детский сад · ds-ustomchug-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="58"><div class="score"><b class="g-warn">58</b><div class="bar"><i class="warn" style="width:58%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">4</td><td class="num">3</td>
+ <td class="num">1</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: 1 из 1 проверенных новостей опубликованы позже 24 часов после события</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение города магадана &#34;детский сад комбинированного вида № 33&#34; ds33-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">10</td>
+ <td><a href="sites/ds33-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение города Магадана &#34;Детский сад комбинированного вида № 33&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds33-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="58"><div class="score"><b class="g-warn">58</b><div class="bar"><i class="warn" style="width:58%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">4</td><td class="num">3</td>
+ <td class="num">18</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 20.10.2026 — 18 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение г. магадана &#34;центр развития ребёнка - детский сад № 63&#34; ds63-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">11</td>
+ <td><a href="sites/ds63-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение г. Магадана &#34;Центр развития ребёнка - детский сад № 63&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds63-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="58"><div class="score"><b class="g-warn">58</b><div class="bar"><i class="warn" style="width:58%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">2</td><td class="num">4</td>
+ <td class="num">435</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 29.08.2025 — 435 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение &#34;детский сад &#34;ромашка&#34; п. ягодное&#34; ds-romashka-yagodnoe-r44.gosweb.gosuslugi.ru">
+ <td class="num">12</td>
+ <td><a href="sites/ds-romashka-yagodnoe-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение &#34;Детский сад &#34;Ромашка&#34; п. Ягодное&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds-romashka-yagodnoe-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="52"><div class="score"><b class="g-warn">52</b><div class="bar"><i class="warn" style="width:52%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">6</td><td class="num">1</td>
+ <td class="num">40</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 28.09.2026 — 40 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное автономное дошкольное образовательное учреждение города магадана &#34;детский сад комбинированного вида № 55&#34; ds55-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">13</td>
+ <td><a href="sites/ds55-magadan-r44.html"><b>Муниципальное автономное дошкольное образовательное учреждение города Магадана &#34;Детский сад комбинированного вида № 55&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds55-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="52"><div class="score"><b class="g-warn">52</b><div class="bar"><i class="warn" style="width:52%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">5</td><td class="num">3</td>
+ <td class="num">12</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div><div><span class="badge b-high">Высокая</span> Педагогический состав: Не указан уровень образования у 23 из 23 проверенных сотрудников</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа № 1&#34; п. палатка sh1-palatka-r44.gosweb.gosuslugi.ru">
+ <td class="num">14</td>
+ <td><a href="sites/sh1-palatka-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение &#34;Средняя общеобразовательная школа № 1&#34; п. Палатка</b></a><br>
+  <span class="small muted">Школа · sh1-palatka-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="52"><div class="score"><b class="g-warn">52</b><div class="bar"><i class="warn" style="width:52%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">4</td><td class="num">2</td>
+ <td class="num">202</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 19.04.2026 — 202 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: Не убран демонстрационный контент шаблона: демо-заголовок «Заголовок мероприятия/новости №…»; незаполненное поле «Введите …»</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение комбинированного вида &#34;детский сад «родничок» г. сусумана&#34; ds-rodnichok-susuman-r44.gosweb.gosuslugi.ru">
+ <td class="num">15</td>
+ <td><a href="sites/ds-rodnichok-susuman-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение комбинированного вида &#34;Детский сад «Родничок» г. Сусумана&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds-rodnichok-susuman-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="51"><div class="score"><b class="g-warn">51</b><div class="bar"><i class="warn" style="width:51%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">5</td><td class="num">4</td>
+ <td class="num">37</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 01.10.2026 — 37 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное автономное дошкольное образовательное учреждение &#34;детский сад №65&#34; ds65-uptar-r44.gosweb.gosuslugi.ru">
+ <td class="num">16</td>
+ <td><a href="sites/ds65-uptar-r44.html"><b>Муниципальное автономное дошкольное образовательное учреждение &#34;Детский сад №65&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds65-uptar-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="51"><div class="score"><b class="g-warn">51</b><div class="bar"><i class="warn" style="width:51%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">4</td><td class="num">2</td>
+ <td class="num">326</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 16.12.2025 — 326 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение г. магадана &#34;средняя общеобразовательная школа №7&#34; sh7-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">17</td>
+ <td><a href="sites/sh7-magadan-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение г. Магадана &#34;Средняя общеобразовательная школа №7&#34;</b></a><br>
+  <span class="small muted">Школа · sh7-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="51"><div class="score"><b class="g-warn">51</b><div class="bar"><i class="warn" style="width:51%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">4</td><td class="num">2</td>
+ <td class="num">194</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 27.04.2026 — 194 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение города магадана &#34;детский сад комбинированного вида № 69&#34; ds-zolotaya-rybka-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">18</td>
+ <td><a href="sites/ds-zolotaya-rybka-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение города Магадана &#34;Детский сад комбинированного вида № 69&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds-zolotaya-rybka-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="50"><div class="score"><b class="g-warn">50</b><div class="bar"><i class="warn" style="width:50%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">5</td><td class="num">4</td>
+ <td class="num">17</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 21.10.2026 — 17 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение &#34;детский сад комбмнированного вида №38&#34; ds38-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">19</td>
+ <td><a href="sites/ds38-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение &#34;Детский сад комбмнированного вида №38&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds38-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="50"><div class="score"><b class="g-warn">50</b><div class="bar"><i class="warn" style="width:50%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">4</td><td class="num">2</td>
+ <td class="num">67</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 01.09.2026 — 67 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Педагогический состав: Не указан уровень образования у 4 из 10 проверенных сотрудников</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение города магадана &#34;центр развития ребёнка - детский сад № 46&#34; ds46-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">20</td>
+ <td><a href="sites/ds46-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение города Магадана &#34;Центр развития ребёнка - детский сад № 46&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds46-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="50"><div class="score"><b class="g-warn">50</b><div class="bar"><i class="warn" style="width:50%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">6</td><td class="num">2</td>
+ <td class="num">21</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 17.10.2026 — 21 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: За последний год 6 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 42 дн.)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение &#34;детский сад № 6&#34; ds6-sejmchan-r44.gosweb.gosuslugi.ru">
+ <td class="num">21</td>
+ <td><a href="sites/ds6-sejmchan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение &#34;Детский сад № 6&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds6-sejmchan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="50"><div class="score"><b class="g-warn">50</b><div class="bar"><i class="warn" style="width:50%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">5</td><td class="num">4</td>
+ <td class="num">9</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: За последний год 7 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 67 дн.)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное автономное дошкольное образовательное учреждение &#34;детский сад №42&#34; ds42-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">22</td>
+ <td><a href="sites/ds42-magadan-r44.html"><b>Муниципальное автономное дошкольное образовательное учреждение &#34;Детский сад №42&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds42-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="49"><div class="score"><b class="g-warn">49</b><div class="bar"><i class="warn" style="width:49%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">6</td><td class="num">2</td>
+ <td class="num">31</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 07.10.2026 — 31 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: За последний год 5 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 89 дн.)</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение «средняя общеобразовательная школа п. омсукчан» sh-srednyaya-omsukchan-r44.gosweb.gosuslugi.ru">
+ <td class="num">23</td>
+ <td><a href="sites/sh-srednyaya-omsukchan-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение «Средняя общеобразовательная школа п. Омсукчан»</b></a><br>
+  <span class="small muted">Школа · sh-srednyaya-omsukchan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="49"><div class="score"><b class="g-warn">49</b><div class="bar"><i class="warn" style="width:49%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">6</td><td class="num">2</td>
+ <td class="num">4</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: За последний год 7 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 108 дн.)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение &#34;детский сад п.омсукчан&#34; ds-omsukchan-r44.gosweb.gosuslugi.ru">
+ <td class="num">24</td>
+ <td><a href="sites/ds-omsukchan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение &#34;Детский сад п.Омсукчан&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds-omsukchan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="48"><div class="score"><b class="g-warn">48</b><div class="bar"><i class="warn" style="width:48%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">5</td><td class="num">5</td>
+ <td class="num">15</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 23.10.2026 — 15 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Правила внутреннего распорядка обучающихся/воспитанников</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное казенное общеобразовательное учреждение «начальная школа – детский сад с.гадля» sh-gadli-r44.gosweb.gosuslugi.ru">
+ <td class="num">25</td>
+ <td><a href="sites/sh-gadli-r44.html"><b>Муниципальное казенное общеобразовательное учреждение «Начальная школа – детский сад с.Гадля»</b></a><br>
+  <span class="small muted">Школа · sh-gadli-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="48"><div class="score"><b class="g-warn">48</b><div class="bar"><i class="warn" style="width:48%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">5</td><td class="num">5</td>
+ <td class="num">14</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: 2 из 2 проверенных новостей опубликованы позже 24 часов после события</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение города магадана &#34;центр развития ребенка - детский сад № 13&#34; ds13-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">26</td>
+ <td><a href="sites/ds13-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение города Магадана &#34;Центр развития ребенка - детский сад № 13&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds13-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="47"><div class="score"><b class="g-warn">47</b><div class="bar"><i class="warn" style="width:47%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">5</td><td class="num">6</td>
+ <td class="num">42</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 26.09.2026 — 42 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное автономное дошкольное образовательное учреждение &#34;детский сад комбинированного вида №35&#34; ds35-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">27</td>
+ <td><a href="sites/ds35-magadan-r44.html"><b>Муниципальное автономное дошкольное образовательное учреждение &#34;Детский сад комбинированного вида №35&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds35-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="47"><div class="score"><b class="g-warn">47</b><div class="bar"><i class="warn" style="width:47%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">6</td><td class="num">1</td>
+ <td class="num">87</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 12.08.2026 — 87 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Правила внутреннего распорядка обучающихся/воспитанников</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение города магадана «центр развития ребенка – детский сад № 57» ds57-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">28</td>
+ <td><a href="sites/ds57-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение города Магадана «Центр развития ребенка – детский сад № 57»</b></a><br>
+  <span class="small muted">Детский сад · ds57-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="47"><div class="score"><b class="g-warn">47</b><div class="bar"><i class="warn" style="width:47%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">4</td><td class="num">4</td>
+ <td class="num">67</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 01.09.2026 — 67 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное автономное общеобразовательное учреждение &#34;средняя общеобразовательная школа № 18&#34; sh18-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">29</td>
+ <td><a href="sites/sh18-magadan-r44.html"><b>Муниципальное автономное общеобразовательное учреждение &#34;Средняя общеобразовательная школа № 18&#34;</b></a><br>
+  <span class="small muted">Школа · sh18-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="47"><div class="score"><b class="g-warn">47</b><div class="bar"><i class="warn" style="width:47%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">5</td><td class="num">1</td>
+ <td class="num">115</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 15.07.2026 — 115 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Раздел «Мероприятия» пуст</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа №20&#34; г. магадана sh20-sokol-r44.gosweb.gosuslugi.ru">
+ <td class="num">30</td>
+ <td><a href="sites/sh20-sokol-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение &#34;Средняя общеобразовательная школа №20&#34; г. Магадана</b></a><br>
+  <span class="small muted">Школа · sh20-sokol-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="47"><div class="score"><b class="g-warn">47</b><div class="bar"><i class="warn" style="width:47%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">4</td><td class="num">4</td>
+ <td class="num">130</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 30.06.2026 — 130 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение &#34;детский сад № 1&#34; поселка палатка ds1-palatka-r44.gosweb.gosuslugi.ru">
+ <td class="num">31</td>
+ <td><a href="sites/ds1-palatka-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение &#34;Детский сад № 1&#34; поселка Палатка</b></a><br>
+  <span class="small muted">Детский сад · ds1-palatka-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="46"><div class="score"><b class="g-warn">46</b><div class="bar"><i class="warn" style="width:46%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">4</td><td class="num">5</td>
+ <td class="num">165</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 26.05.2026 — 165 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Правила внутреннего распорядка обучающихся/воспитанников</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="магаданское областное государственное казенное общеобразовательное учреждение &#34;средняя общербразовательная школа п.ола&#34; sh-ola-r44.gosweb.gosuslugi.ru">
+ <td class="num">32</td>
+ <td><a href="sites/sh-ola-r44.html"><b>Магаданское областное государственное казенное общеобразовательное учреждение &#34;Средняя общербразовательная школа п.Ола&#34;</b></a><br>
+  <span class="small muted">Школа · sh-ola-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="46"><div class="score"><b class="g-warn">46</b><div class="bar"><i class="warn" style="width:46%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">3</td><td class="num">7</td>
+ <td class="num">166</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 25.05.2026 — 166 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение «детский сад №6 «золотой ключик» п.ола» ds6-ola-r44.gosweb.gosuslugi.ru">
+ <td class="num">33</td>
+ <td><a href="sites/ds6-ola-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение «Детский сад №6 «Золотой ключик» п.Ола»</b></a><br>
+  <span class="small muted">Детский сад · ds6-ola-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="45"><div class="score"><b class="g-warn">45</b><div class="bar"><i class="warn" style="width:45%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">6</td><td class="num">4</td>
+ <td class="num">11</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: За последний год 6 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 51 дн.)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа&#34; п. стекольный sh-stekolnyj-r44.gosweb.gosuslugi.ru">
+ <td class="num">34</td>
+ <td><a href="sites/sh-stekolnyj-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение &#34;Средняя общеобразовательная школа&#34; п. Стекольный</b></a><br>
+  <span class="small muted">Школа · sh-stekolnyj-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="45"><div class="score"><b class="g-warn">45</b><div class="bar"><i class="warn" style="width:45%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">2</td><td class="num">3</td><td class="num">3</td>
+ <td class="num">523</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 02.06.2025 — 523 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-critical">Критично</span> Педагогический состав: В разделе «Педагогический состав» нет сведений о сотрудниках</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение города магадана &#34;детский сад комбинированного вида №15&#34; ds-solnyshko-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">35</td>
+ <td><a href="sites/ds-solnyshko-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение города Магадана &#34;Детский сад комбинированного вида №15&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds-solnyshko-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="44"><div class="score"><b class="g-warn">44</b><div class="bar"><i class="warn" style="width:44%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">6</td><td class="num">5</td>
+ <td class="num">21</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 17.10.2026 — 21 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение &#34;детский сад &#34;солнышко&#34; п. ягодное&#34; ds-solnyshko-yagodnoe-r44.gosweb.gosuslugi.ru">
+ <td class="num">36</td>
+ <td><a href="sites/ds-solnyshko-yagodnoe-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение &#34;Детский сад &#34;Солнышко&#34; п. Ягодное&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds-solnyshko-yagodnoe-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="44"><div class="score"><b class="g-warn">44</b><div class="bar"><i class="warn" style="width:44%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">8</td><td class="num">3</td>
+ <td class="num">9</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: За последний год 4 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 43 дн.)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное бюджетное дошкольное образовательное учреждение «детский сад «пушинка» п.армань» ds-pushinka-arman-r44.gosweb.gosuslugi.ru">
+ <td class="num">37</td>
+ <td><a href="sites/ds-pushinka-arman-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение «Детский сад «Пушинка» п.Армань»</b></a><br>
+  <span class="small muted">Детский сад · ds-pushinka-arman-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="43"><div class="score"><b class="g-warn">43</b><div class="bar"><i class="warn" style="width:43%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">6</td><td class="num">1</td>
+ <td class="num">522</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 03.06.2025 — 522 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное автономное дошкольное образовательное учреждение города магадана &#34;детский сад присмтра и оздоровления №7&#34; ds7-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">38</td>
+ <td><a href="sites/ds7-magadan-r44.html"><b>Муниципальное автономное дошкольное образовательное учреждение города Магадана &#34;Детский сад присмтра и оздоровления №7&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds7-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="43"><div class="score"><b class="g-warn">43</b><div class="bar"><i class="warn" style="width:43%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">5</td><td class="num">4</td>
+ <td class="num">107</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 23.07.2026 — 107 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Правила внутреннего распорядка обучающихся/воспитанников</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное казенное общеобразовательное учреждение «основная общеобразовательная школа с.тахтоямск» sh-taxtoyamska-r44.gosweb.gosuslugi.ru">
+ <td class="num">39</td>
+ <td><a href="sites/sh-taxtoyamska-r44.html"><b>Муниципальное казенное общеобразовательное учреждение «Основная общеобразовательная школа с.Тахтоямск»</b></a><br>
+  <span class="small muted">Школа · sh-taxtoyamska-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="43"><div class="score"><b class="g-warn">43</b><div class="bar"><i class="warn" style="width:43%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">5</td><td class="num">4</td>
+ <td class="num">199</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 22.04.2026 — 199 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа № 2&#34; п. палатка sh2-palatka-r44.gosweb.gosuslugi.ru">
+ <td class="num">40</td>
+ <td><a href="sites/sh2-palatka-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение &#34;Средняя общеобразовательная школа № 2&#34; п. Палатка</b></a><br>
+  <span class="small muted">Школа · sh2-palatka-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="43"><div class="score"><b class="g-warn">43</b><div class="bar"><i class="warn" style="width:43%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">2</td><td class="num">4</td><td class="num">2</td>
+ <td class="num">464</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 31.07.2025 — 464 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-critical">Критично</span> Педагогический состав: В разделе «Педагогический состав» нет сведений о сотрудниках</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное автономное общеобразовательное учреждение &#34;гимназия №30&#34; gimn30-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">41</td>
+ <td><a href="sites/gimn30-magadan-r44.html"><b>Муниципальное автономное общеобразовательное учреждение &#34;Гимназия №30&#34;</b></a><br>
+  <span class="small muted">Школа · gimn30-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="42"><div class="score"><b class="g-warn">42</b><div class="bar"><i class="warn" style="width:42%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">5</td><td class="num">4</td>
+ <td class="num">59</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 09.09.2026 — 59 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа поселка дебин&#34; sh-debin-r44.gosweb.gosuslugi.ru">
+ <td class="num">42</td>
+ <td><a href="sites/sh-debin-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение &#34;Средняя общеобразовательная школа поселка Дебин&#34;</b></a><br>
+  <span class="small muted">Школа · sh-debin-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="42"><div class="score"><b class="g-warn">42</b><div class="bar"><i class="warn" style="width:42%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">7</td><td class="num">4</td>
+ <td class="num">11</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: 2 из 4 проверенных новостей опубликованы позже 24 часов после события</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="магаданское областное государственное автономное общеобразовательное учреждение &#34;инженерная школа&#34; sh-inzhenernaya-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">43</td>
+ <td><a href="sites/sh-inzhenernaya-magadan-r44.html"><b>Магаданское областное государственное автономное общеобразовательное учреждение &#34;Инженерная школа&#34;</b></a><br>
+  <span class="small muted">Школа · sh-inzhenernaya-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="42"><div class="score"><b class="g-warn">42</b><div class="bar"><i class="warn" style="width:42%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">5</td><td class="num">6</td>
+ <td class="num">157</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 03.06.2026 — 157 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: Не убран демонстрационный контент шаблона: подсказка редактора «Примерно от … до … символов»</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа&#34; п. талая sh-talskaya-r44.gosweb.gosuslugi.ru">
+ <td class="num">44</td>
+ <td><a href="sites/sh-talskaya-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение &#34;Средняя общеобразовательная школа&#34; п. Талая</b></a><br>
+  <span class="small muted">Школа · sh-talskaya-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="42"><div class="score"><b class="g-warn">42</b><div class="bar"><i class="warn" style="width:42%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">8</td><td class="num">1</td>
+ <td class="num">1</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: За последний год 4 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 108 дн.)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Раздел «Мероприятия» пуст</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа в пос.усть-омчуг&#34; sh-ustomchug-r44.gosweb.gosuslugi.ru">
+ <td class="num">45</td>
+ <td><a href="sites/sh-ustomchug-r44.html"><b>МУНИЦИПАЛЬНОЕ БЮДЖЕТНОЕ ОБЩЕОБРАЗОВАТЕЛЬНОЕ УЧРЕЖДЕНИЕ &#34;СРЕДНЯЯ ОБЩЕОБРАЗОВАТЕЛЬНАЯ ШКОЛА В ПОС.УСТЬ-ОМЧУГ&#34;</b></a><br>
+  <span class="small muted">Школа · sh-ustomchug-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="42"><div class="score"><b class="g-warn">42</b><div class="bar"><i class="warn" style="width:42%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">5</td><td class="num">4</td>
+ <td class="num">64</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 04.09.2026 — 64 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Контакты: Неполные контактные данные: не указаны телефон, часы приёма граждан</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="warn" data-t="муниципальное автономное дошкольное образовательное учреждение &#34;детский сад комбинированного вида №50&#34; ds50-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">46</td>
+ <td><a href="sites/ds50-magadan-r44.html"><b>Муниципальное автономное дошкольное образовательное учреждение &#34;Детский сад комбинированного вида №50&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds50-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="41"><div class="score"><b class="g-warn">41</b><div class="bar"><i class="warn" style="width:41%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">1</td><td class="num">5</td><td class="num">5</td>
+ <td class="num">81</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 18.08.2026 — 81 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа п.оротукан&#34; sh-orotukan-r44.gosweb.gosuslugi.ru">
+ <td class="num">47</td>
+ <td><a href="sites/sh-orotukan-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение &#34;Средняя общеобразовательная школа п.Оротукан&#34;</b></a><br>
+  <span class="small muted">Школа · sh-orotukan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="40"><div class="score"><b class="g-warn">40</b><div class="bar"><i class="warn" style="width:40%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">7</td><td class="num">5</td>
+ <td class="num">11</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: За последний год 5 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 62 дн.)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="school" data-g="warn" data-t="муниципальное общеобразовательное автономное учреждение средняя общеобразовательная школа № 29 sh29-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">48</td>
+ <td><a href="sites/sh29-magadan-r44.html"><b>Муниципальное общеобразовательное автономное учреждение Средняя общеобразовательная школа № 29</b></a><br>
+  <span class="small muted">Школа · sh29-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="40"><div class="score"><b class="g-warn">40</b><div class="bar"><i class="warn" style="width:40%"></i></div></div><span class="small g-warn">Требует внимания</span></td>
+ <td class="num">0</td><td class="num">6</td><td class="num">7</td>
+ <td class="num">33</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 05.10.2026 — 33 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное автономное дощкольное образовательное учреждение &#34;детский сад комбинированного вида № 3&#34; (мадоу № 3) ds3-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">49</td>
+ <td><a href="sites/ds3-magadan-r44.html"><b>Муниципальное автономное дощкольное образовательное учреждение &#34;Детский сад комбинированного вида № 3&#34; (МАДОУ № 3)</b></a><br>
+  <span class="small muted">Детский сад · ds3-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="39"><div class="score"><b class="g-bad">39</b><div class="bar"><i class="bad" style="width:39%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">9</td><td class="num">0</td>
+ <td class="num">32</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 06.10.2026 — 32 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: За последний год 4 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 94 дн.)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное бюджетное дошкольное образовательное учреждение &#34;детский сад комбинированного вида № 66&#34; ds66-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">50</td>
+ <td><a href="sites/ds66-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение &#34;Детский сад комбинированного вида № 66&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds66-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="39"><div class="score"><b class="g-bad">39</b><div class="bar"><i class="bad" style="width:39%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">6</td><td class="num">5</td>
+ <td class="num">93</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 06.08.2026 — 93 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Правила внутреннего распорядка обучающихся/воспитанников</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное бюджетное общебразовательное учреждение &#34;гимназия №13 имени героя российской федерации ивана кабанова&#34; gimn13-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">51</td>
+ <td><a href="sites/gimn13-magadan-r44.html"><b>Муниципальное бюджетное общебразовательное учреждение &#34;Гимназия №13 имени Героя Российской Федерации Ивана Кабанова&#34;</b></a><br>
+  <span class="small muted">Школа · gimn13-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="39"><div class="score"><b class="g-bad">39</b><div class="bar"><i class="bad" style="width:39%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">8</td><td class="num">3</td>
+ <td class="num">40</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 28.09.2026 — 40 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: За последний год 5 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 87 дн.)</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное бюджетное общеобразовательное учреждение «средняя общеобразовательная школа п. ягодное» sh-yagodnoe-r44.gosweb.gosuslugi.ru">
+ <td class="num">52</td>
+ <td><a href="sites/sh-yagodnoe-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение «Средняя общеобразовательная школа п. Ягодное»</b></a><br>
+  <span class="small muted">Школа · sh-yagodnoe-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="39"><div class="score"><b class="g-bad">39</b><div class="bar"><i class="bad" style="width:39%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">8</td><td class="num">3</td>
+ <td class="num">12</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: За последний год 5 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 77 дн.)</div><div><span class="badge b-high">Высокая</span> Новости: 2 из 4 проверенных новостей опубликованы позже 24 часов после события</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное казенное дошкольное образовательное учреждение ”детский сад п. эвенск” ds-evensk-r44.gosweb.gosuslugi.ru">
+ <td class="num">53</td>
+ <td><a href="sites/ds-evensk-r44.html"><b>Муниципальное казенное дошкольное образовательное учреждение ”Детский сад п. Эвенск”</b></a><br>
+  <span class="small muted">Детский сад · ds-evensk-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="38"><div class="score"><b class="g-bad">38</b><div class="bar"><i class="bad" style="width:38%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">10</td><td class="num">3</td>
+ <td class="num">15</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 23.10.2026 — 15 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное бюджетное дошкольное образовательное учреждение - детский сад «радуга» п. синегорье ягоднинского района магаданской области ds-raduga-sinegore-r44.gosweb.gosuslugi.ru">
+ <td class="num">54</td>
+ <td><a href="sites/ds-raduga-sinegore-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение - детский сад «Радуга» п. Синегорье Ягоднинского района Магаданской области</b></a><br>
+  <span class="small muted">Детский сад · ds-raduga-sinegore-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="38"><div class="score"><b class="g-bad">38</b><div class="bar"><i class="bad" style="width:38%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">9</td><td class="num">1</td>
+ <td class="num">1</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: За последний год 6 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 43 дн.)</div><div><span class="badge b-high">Высокая</span> Новости: 1 из 1 проверенных новостей опубликованы позже 24 часов после события</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное бюджетное дошкольное образовательное учреждение &#34;детский сад комбинированного вида № 1″ города магадана ds1-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">55</td>
+ <td><a href="sites/ds1-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение &#34;Детский сад комбинированного вида № 1″ города Магадана</b></a><br>
+  <span class="small muted">Детский сад · ds1-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="38"><div class="score"><b class="g-bad">38</b><div class="bar"><i class="bad" style="width:38%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">9</td><td class="num">2</td>
+ <td class="num">4</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Порядок оформления возникновения, приостановления и прекращения отношений</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное автономное общеобразовательное учреждение sh-anglijskaya-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">56</td>
+ <td><a href="sites/sh-anglijskaya-magadan-r44.html"><b>Муниципальное автономное общеобразовательное учреждение</b></a><br>
+  <span class="small muted">Школа · sh-anglijskaya-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="38"><div class="score"><b class="g-bad">38</b><div class="bar"><i class="bad" style="width:38%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">9</td><td class="num">2</td>
+ <td class="num">0</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div><div><span class="badge b-high">Высокая</span> Расписание: Расписание не заполнено</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное автономное дошкольное учреждение &#34;детский сад № 59&#34; ds59-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">57</td>
+ <td><a href="sites/ds59-magadan-r44.html"><b>Муниципальное автономное дошкольное учреждение &#34;Детский сад № 59&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds59-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="37"><div class="score"><b class="g-bad">37</b><div class="bar"><i class="bad" style="width:37%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">6</td><td class="num">5</td>
+ <td class="num">106</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 24.07.2026 — 106 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное бюджетное дошкольное образовательное учреждение города магадана &#34;детский сад № 64&#34; пгт.сокол г.магадан магаданская обл ds64-sokol-r44.gosweb.gosuslugi.ru">
+ <td class="num">58</td>
+ <td><a href="sites/ds64-sokol-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение города Магадана &#34;Детский сад № 64&#34; пгт.Сокол г.Магадан Магаданская обл</b></a><br>
+  <span class="small muted">Детский сад · ds64-sokol-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="37"><div class="score"><b class="g-bad">37</b><div class="bar"><i class="bad" style="width:37%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">7</td><td class="num">3</td>
+ <td class="num">96</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 03.08.2026 — 96 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: 1 из 1 проверенных новостей опубликованы позже 24 часов после события</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное казенное общеобразовательное учреждение «средняя общеобразовательная школа п.армань» sh-armani-r44.gosweb.gosuslugi.ru">
+ <td class="num">59</td>
+ <td><a href="sites/sh-armani-r44.html"><b>Муниципальное казенное общеобразовательное учреждение «Средняя общеобразовательная школа п.Армань»</b></a><br>
+  <span class="small muted">Школа · sh-armani-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="37"><div class="score"><b class="g-bad">37</b><div class="bar"><i class="bad" style="width:37%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">8</td><td class="num">5</td>
+ <td class="num">15</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 23.10.2026 — 15 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное автономное дошкольное образовавтельное учреждение &#34;центр развития ребенка - детский сад № 2 &#34; ds-rybalko-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">60</td>
+ <td><a href="sites/ds-rybalko-magadan-r44.html"><b>МУНИЦИПАЛЬНОЕ АВТОНОМНОЕ ДОШКОЛЬНОЕ ОБРАЗОВАВТЕЛЬНОЕ УЧРЕЖДЕНИЕ &#34;ЦЕНТР РАЗВИТИЯ РЕБЕНКА - ДЕТСКИЙ САД № 2 &#34;</b></a><br>
+  <span class="small muted">Детский сад · ds-rybalko-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="36"><div class="score"><b class="g-bad">36</b><div class="bar"><i class="bad" style="width:36%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">10</td><td class="num">7</td>
+ <td class="num">5</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: За последний год 6 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 37 дн.)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное казенное общеобразовательное учреждение &#34;школа-интернат им. д.б. закирова п.эвенск&#34; sh-imzakirova-evensk-r44.gosweb.gosuslugi.ru">
+ <td class="num">61</td>
+ <td><a href="sites/sh-imzakirova-evensk-r44.html"><b>Муниципальное казенное общеобразовательное учреждение &#34;Школа-интернат им. Д.Б. Закирова п.Эвенск&#34;</b></a><br>
+  <span class="small muted">Школа · sh-imzakirova-evensk-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="36"><div class="score"><b class="g-bad">36</b><div class="bar"><i class="bad" style="width:36%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">6</td><td class="num">5</td>
+ <td class="num">18</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Педагогический состав: В разделе «Педагогический состав» нет сведений о сотрудниках</div><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 20.10.2026 — 18 дн. назад (норматив: не реже 1 раза в 14 дней)</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное бюджетное дошкольное образовательное учреждение города магадана &#34;детский сад комбинированного вида №60&#34; ds-korablik-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">62</td>
+ <td><a href="sites/ds-korablik-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение города Магадана &#34;Детский сад комбинированного вида №60&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds-korablik-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="35"><div class="score"><b class="g-bad">35</b><div class="bar"><i class="bad" style="width:35%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">8</td><td class="num">2</td>
+ <td class="num">723</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 14.11.2024 — 723 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Главная страница: Не убран демонстрационный контент шаблона: незаполненное поле «Укажите …»</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа посёлка дукат&#34; sh-dukat-r44.gosweb.gosuslugi.ru">
+ <td class="num">63</td>
+ <td><a href="sites/sh-dukat-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение &#34;Средняя общеобразовательная школа посёлка Дукат&#34;</b></a><br>
+  <span class="small muted">Школа · sh-dukat-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="35"><div class="score"><b class="g-bad">35</b><div class="bar"><i class="bad" style="width:35%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">8</td><td class="num">2</td>
+ <td class="num">2</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Педагогический состав: В разделе «Педагогический состав» нет сведений о сотрудниках</div><div><span class="badge b-high">Высокая</span> Новости: 5 из 9 проверенных новостей опубликованы позже 24 часов после события</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное автономное общеобразовательное учреждение &#34;средняя общеобразовательная (русская культурологическая) школа № 2&#34; sh2-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">64</td>
+ <td><a href="sites/sh2-magadan-r44.html"><b>Муниципальное автономное общеобразовательное учреждение &#34;Средняя общеобразовательная (русская культурологическая) школа № 2&#34;</b></a><br>
+  <span class="small muted">Школа · sh2-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="34"><div class="score"><b class="g-bad">34</b><div class="bar"><i class="bad" style="width:34%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">7</td><td class="num">5</td>
+ <td class="num"></td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: В разделе «Новости» нет ни одной публикации</div><div><span class="badge b-high">Высокая</span> Мероприятия: Раздел «Мероприятия» пуст</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное бюджетное дошкольное образовательное учреждение города магадана &#34;детский сад комбинированного вида № 61&#34; ds-alenkij-cvetochek-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">65</td>
+ <td><a href="sites/ds-alenkij-cvetochek-magadan-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение города Магадана &#34;Детский сад комбинированного вида № 61&#34;</b></a><br>
+  <span class="small muted">Детский сад · ds-alenkij-cvetochek-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="33"><div class="score"><b class="g-bad">33</b><div class="bar"><i class="bad" style="width:33%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">8</td><td class="num">3</td>
+ <td class="num">99</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 31.07.2026 — 99 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа п. синегорье&#34; sh-sinegore-r44.gosweb.gosuslugi.ru">
+ <td class="num">66</td>
+ <td><a href="sites/sh-sinegore-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение &#34;Средняя общеобразовательная школа п. Синегорье&#34;</b></a><br>
+  <span class="small muted">Школа · sh-sinegore-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="33"><div class="score"><b class="g-bad">33</b><div class="bar"><i class="bad" style="width:33%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">11</td><td class="num">2</td>
+ <td class="num">32</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 06.10.2026 — 32 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: 7 из 8 проверенных новостей опубликованы позже 24 часов после события</div></td>
+</tr>
+<tr data-k="kindergarten" data-g="bad" data-t="муниципальное бюджетное дошкольное образовательное учреждение «детский сад №1 «гуси-лебеди» п.ола» ds1-ola-r44.gosweb.gosuslugi.ru">
+ <td class="num">67</td>
+ <td><a href="sites/ds1-ola-r44.html"><b>Муниципальное бюджетное дошкольное образовательное учреждение «Детский сад №1 «Гуси-лебеди» п.Ола»</b></a><br>
+  <span class="small muted">Детский сад · ds1-ola-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="32"><div class="score"><b class="g-bad">32</b><div class="bar"><i class="bad" style="width:32%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">9</td><td class="num">1</td>
+ <td class="num">401</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 02.10.2025 — 401 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Документы: Не найден обязательный документ: Коллективный договор</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное бюджетное общеобразовательное учреждение города магадана &#34; средняя общеобразовательная школа № 23&#34; sh23-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">68</td>
+ <td><a href="sites/sh23-magadan-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение города Магадана &#34; Средняя общеобразовательная школа № 23&#34;</b></a><br>
+  <span class="small muted">Школа · sh23-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="31"><div class="score"><b class="g-bad">31</b><div class="bar"><i class="bad" style="width:31%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">8</td><td class="num">5</td>
+ <td class="num">479</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 16.07.2025 — 479 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Главная страница: Не убран демонстрационный контент шаблона: незаполненное поле «Укажите …»</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное автономное общеобразовательное учреждение &#34;лицей № 14&#34; lic14-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">69</td>
+ <td><a href="sites/lic14-magadan-r44.html"><b>Муниципальное автономное общеобразовательное учреждение &#34;Лицей № 14&#34;</b></a><br>
+  <span class="small muted">Школа · lic14-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="30"><div class="score"><b class="g-bad">30</b><div class="bar"><i class="bad" style="width:30%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">2</td><td class="num">7</td><td class="num">3</td>
+ <td class="num">53</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 15.09.2026 — 53 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-critical">Критично</span> Педагогический состав: В разделе «Педагогический состав» нет сведений о сотрудниках</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное бюджетное общеобразовательное учреждение &#34;средняя общеобразовательная школа №1 г.сусумана&#34; sh-1susumana-susuman-r44.gosweb.gosuslugi.ru">
+ <td class="num">70</td>
+ <td><a href="sites/sh-1susumana-susuman-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение &#34;Средняя общеобразовательная школа №1 г.Сусумана&#34;</b></a><br>
+  <span class="small muted">Школа · sh-1susumana-susuman-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="30"><div class="score"><b class="g-bad">30</b><div class="bar"><i class="bad" style="width:30%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">9</td><td class="num">3</td>
+ <td class="num">2</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Педагогический состав: В разделе «Педагогический состав» нет сведений о сотрудниках</div><div><span class="badge b-high">Высокая</span> Новости: 1 из 2 проверенных новостей опубликованы позже 24 часов после события</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное автономное общеобразовательное учреждение &#34;гимназия №24&#34; gimn24-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">71</td>
+ <td><a href="sites/gimn24-magadan-r44.html"><b>Муниципальное автономное общеобразовательное учреждение &#34;Гимназия №24&#34;</b></a><br>
+  <span class="small muted">Школа · gimn24-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="29"><div class="score"><b class="g-bad">29</b><div class="bar"><i class="bad" style="width:29%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">11</td><td class="num">4</td>
+ <td class="num">40</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 28.09.2026 — 40 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: За последний год 4 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 87 дн.)</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное автономное общеобразовательное учреждение &#34;лицей (эколого-биологический)&#34; lic-ekologobiologicheskij-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">72</td>
+ <td><a href="sites/lic-ekologobiologicheskij-magadan-r44.html"><b>Муниципальное автономное общеобразовательное учреждение &#34;Лицей (эколого-биологический)&#34;</b></a><br>
+  <span class="small muted">Школа · lic-ekologobiologicheskij-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="29"><div class="score"><b class="g-bad">29</b><div class="bar"><i class="bad" style="width:29%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">10</td><td class="num">6</td>
+ <td class="num">26</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 12.10.2026 — 26 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: 2 из 2 проверенных новостей опубликованы позже 24 часов после события</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное казенное общеобразовательное учреждение «начальная школа – детский сад с.балаганное» sh-balagannogo-r44.gosweb.gosuslugi.ru">
+ <td class="num">73</td>
+ <td><a href="sites/sh-balagannogo-r44.html"><b>Муниципальное казенное общеобразовательное учреждение «Начальная школа – детский сад с.Балаганное»</b></a><br>
+  <span class="small muted">Школа · sh-balagannogo-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="29"><div class="score"><b class="g-bad">29</b><div class="bar"><i class="bad" style="width:29%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">9</td><td class="num">5</td>
+ <td class="num">227</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 25.03.2026 — 227 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное казенное общеобразовательное учреждение «средняя общеобразовательная школа с.клёпка» sh-klepki-r44.gosweb.gosuslugi.ru">
+ <td class="num">74</td>
+ <td><a href="sites/sh-klepki-r44.html"><b>Муниципальное казенное общеобразовательное учреждение «Средняя общеобразовательная школа с.Клёпка»</b></a><br>
+  <span class="small muted">Школа · sh-klepki-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="28"><div class="score"><b class="g-bad">28</b><div class="bar"><i class="bad" style="width:28%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">10</td><td class="num">2</td>
+ <td class="num"></td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: В разделе «Новости» нет ни одной публикации</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное автономное общеобразовательное учреждение &#34;средняя общеобразовательная школа с углубленным изучением отдельных предметов № 4&#34; sh4-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">75</td>
+ <td><a href="sites/sh4-magadan-r44.html"><b>Муниципальное автономное общеобразовательное учреждение &#34;Средняя общеобразовательная школа с углубленным изучением отдельных предметов № 4&#34;</b></a><br>
+  <span class="small muted">Школа · sh4-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="27"><div class="score"><b class="g-bad">27</b><div class="bar"><i class="bad" style="width:27%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">11</td><td class="num">2</td>
+ <td class="num">1800</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 03.12.2021 — 1800 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Раздел «Мероприятия» пуст</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное казенное общеобразовательное учреждение «средняя общеобразовательная школа с.тауйск» sh-taujska-r44.gosweb.gosuslugi.ru">
+ <td class="num">76</td>
+ <td><a href="sites/sh-taujska-r44.html"><b>Муниципальное казенное общеобразовательное учреждение «Средняя общеобразовательная школа с.Тауйск»</b></a><br>
+  <span class="small muted">Школа · sh-taujska-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="25"><div class="score"><b class="g-bad">25</b><div class="bar"><i class="bad" style="width:25%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">13</td><td class="num">2</td>
+ <td class="num">17</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: Последняя новость опубликована 21.10.2026 — 17 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Новости: За последний год 4 раз(а) нарушен интервал публикации новостей (более 14 дней, максимум 35 дн.)</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное автономное общеобразовательное учреждение «средняя общеобразовательная школа № 21» sh21-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">77</td>
+ <td><a href="sites/sh21-magadan-r44.html"><b>Муниципальное автономное общеобразовательное учреждение «Средняя общеобразовательная школа № 21»</b></a><br>
+  <span class="small muted">Школа · sh21-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="24"><div class="score"><b class="g-bad">24</b><div class="bar"><i class="bad" style="width:24%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">12</td><td class="num">3</td>
+ <td class="num">8</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Педагогический состав: В разделе «Педагогический состав» нет сведений о сотрудниках</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное бюджетное общеобразовательное учреждение «средняя общеобразовательная школа п. мяунджа» sh-myaundzha-r44.gosweb.gosuslugi.ru">
+ <td class="num">78</td>
+ <td><a href="sites/sh-myaundzha-r44.html"><b>Муниципальное бюджетное общеобразовательное учреждение «Средняя общеобразовательная школа п. Мяунджа»</b></a><br>
+  <span class="small muted">Школа · sh-myaundzha-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="23"><div class="score"><b class="g-bad">23</b><div class="bar"><i class="bad" style="width:23%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">2</td><td class="num">9</td><td class="num">4</td>
+ <td class="num">333</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 09.12.2025 — 333 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-critical">Критично</span> Педагогический состав: В разделе «Педагогический состав» нет сведений о сотрудниках</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="мбоу сош п. сеймчан sh-sejmchan-r44.gosweb.gosuslugi.ru">
+ <td class="num">79</td>
+ <td><a href="sites/sh-sejmchan-r44.html"><b>МБОУ СОШ п. Сеймчан</b></a><br>
+  <span class="small muted">Школа · sh-sejmchan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="22"><div class="score"><b class="g-bad">22</b><div class="bar"><i class="bad" style="width:22%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">0</td><td class="num">14</td><td class="num">3</td>
+ <td class="num">2</td>
+ <td class="small"><div><span class="badge b-high">Высокая</span> Новости: 2 из 2 проверенных новостей опубликованы позже 24 часов после события</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+<tr data-k="school" data-g="bad" data-t="муниципальное бюджетное обеобразовательное учреждение &#34;начальная школа - детский сад № 72&#34; sh72-magadan-r44.gosweb.gosuslugi.ru">
+ <td class="num">80</td>
+ <td><a href="sites/sh72-magadan-r44.html"><b>Муниципальное бюджетное обеобразовательное учреждение &#34;Начальная школа - детский сад № 72&#34;</b></a><br>
+  <span class="small muted">Школа · sh72-magadan-r44.gosweb.gosuslugi.ru</span></td>
+ <td data-v="18"><div class="score"><b class="g-bad">18</b><div class="bar"><i class="bad" style="width:18%"></i></div></div><span class="small g-bad">Критично</span></td>
+ <td class="num">1</td><td class="num">14</td><td class="num">3</td>
+ <td class="num">131</td>
+ <td class="small"><div><span class="badge b-critical">Критично</span> Новости: Последняя новость опубликована 29.06.2026 — 131 дн. назад (норматив: не реже 1 раза в 14 дней)</div><div><span class="badge b-high">Высокая</span> Мероприятия: Нет мероприятий на текущий квартал (4 кв. 2026: 01.10.2026–31.12.2026)</div></td>
+</tr>
+</tbody></table></div>
+
+<h2>Как проводилась проверка</h2>
+<div class="card small">
+<p>Краулер обходит каждый сайт из перечня: главную страницу, меню и карту сайта, затем разделы «Новости», «Мероприятия»,
+«Сведения об образовательной организации» (все подразделы и документы), «Педагогический состав» / «Наш коллектив» (карточки сотрудников),
+«Контакты», «Расписание», «О школе», «Педагогам и сотрудникам». Требования взяты из задания министерства, Приказа Рособрнадзора
+от 04.08.2023 № 1493 и памятки «Типичные ошибки заполнения сайтов».</p>
+<ul>
+ <li><b>Новости</b>: интервал между публикациями — не более 14 дней (за последний год); новость — не позднее суток после события
+  (дата события берётся из текста новости: «23 октября», «вчера», «сегодня»); факт-чекинг дат праздников, юбилеев, дней недели
+и проверка фактов ИИ-агентом с веб-поиском.</li>
+ <li><b>Мероприятия</b>: наличие на текущий и следующий квартал; прошедшие мероприятия сверяются с новостями (новость в течение 2 недель).</li>
+ <li><b>Документы</b>: полный перечень документов собирается со всех подразделов, проверяется наличие 20 обязательных категорий
+  и сравнивается с эталонным сайтом и остальными сайтами региона.</li>
+ <li><b>Сотрудники</b>: фото (в том числе выявление картинок-силуэтов шаблона), уровень образования, контакты.</li>
+ <li><b>Заглушки</b>: демонстрационный текст шаблона («Укажите ФИО», «Заголовок мероприятия №1», «Примерно от 200 до 400 символов»…).</li>
+</ul>
+<p><b>Балл</b> = 100·e<sup>−штраф/80</sup>; штраф: критичное замечание — 15, высокое — 8, среднее — 3, низкое — 1 (не более 25 на раздел).
+<b>Эталон</b> — сайт с наибольшим баллом среди учреждений своего типа.</p>
+<p><b>Ограничения.</b> Если в новости не указана дата события, срок публикации не проверяется (это отмечается отдельно).
+Год у дат без года определяется по дню недели или ближайшей к публикации дате. Документ считается найденным по названию —
+содержимое файлов не проверяется. Качество фотографий (фон, освещение, деловой стиль) автоматически не оценивается,
+выявляются только отсутствующие фото и картинки-заглушки.</p>
+</div>
+<p class="small muted">Сформировано 2026-11-07T15:50:19 · HTTP-запросов: 1, из кэша: 5206 ·
+ <a href="summary.xlsx">Excel</a> · <a href="findings.csv">CSV всех замечаний</a> · <a href="results.json">JSON</a></p>
+</div>
+<script>
+function flt(){const q=document.getElementById('q').value.toLowerCase(),k=document.getElementById('k').value,g=document.getElementById('g').value;
+document.querySelectorAll('#rt tbody tr').forEach(tr=>{tr.style.display=(!q||tr.dataset.t.includes(q))&&(!k||tr.dataset.k===k)&&(!g||tr.dataset.g===g)?'':'none'})}
+document.querySelectorAll('#rt th').forEach((th,i)=>th.addEventListener('click',()=>{const tb=th.closest('table').tBodies[0];
+const rows=[...tb.rows];const dir=th.dataset.dir=th.dataset.dir==='asc'?'desc':'asc';
+const val=r=>{const c=r.cells[i];const v=c.dataset.v??c.innerText.trim();const n=parseFloat(v);return isNaN(n)?v.toLowerCase():n};
+rows.sort((a,b)=>{const x=val(a),y=val(b);return (x>y?1:x<y?-1:0)*(dir==='asc'?1:-1)});rows.forEach(r=>tb.appendChild(r))}));
+</script>
+</body></html>

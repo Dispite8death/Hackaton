@@ -1,0 +1,9 @@
+[Unit]
+Description=Аудит сайтов образовательных организаций (Госвеб)
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/gosweb-audit
+EnvironmentFile=-/opt/gosweb-audit/.env
+ExecStart=/opt/gosweb-audit/deploy/run_audit.sh
