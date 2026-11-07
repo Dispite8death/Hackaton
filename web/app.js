@@ -1,0 +1,450 @@
+(() => {
+  "use strict";
+
+  const byId = id => document.getElementById(id);
+  const esc = value => String(value ?? "").replace(/[&<>"']/g, c =>
+    ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"})[c]);
+  const names = {overview:"Обзор аудита", institutions:"Учреждения", findings:"Замечания", settings:"Настройки"};
+  const labels = {
+    kind:{school:"Школа", kindergarten:"Детский сад"},
+    status:{issue:"Замечание",pass:"Подтверждено",review:"Требует сверки",unverified:"Не проверено",info:"Справочно"},
+    severity:{high:"Высокая",medium:"Средняя",low:"Низкая"},
+    confidence:{high:"Высокая",medium:"Средняя",low:"Низкая",unknown:"Не определена"},
+    quality:{excellent:"Отличный",good:"Хороший",fair:"Удовлетворительный",poor:"Низкий",unrated:"Без оценки"},
+    category:{home:"Главная",news:"Новости",events:"Мероприятия",documents:"Документы",staff:"Сотрудники",
+      contacts:"Контакты",schedule:"Расписание",programs:"Программы",layout:"Оформление",factcheck:"Фактчекинг",structure:"Структура"},
+    group:{content:"Содержание",publication:"Публикации",layout:"Оформление",photos:"Фото",attachments:"Вложения",navigation:"Навигация"}
+  };
+  const facets = {organization_id:"Учреждения",status:"Статус",severity:"Критичность",quality:"Уровень",
+    category:"Категория",group:"Группа проверок",confidence:"Уверенность"};
+  const known = ["kind", ...Object.keys(facets), "date_from","date_to","q"];
+  const dateFmt = new Intl.DateTimeFormat("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Asia/Magadan"});
+  const numberFmt = new Intl.NumberFormat("ru-RU",{maximumFractionDigits:1});
+  const sortNames = {rank:"По рейтингу", name:"По названию", issues:"По числу замечаний", coverage:"По охвату", date:"По дате проверки"};
+  const pageSize = 25;
+  const selected = new Set();
+  let access = false;
+  let data = null;
+  let controller = null;
+  let options = {};
+  let listPage = 0;
+  let sort = "rank";
+  let queryTimer;
+  let renderedHash = location.hash;
+
+  function readFilters() {
+    const input = new URLSearchParams(location.search);
+    const values = {};
+    for (const key of known) {
+      const parts = input.getAll(key);
+      if (!parts.length) continue;
+      if (["q","date_from","date_to"].includes(key)) values[key] = parts.at(-1);
+      else values[key] = [...new Set(parts.flatMap(v => v.split(",")).filter(Boolean))];
+    }
+    return values;
+  }
+  let filters = readFilters();
+  function params(obj) {
+    const result = new URLSearchParams();
+    for (const key of known) {
+      const value = obj[key];
+      if (value && value.length) result.set(key, Array.isArray(value) ? value.join(",") : value);
+    }
+    return result.toString();
+  }
+  function route() {
+    const name = location.hash.slice(1);
+    const detail = /^institution\/(\d+)$/.exec(name);
+    return detail ? {tab:"institution",id:Number(detail[1])} : {tab:names[name] ? name : "overview"};
+  }
+  function navigate(tab) {
+    location.hash=tab;
+  }
+  function saveFilters(next) {
+    filters=next;
+    listPage=0;
+    const query=params(filters);
+    history.replaceState(null,"",location.pathname+(query?"?"+query:"")+location.hash);
+    refresh();
+  }
+  function label(key,value) {
+    const item=(options[key] || []).find(i => String(i.value)===String(value));
+    return item?.label || labels[key]?.[value] || (key==="organization_id" ? "Учреждение № "+value : String(value || "—"));
+  }
+  function optionList(key) {
+    const list=options[key];
+    return Array.isArray(list) && list.length ? list : Object.entries(labels[key] || {}).map(([value,label])=>({value,label}));
+  }
+  function num(value) {
+    return value == null || value === "" || !Number.isFinite(Number(value)) ? "—" : numberFmt.format(Number(value));
+  }
+  function percent(value) {return value==null ? "—" : num(value)+"%";}
+  function date(value) {
+    if (!value) return "—";
+    const parsed = new Date(typeof value==="number" ? value*1000 : value);
+    return Number.isNaN(parsed.getTime()) ? "—" : dateFmt.format(parsed);
+  }
+  function url(value) {
+    try {
+      const u=new URL(value);
+      return ["https:","http:"].includes(u.protocol) && !u.username && !u.password ? u.href : "";
+    } catch {return "";}
+  }
+  function external(value,text) {
+    const href=url(value);
+    return href ? `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(text)} ↗</a>` : "";
+  }
+  function pill(key,value) {
+    const token=Object.hasOwn(labels[key]||{},value)?value:"unknown";
+    return `<span class="pill ${token}">${esc(label(key,value))}</span>`;
+  }
+  function pdf(obj) {
+    const value=params(obj);
+    return "/report.pdf"+(value?"?"+value:"");
+  }
+  function downloadMenu() {
+    const r=route();
+    const record=(title,obj)=>`<a href="${esc(pdf(obj))}" target="_blank" rel="noopener">${esc(title)}</a>`;
+    const chosen=[...selected];
+    byId("downloads").innerHTML=[
+      record("По текущим фильтрам",r.id ? {...filters,organization_id:[r.id]} : filters),
+      chosen.length ? record("По отмеченным учреждениям ("+chosen.length+")",{organization_id:chosen}) :
+        '<span class="disabled">Отмеченных учреждений нет</span>',
+      r.id ? record("По этому учреждению",{organization_id:[r.id]}) : "",
+      record("По всем учреждениям",{})
+    ].join("");
+  }
+  function updateControls() {
+    const activeKeys=Object.keys(filters).filter(key=>filters[key]?.length);
+    byId("query").value=filters.q || "";
+    byId("date-from").value=filters.date_from || "";
+    byId("date-to").value=filters.date_to || "";
+    for (const button of document.querySelectorAll("[data-kind]")) {
+      const value=button.dataset.kind;
+      const isActive=value ? (filters.kind||[]).includes(value) : !(filters.kind||[]).length;
+      button.setAttribute("aria-pressed",String(isActive));
+    }
+    const count=activeKeys.filter(k=>k!=="kind" && k!=="q").length;
+    byId("filter-count").hidden=!count;
+    byId("filter-count").textContent=count;
+    const chips=[];
+    for (const key of activeKeys) {
+      for (const value of (Array.isArray(filters[key])?filters[key]:[filters[key]])) {
+        const text=key==="q" ? "Поиск · "+value : key==="date_from" ? "С "+value : key==="date_to" ? "По "+value :
+          (["severity","confidence"].includes(key)?facets[key]+" · ":"")+label(key,value);
+        chips.push(`<button class="chip" data-remove-key="${esc(key)}" data-remove-value="${esc(value)}" aria-label="Снять фильтр ${esc(text)}">${esc(text)} ×</button>`);
+      }
+    }
+    byId("chips").innerHTML=chips.join("");
+    byId("chips").hidden=!chips.length;
+    downloadMenu();
+  }
+  function drawFacets() {
+    const open=new Set([...byId("facets").querySelectorAll("details[open]")].map(el=>el.dataset.facet));
+    const find=byId("facets").querySelector(".org-search")?.value || "";
+    byId("facets").innerHTML=Object.entries(facets).map(([key,title])=>{
+      const selectedValues=filters[key] || [];
+      const list=optionList(key).map(item=>{
+        const val=String(item.value);
+        return `<label data-option-text="${esc(String(item.label).toLocaleLowerCase("ru"))}"><input type="checkbox" data-set="${key}" value="${esc(val)}" ${selectedValues.includes(val)?"checked":""}> ${esc(item.label)}</label>`;
+      }).join("");
+      return `<details class="facet" data-facet="${key}" ${open.has(key)?"open":""}><summary>${esc(title)}${selectedValues.length?" · "+selectedValues.length:""}<i class="caret"></i></summary><div class="facet-options">${key==="organization_id"?'<input type="search" class="org-search" aria-label="Поиск в списке учреждений" placeholder="Найти в списке">':""}${list || '<p class="subtle">В выборке нет вариантов</p>'}</div></details>`;
+    }).join("");
+    const field=byId("facets").querySelector(".org-search");
+    if (field && find) {field.value=find; filterOrganizations(field);}
+  }
+  function filterOrganizations(field) {
+    const term=field.value.toLocaleLowerCase("ru").trim();
+    for (const el of field.parentElement.querySelectorAll("label")) el.hidden=!el.dataset.optionText.includes(term);
+  }
+  function empty(title,text,reset=true) {
+    return `<div class="empty"><h3>${esc(title)}</h3><p>${esc(text)}</p>${reset && params(filters)?'<button class="secondary" data-reset>Сбросить фильтры</button>':""}</div>`;
+  }
+  function kpi(title,value,detail,tone) {
+    return `<article class="kpi" style="--tone:${tone}"><p>${esc(title)}</p><strong>${esc(value)}</strong><small>${esc(detail)}</small></article>`;
+  }
+  function score(value) {return value==null ? "—" : num(value);}
+  function sortFindings(list) {
+    const order={issue:0,review:1,unverified:2,pass:3,info:4};
+    return [...list].sort((a,b)=>(order[a.status]??4)-(order[b.status]??4) ||
+      (a.priority??9)-(b.priority??9) || String(b.checked_at||"").localeCompare(String(a.checked_at||"")));
+  }
+  function finding(row) {
+    const meta=[row.organization_name,label("category",row.category)].filter(Boolean).join(" · ");
+    const clue=typeof row.evidence==="string" ? row.evidence : "";
+    const link=external(row.url,"Исходная страница");
+    const inst=Number.isInteger(Number(row.organization_id)) && Number(row.organization_id)>0 ?
+      `<a href="#institution/${Number(row.organization_id)}">Карточка учреждения</a>` : "";
+    const detail=(title,value)=>value?`<div><dt>${esc(title)}</dt><dd>${esc(value)}</dd></div>`:"";
+    const refs=(row.materials || []).map(m=>{
+      const name=[m.publisher || m.id,m.page ? "стр. "+m.page : ""].filter(Boolean).join(" · ");
+      return name ? `<li>${external(m.url,name) || esc(name)}</li>` : "";
+    }).join("");
+    return `<details class="find-row"><summary><div><h3>${esc(row.title || "Результат проверки")}</h3><p class="caption">${esc(meta)}</p></div>
+      <span class="severity-label">${row.status==="issue" && row.severity ? pill("severity",row.severity) : ""}</span>${pill("status",row.status)}<i class="caret"></i></summary>
+      <div class="find-body"><dl>${detail("Наблюдение",row.description)}${detail("Основание",clue)}${detail("Что сделать",row.recommendation)}</dl>
+      <div class="find-meta">${row.status==="issue" && row.severity?`<span class="mobile-severity">Критичность · ${esc(label("severity",row.severity))}</span>`:""}${row.confidence?`<span>Уверенность · ${esc(label("confidence",row.confidence))}</span>`:""}
+      ${row.priority?`<span>Приоритет ${esc(row.priority)}</span>`:""}${row.checked_at?`<span>Проверено ${date(row.checked_at)}</span>`:""}
+      ${row.page_id?`<span>Снимок № ${esc(row.page_id)}</span>`:""}${row.source?`<span>Источник · ${esc(row.source)}</span>`:""}</div>
+      ${refs?`<div class="material-refs"><strong>Материалы проверки</strong><ul>${refs}</ul></div>`:""}
+      <div class="wide-actions">${link}${inst}</div></div></details>`;
+  }
+  function resultsPanel(counts) {
+    const sequence=["pass","issue","review","unverified","info"];
+    const total=sequence.reduce((s,k)=>s+Number(counts[k]||0),0);
+    const stacks=sequence.filter(k=>counts[k]>0).map(k=>`<span class="${k}" style="flex:${Number(counts[k])}"></span>`).join("");
+    const legend=sequence.map(k=>`<div class="legend-row"><i class="dot ${k}"></i><span>${esc(label("status",k))}</span><strong>${num(counts[k]||0)}</strong></div>`).join("");
+    return `<section class="panel"><div class="panel-head"><h2>Результаты проверок</h2><span class="subtle">${num(total)} всего</span></div>
+      <div class="stack" aria-hidden="true">${stacks}</div><div class="legend">${legend}</div></section>`;
+  }
+  function qualityPanel(counts) {
+    const list=["excellent","good","fair","poor","unrated"];
+    const max=Math.max(1,...list.map(k=>Number(counts[k]||0)));
+    const rows=list.map(k=>`<div class="quality-row"><span>${esc(label("quality",k))}</span><span class="bar" aria-hidden="true"><i class="${k}" style="width:${100*(counts[k]||0)/max}%"></i></span><strong>${num(counts[k]||0)}</strong></div>`).join("");
+    const grading=data.grading || {};
+    const guidance=[grading.method,grading.coverage,grading.classification,grading.scope].filter(Boolean).map(t=>`<p>${esc(t)}</p>`).join("");
+    return `<section class="panel"><div class="panel-head"><h2>Уровень учреждений</h2></div><div class="quality-list">${rows}</div>
+      ${guidance?`<details class="grading"><summary>Как рассчитывается оценка <i class="caret"></i></summary>${guidance}</details>`:""}</section>`;
+  }
+  function overview() {
+    const s=data.summary || {}, counts=s.counts || {};
+    const priority=sortFindings(data.findings||[]).filter(x=>["issue","review"].includes(x.status)).slice(0,5);
+    return `<div class="kpis">${kpi("Учреждения",num(s.total),"Школы "+num(s.schools)+" · Сады "+num(s.kindergartens),"#257b68")}
+      ${kpi("Охват проверок",percent(s.coverage),"По выбранным учреждениям","#608b9d")}
+      ${kpi("Замечания",num(counts.issue??0),"Требуют исправления","#c36552")}
+      ${kpi("Требуют сверки",num(counts.review??0),"Требуется оценка специалиста","#c19a4d")}</div>
+      ${s.total===0?empty("Учреждения не найдены","Измените параметры выборки."):""}
+      <div class="panels">${resultsPanel(counts)}${qualityPanel(s.quality_counts || {})}</div>
+      <section class="list-panel"><div class="list-head"><h2>На что обратить внимание</h2><a class="small-link" href="#findings">Все результаты →</a></div>
+      ${priority.length?priority.map(finding).join(""):empty("Замечаний в выборке нет","Для этой выборки нет подтверждённых замечаний и результатов на сверку.",false)}</section>`;
+  }
+  function pager(total) {
+    const pages=Math.max(1,Math.ceil(total/pageSize));
+    if (pages<=1) return "";
+    return `<div class="pagination"><span>${num(1+listPage*pageSize)}–${num(Math.min(total,(listPage+1)*pageSize))} из ${num(total)}</span>
+      <div class="pages"><button data-page="-1" ${listPage===0?"disabled":""}>Назад</button><button data-page="1" ${listPage+1>=pages?"disabled":""}>Далее</button></div></div>`;
+  }
+  function orderedInstitutions() {
+    const list=[...(data.institutions||[])];
+    return list.sort((a,b)=>{
+      if (sort==="issues") return (b.counts?.issue||0)-(a.counts?.issue||0);
+      if (sort==="coverage") return (b.coverage??-1)-(a.coverage??-1);
+      if (sort==="date") return String(b.last_checked||"").localeCompare(String(a.last_checked||""));
+      if (sort==="name") return a.name.localeCompare(b.name,"ru");
+      return (a.rank??1e8)-(b.rank??1e8) || a.name.localeCompare(b.name,"ru");
+    });
+  }
+  function institutions() {
+    const list=orderedInstitutions();
+    listPage=Math.min(listPage,Math.max(0,Math.ceil(list.length/pageSize)-1));
+    const part=list.slice(listPage*pageSize,(listPage+1)*pageSize);
+    const rows=part.map(row=>`<tr><td><input type="checkbox" data-select="${Number(row.id)}" ${selected.has(String(row.id))?"checked":""} aria-label="Отметить ${esc(row.name)}"></td>
+      <td class="inst-name"><a class="institution-link" href="#institution/${Number(row.id)}">${esc(row.name)}</a><small class="cell-muted">${esc(label("kind",row.kind))}</small></td>
+      <td class="score-cell num"><strong>${score(row.score)}</strong></td><td>${pill("quality",row.quality)}</td><td class="num">${percent(row.coverage)}</td>
+      <td class="num">${num(row.counts?.issue??0)}</td><td class="num matrix-extra">${date(row.last_checked)}</td>
+      <td><a href="${esc(pdf({organization_id:[row.id]}))}" target="_blank" rel="noopener" aria-label="PDF · ${esc(row.name)}">PDF</a></td></tr>`).join("");
+    return `<section class="list-panel"><div class="list-head"><h2>Реестр учреждений <span class="subtle">${num(list.length)}</span></h2>
+      <div class="selection-tools"><span id="selected-count"></span><label>Сортировка <select class="sort" id="sort">${Object.entries(sortNames).map(([k,v])=>`<option value="${k}" ${sort===k?"selected":""}>${v}</option>`).join("")}</select></label></div></div>
+      ${list.length?`<div class="table-wrap"><table class="inst-table"><thead><tr><th><input id="select-page" type="checkbox" aria-label="Отметить все учреждения на этой странице"></th>
+        <th>Учреждение</th><th>Балл</th><th>Уровень</th><th>Охват</th><th>Замечания</th><th class="matrix-extra">Проверено</th><th>Отчёт</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>${pager(list.length)}`:empty("Учреждения не найдены","Уточните название или снимите часть фильтров.")}</section>`;
+  }
+  function findings() {
+    const list=sortFindings(data.findings||[]);
+    listPage=Math.min(listPage,Math.max(0,Math.ceil(list.length/pageSize)-1));
+    return `<section class="list-panel"><div class="list-head"><h2>Результаты по критериям <span class="subtle">${num(list.length)}</span></h2><span class="subtle">По приоритету</span></div>
+      ${list.length?list.slice(listPage*pageSize,(listPage+1)*pageSize).map(finding).join("")+pager(list.length):empty("Результаты не найдены","Для выбранных условий подходящих проверок нет.")}</section>`;
+  }
+  function institution() {
+    const row=data.institution;
+    if (!row) return empty("Учреждение не найдено","Проверьте фильтры или вернитесь к полному реестру.");
+    const categories=data.categories||[];
+    const history=data.history||[];
+    const categoriesRows=categories.map(c=>`<tr><td>${esc(c.label||label("category",c.id))}</td><td>${num(c.counts?.issue||0)}</td><td>${num(c.counts?.review||0)}</td><td>${percent(c.coverage)}</td><td>${score(c.score)}</td></tr>`).join("");
+    const states={running:"Идёт",completed:"Завершён",partial:"Частичный",failed:"С ошибкой",interrupted:"Прерван"};
+    const historyRows=history.map(h=>`<tr><td>${date(h.date)}</td><td>${h.purpose==="sample"?"Выборочный":"Основной"}</td><td>${num(h.pages)}</td><td>${esc(states[h.state] || h.state)}</td></tr>`).join("");
+    const missing=(data.findings || []).filter(f=>f.status==="unverified");
+    const needed={home:"главная страница и исходные изображения",news:"список новостей, карточки и даты публикаций",
+      events:"список мероприятий и карточки с датами",documents:"каталог и оригиналы документов",staff:"каталог и карточки сотрудников",
+      contacts:"шапка главной страницы и раздел контактов",schedule:"раздел расписания и файлы с занятиями",
+      programs:"раздел образования и тексты программ",layout:"экранные снимки и PDF проверяемых страниц",
+      factcheck:"публикации из разрешённых независимых источников",structure:"страницы со сведениями об учреждении"};
+    const gaps=Object.entries(needed).filter(([cat])=>missing.some(f=>f.category===cat && !f.page_id))
+      .map(([cat,hint])=>`<li><strong>${esc(label("category",cat))}</strong> · ${esc(hint)}</li>`).join("");
+    const pendingModel=missing.some(f=>f.page_id);
+    const nextSteps=row.quality==="unrated" ? `<section class="panel gaps"><h2>Недостаточно данных для оценки</h2>
+      <p>Оценено ${num(row.verified_criteria)} из ${num(row.total_criteria)} применимых критериев. Для присвоения уровня нужны минимум три оценённых критерия и охват от 50%.</p>
+      ${gaps?`<details><summary>Какие материалы проверить или догрузить <i class="caret"></i></summary><ul>${gaps}</ul></details>`:""}
+      ${pendingModel?"<p>Для части критериев снимки уже сохранены. Откройте непроверенные результаты и повторите проверку по их основаниям.</p>":""}
+      ${!gaps&&!pendingModel?"<p>Проверьте результаты на сверку или расширьте период и фильтры.</p>":""}</section>` : "";
+    return `<div class="kpis">${kpi("Оценка",score(row.score),"Из 100 баллов","#257b68")}${kpi("Охват проверок",percent(row.coverage),label("quality",row.quality),"#608b9d")}
+      ${kpi("Замечания",num(row.counts?.issue||0),"В выбранном периоде","#c36552")}${kpi("Требуют сверки",num(row.counts?.review||0),"В выбранном периоде","#c19a4d")}</div>
+      ${nextSteps}<div class="panels"><section class="list-panel"><div class="list-head"><h2>По категориям</h2></div>${categoriesRows?`<div class="table-wrap"><table><thead><tr><th>Категория</th><th>Замечания</th><th>Сверка</th><th>Охват</th><th>Балл</th></tr></thead><tbody>${categoriesRows}</tbody></table></div>`:empty("Категории пока не оценены","Проверки появятся после обработки материалов.",false)}</section>
+      <section class="list-panel"><div class="list-head"><h2>История обходов</h2>${external(row.site_url,"Сайт учреждения")}</div>${historyRows?`<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Обход</th><th>Страниц</th><th>Состояние</th></tr></thead><tbody>${historyRows}</tbody></table></div>`:empty("Обходов в периоде нет","Выберите другой интервал дат.",false)}</section></div>${findings()}`;
+  }
+  function settings() {
+    return `<section class="panel settings"><h2>Администрирование</h2>${access?
+      '<p>Откройте локальную панель для настройки ИИ, источников, обходов и хранения материалов.</p><a class="primary" href="/admin">Открыть панель администратора →</a>':
+      '<p>В публичном режиме доступны просмотр результатов и выгрузка PDF. Управление обходами, моделями и источниками доступно на компьютере администратора.</p>'}</section>`;
+  }
+  function selectionState() {
+    const el=byId("selected-count");
+    if (el) el.textContent=selected.size ? "Отмечено · "+num(selected.size) : "";
+    const all=byId("select-page");
+    if (all) {
+      const boxes=[...document.querySelectorAll("[data-select]")];
+      all.checked=!!boxes.length && boxes.every(x=>x.checked);
+      all.indeterminate=!all.checked && boxes.some(x=>x.checked);
+    }
+    downloadMenu();
+  }
+  function show() {
+    const r=route();
+    byId("content").innerHTML=r.tab==="settings"?settings():
+      r.tab==="overview"?overview():r.tab==="institutions"?institutions():r.tab==="findings"?findings():institution();
+    byId("content").setAttribute("aria-busy","false");
+    selectionState();
+  }
+  async function fetchJson(path,signal) {
+    const res=await fetch(path,{signal,headers:{Accept:"application/json"},credentials:"same-origin"});
+    if (!res.ok) throw new Error(res.status===404?"Такой страницы или учреждения нет.":"Сервер вернул ошибку "+res.status+".");
+    return res.json();
+  }
+  async function refresh() {
+    const r=route();
+    renderedHash=location.hash;
+    document.body.classList.toggle("detail-page",Boolean(r.id));
+    controller?.abort();
+    controller=new AbortController();
+    const signal=controller.signal;
+    document.querySelectorAll("[data-tab]").forEach(a=>{
+      if (a.dataset.tab===(r.tab==="institution"?"institutions":r.tab)) a.setAttribute("aria-current","page");
+      else a.removeAttribute("aria-current");
+    });
+    byId("title").textContent=names[r.tab] || "Карточка учреждения";
+    document.title=byId("title").textContent+" · Аудит сайтов образования";
+    byId("breadcrumb").innerHTML=r.id?'<a class="back" href="#institutions">← К учреждениям</a>':"";
+    byId("filters").hidden=r.tab==="settings";
+    byId("download").hidden=r.tab==="settings";
+    byId("asof").textContent="";
+    updateControls();
+    if (r.tab==="settings") {show();return;}
+    byId("content").setAttribute("aria-busy","true");
+    const query=params(filters);
+    const path=r.id?"/api/institution/"+r.id:"/api/dashboard";
+    try {
+      const body=await fetchJson(path+(query?"?"+query:""),signal);
+      if (signal.aborted) return;
+      data=body;
+      options={...options,...body.options};
+      if (!options.organization_id?.length) {
+        const base=r.id ? await fetchJson("/api/dashboard",signal) : body;
+        options={...options,...base.options};
+        if (!options.organization_id?.length)
+          options.organization_id=(base.institutions||[]).map(x=>({value:String(x.id),label:x.name}));
+      }
+      if (signal.aborted) return;
+      if (r.id && body.institution) {
+        const row=body.institution;
+        byId("title").textContent=row.name;
+        byId("asof").textContent=label("kind",row.kind)+" · Последняя проверка "+date(row.last_checked);
+      } else if (body.as_of) byId("asof").textContent="Данные на "+date(body.as_of);
+      document.title=byId("title").textContent+" · Аудит сайтов образования";
+      drawFacets();
+      updateControls();
+      show();
+      byId("announcement").textContent="Результаты обновлены.";
+    } catch(error) {
+      if (signal.aborted) return;
+      data=null;
+      byId("content").setAttribute("aria-busy","false");
+      byId("content").innerHTML=`<div class="panel">${empty("Не удалось загрузить данные",error.message,false)}<button class="secondary" id="retry">Повторить загрузку</button></div>`;
+    }
+  }
+  document.addEventListener("click",event=>{
+    const el=event.target.closest("a,button,input,summary");
+    if (!el) return;
+    if (!el.closest("#download")) byId("download").open=false;
+    if (!el.closest(".facet")) document.querySelectorAll(".facet[open]").forEach(x=>x.open=false);
+    if (el.closest("#downloads")) byId("download").open=false;
+    if (el.hasAttribute("data-kind")) {
+      const next={...filters};
+      if (el.dataset.kind) next.kind=[el.dataset.kind]; else delete next.kind;
+      saveFilters(next);
+    } else if (el.id==="toggle-filters") {
+      const advanced=byId("advanced");
+      advanced.hidden=!advanced.hidden;
+      el.setAttribute("aria-expanded",String(!advanced.hidden));
+    } else if (el.hasAttribute("data-remove-key")) {
+      const key=el.dataset.removeKey,next={...filters};
+      if (Array.isArray(next[key])) {
+        next[key]=next[key].filter(v=>String(v)!==el.dataset.removeValue);
+        if (!next[key].length) delete next[key];
+      } else delete next[key];
+      saveFilters(next);
+    } else if (el.id==="clear" || el.hasAttribute("data-reset")) {
+      byId("date-error").hidden=true;
+      saveFilters({});
+    } else if (el.hasAttribute("data-page") && data) {
+      listPage=Math.max(0,listPage+Number(el.dataset.page));
+      show();
+      document.querySelector("#content .list-panel:last-child")?.scrollIntoView({block:"start"});
+    } else if (el.id==="retry") refresh();
+    else if (el.id==="skip") {event.preventDefault();byId("main").focus();}
+  });
+  document.addEventListener("toggle",event=>{
+    if (event.target.matches("details.facet[open]"))
+      document.querySelectorAll("details.facet[open]").forEach(d=>{if(d!==event.target)d.open=false;});
+  },true);
+  document.addEventListener("change",event=>{
+    const el=event.target;
+    if (el.dataset.set) {
+      const key=el.dataset.set,next={...filters};
+      const values=new Set(next[key]||[]);
+      if (el.checked) values.add(el.value); else values.delete(el.value);
+      if (values.size) next[key]=[...values]; else delete next[key];
+      saveFilters(next);
+    } else if (el.id==="date-from" || el.id==="date-to") {
+      const from=byId("date-from").value,to=byId("date-to").value;
+      const error=byId("date-error");
+      error.hidden=!(from && to && from>to);
+      error.textContent=error.hidden?"":"Дата окончания должна быть не раньше даты начала.";
+      if (!error.hidden) return;
+      saveFilters({...filters,date_from:from,date_to:to});
+    } else if (el.dataset.select) {
+      if (el.checked) selected.add(el.dataset.select); else selected.delete(el.dataset.select);
+      selectionState();
+    } else if (el.id==="select-page") {
+      document.querySelectorAll("[data-select]").forEach(box=>{
+        box.checked=el.checked;
+        if(el.checked)selected.add(box.dataset.select);else selected.delete(box.dataset.select);
+      });
+      selectionState();
+    } else if (el.id==="sort") {sort=el.value;listPage=0;show();}
+  });
+  document.addEventListener("input",event=>{
+    if (event.target.matches(".org-search")) filterOrganizations(event.target);
+    if (event.target.id==="query") {
+      clearTimeout(queryTimer);
+      queryTimer=setTimeout(()=>saveFilters({...filters,q:byId("query").value.trim()}),320);
+    }
+  });
+  document.addEventListener("keydown",event=>{
+    if (event.key==="Escape") {
+      for (const menu of document.querySelectorAll(".facet[open],#download[open]")) {
+        menu.open=false;
+        menu.querySelector("summary")?.focus();
+      }
+    }
+  });
+  addEventListener("hashchange",()=>{filters=readFilters();listPage=0;refresh();window.scrollTo(0,0);});
+  addEventListener("popstate",()=>{
+    if (renderedHash===location.hash) {filters=readFilters();listPage=0;refresh();}
+  });
+  fetchJson("/api/access").then(result=>{
+    access=result.admin===true;
+    byId("access").textContent=access?"Локальный доступ":"Только просмотр";
+    if (route().tab==="settings") show();
+  }).catch(()=>{});
+  refresh();
+})();

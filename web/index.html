@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#102e36">
+  <title>Обзор · Аудит сайтов образования</title>
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main" id="skip">К содержимому</a>
+  <header class="topbar">
+    <div class="top-inner">
+      <a href="#overview" class="brand" aria-label="Аудит сайтов образования, обзор">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span><strong>Аудит сайтов</strong><small>Образование</small></span>
+      </a>
+      <nav class="nav" aria-label="Разделы">
+        <a href="#overview" data-tab="overview">Обзор</a>
+        <a href="#institutions" data-tab="institutions">Учреждения</a>
+        <a href="#findings" data-tab="findings">Замечания</a>
+        <a href="#settings" data-tab="settings">Настройки</a>
+      </nav>
+      <span id="access" class="access">Только просмотр</span>
+    </div>
+  </header>
+  <main id="main" class="shell" tabindex="-1">
+    <div id="breadcrumb"></div>
+    <div class="page-head">
+      <div>
+        <p class="region">Магаданская область</p>
+        <h1 id="title">Обзор аудита</h1>
+        <p id="asof" class="subhead"></p>
+      </div>
+      <details id="download" class="download">
+        <summary class="primary"><span class="download-icon" aria-hidden="true">↓</span> Скачать PDF <span class="caret"></span></summary>
+        <div class="menu" id="downloads"></div>
+      </details>
+    </div>
+    <section class="filters" id="filters" aria-label="Фильтры аудита">
+      <div class="filter-row">
+        <div class="segmented" aria-label="Тип учреждения" role="group">
+          <button type="button" data-kind="">Все</button>
+          <button type="button" data-kind="school">Школы</button>
+          <button type="button" data-kind="kindergarten">Детские сады</button>
+        </div>
+        <label class="search"><span aria-hidden="true" class="lens"></span>
+          <span class="sr-only">Найти учреждение или замечание</span>
+          <input id="query" type="search" placeholder="Найти учреждение или замечание" maxlength="200" autocomplete="off">
+        </label>
+        <button type="button" class="secondary filters-button" id="toggle-filters" aria-controls="advanced" aria-expanded="false">
+          <span aria-hidden="true" class="sliders"><i></i><i></i></span> Фильтры <span id="filter-count" hidden></span>
+        </button>
+      </div>
+      <div id="advanced" class="advanced" hidden>
+        <div id="facets" class="facets"></div>
+        <div class="dates">
+          <label>Проверено с <input type="date" id="date-from"></label>
+          <label>по <input type="date" id="date-to"></label>
+          <button type="button" id="clear" class="text-button">Сбросить фильтры</button>
+        </div>
+        <p class="date-error" id="date-error" role="alert" hidden></p>
+      </div>
+      <div id="chips" class="chips" hidden></div>
+    </section>
+    <div id="content" aria-busy="true"><div class="loading">Загружаем результаты аудита…</div></div>
+    <p id="announcement" class="sr-only" aria-live="polite"></p>
+  </main>
+  <footer class="footer"><span>Аудит сайтов образовательных учреждений</span><span>Магаданская область</span></footer>
+</body>
+</html>

@@ -1,0 +1,21 @@
+# Publish the application and case inputs. Local archives and launch credentials stay on this machine.
+/*
+!/.gitignore
+!/Engine/
+!/web/
+!/Задание/
+!/README.md
+!/ВКЛАД.md
+!/ДЕМОНСТРАЦИЯ.md
+!/requirements.txt
+!/requirements-render.txt
+!/Администрирование.cmd
+!/start.sh
+!/start.cmd
+**/__pycache__/
+*.py[cod]
+*.sqlite*
+*.db
+*.pem
+*.key
+.env*
