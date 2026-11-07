@@ -49,16 +49,23 @@ def test_llm_checker_refusal_returns_none(monkeypatch):
     assert c.check_news("t", "x", datetime(2026, 1, 1), "s") is None
 
 
-def test_gateway_checker_parses_grounded_answer(monkeypatch, tmp_path):
-    monkeypatch.setenv("AUDIT_CACHE_DIR", str(tmp_path))
-    from audit.llm import GatewayChecker
+def _settings(**kw):
+    from audit.llm import LLMSettings
+    base = dict(provider="openai", base_url="https://gw.example/v1", api_key="k", model="gemini-2.5-flash")
+    base.update(kw)
+    return LLMSettings(**base)
 
+
+def test_gateway_checker_parses_grounded_answer(monkeypatch, tmp_path):
+    from audit.llm import OpenAICompatChecker
+
+    monkeypatch.setenv("AUDIT_CACHE_DIR", str(tmp_path))
     content = '```json\n{"event_date": "2026-09-21", "event_date_basis": "текст", "claims": [' \
               '{"claim": "a", "status": "confirmed", "source": null, "note": ""}]}\n```'
     payload = {"choices": [{"message": {"content": content, "annotations": [
         {"type": "url_citation", "url_citation": {"title": "atomic-energy.ru", "url": "https://x"}}]}}],
         "usage": {"prompt_tokens": 10, "completion_tokens": 5}}
-    g = GatewayChecker("https://gw.example/v1", "k", "gemini-2.5-flash")
+    g = OpenAICompatChecker(_settings())
     sent = {}
 
     def fake_post(url, headers, json, timeout):
@@ -70,3 +77,41 @@ def test_gateway_checker_parses_grounded_answer(monkeypatch, tmp_path):
     assert res["event_date"] == date(2026, 9, 21)
     assert res["claims"][0]["status"] == "confirmed" and "atomic-energy.ru" in res["claims"][0]["source"]
     assert sent["tools"] == [{"googleSearch": {}}]
+
+
+def test_local_server_without_key_and_json_fallback(monkeypatch, tmp_path):
+    """Локальный сервер (Ollama/LM Studio): без ключа, без веб-поиска; JSON-режим не поддержан -> повтор."""
+    from audit.llm import OpenAICompatChecker
+
+    monkeypatch.setenv("AUDIT_CACHE_DIR", str(tmp_path))
+    g = OpenAICompatChecker(_settings(base_url="http://localhost:11434/v1", api_key="", model="qwen2.5:14b"))
+    assert "Authorization" not in g.headers and not g.grounding
+    assert g.url == "http://localhost:11434/v1/chat/completions"
+    calls = []
+    ok = {"choices": [{"message": {"content": '{"event_date": null, "event_date_basis": "", "claims": ['
+                                              '{"claim": "c", "status": "contradiction", "source": "", "note": "n"}]}'}}]}
+
+    def fake_post(url, headers, json, timeout):
+        calls.append(dict(json))
+        if "response_format" in json:
+            return NS(status_code=400, json=lambda: {}, text="response_format not supported")
+        return NS(status_code=200, json=lambda: ok, text="")
+
+    monkeypatch.setattr(g.requests, "post", fake_post)
+    res = g.check_news("t", "текст", datetime(2026, 9, 28), "школа")
+    assert len(calls) == 2 and "response_format" not in calls[1]
+    # без веб-поиска «расхождение» не засчитывается — это лишь мнение модели
+    assert res["claims"][0]["status"] == "unverified" and "без веб-поиска" in res["claims"][0]["source"]
+
+
+def test_settings_from_env(monkeypatch):
+    from audit.llm import LLMSettings
+
+    for k in ("AUDIT_LLM_PROVIDER", "AUDIT_LLM_BASE_URL", "AUDIT_LLM_MODEL", "AUDIT_LLM_WEB_SEARCH"):
+        monkeypatch.delenv(k, raising=False)
+    assert LLMSettings.from_env().provider == "anthropic"
+    monkeypatch.setenv("AUDIT_LLM_BASE_URL", "http://127.0.0.1:1234/v1")
+    s = LLMSettings.from_env(model="local-model")
+    assert s.provider == "openai" and s.model == "local-model" and s.effective_web_search() == "off"
+    monkeypatch.setenv("AUDIT_LLM_WEB_SEARCH", "google")
+    assert LLMSettings.from_env().effective_web_search() == "google"

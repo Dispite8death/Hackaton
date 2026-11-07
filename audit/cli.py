@@ -42,7 +42,8 @@ def cmd_run(a: argparse.Namespace) -> int:
         return 2
     fetcher = Fetcher(a.cache_dir, ttl_hours=a.cache_ttl, use_cache=not a.no_cache,
                       max_concurrency=a.concurrency, timeout=a.timeout)
-    llm = make_checker(a.llm, a.llm_model)
+    llm = make_checker(a.llm, a.llm_model, provider=a.llm_provider, base_url=a.llm_base_url,
+                       web_search=a.llm_web_search)
     opts = Options(today=today, max_news_details=a.max_news, max_persons=a.max_persons,
                    image_hashes=not a.no_images, llm_news_per_site=a.llm_news if llm else 0)
     started = time.time()
@@ -81,6 +82,28 @@ def cmd_run(a: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_llm_test(a: argparse.Namespace) -> int:
+    """Проверка подключения к ИИ: один тестовый запрос с новостью, содержащей заведомую ошибку."""
+    llm = make_checker(True, a.llm_model, provider=a.llm_provider, base_url=a.llm_base_url,
+                       web_search=a.llm_web_search)
+    if not llm:
+        print("ИИ-бэкенд не настроен — см. README, раздел «Настройка ИИ».")
+        return 2
+    print("Настройки:", llm.settings.describe())
+    text = ("16 октября в нашей школе прошёл праздник, посвящённый Дню отца, который в 2026 году отмечается "
+            "16 октября. Ребята подготовили концерт для пап.")
+    t0 = time.time()
+    res = llm.check_news("День отца в школе", text, datetime(2026, 10, 19, 10, 0), "Тестовая школа")
+    print(f"Время ответа: {time.time() - t0:.1f} c, расход: {llm.usage}")
+    if res is None:
+        print("Ответ не получен или не разобран — подробности в предупреждениях выше.")
+        return 1
+    print("Дата события:", res.get("event_date"), "|", res.get("event_date_basis", "")[:120])
+    for c in res.get("claims", []):
+        print(f"  [{c['status']}] {c['claim'][:90]} — {c.get('note', '')[:120]} ({c['source'][:100]})")
+    return 0
+
+
 def cmd_report(a: argparse.Namespace) -> int:
     from .report import load_results, render_all
     sites, summary = load_results(Path(a.results))
@@ -98,6 +121,15 @@ def load_dotenv(path: str = ".env") -> None:
         if line and not line.startswith("#") and "=" in line:
             k, v = line.split("=", 1)
             os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
+def _llm_args(p: argparse.ArgumentParser) -> None:
+    g = p.add_argument_group("ИИ-бэкенд (переопределяют AUDIT_LLM_* из окружения / .env)")
+    g.add_argument("--llm-provider", choices=["auto", "openai", "anthropic"], default=None,
+                   help="openai — любой OpenAI-совместимый сервер, в т.ч. локальный; anthropic — Claude API")
+    g.add_argument("--llm-base-url", default=None, help="например http://localhost:11434/v1 (Ollama)")
+    g.add_argument("--llm-model", default=None)
+    g.add_argument("--llm-web-search", choices=["auto", "google", "off"], default=None)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -121,10 +153,14 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--max-persons", type=int, default=40, help="карточек сотрудников на раздел")
     r.add_argument("--no-images", action="store_true", help="не скачивать фото для поиска заглушек")
     r.add_argument("--llm", action="store_true", help="факт-чекинг новостей ИИ-агентом Claude с веб-поиском")
-    r.add_argument("--llm-model", default=None)
     r.add_argument("--llm-news", type=int, default=3, help="новостей на сайт для ИИ-проверки")
+    _llm_args(r)
     r.add_argument("-v", "--verbose", action="store_true")
     r.set_defaults(fn=cmd_run)
+    t = sub.add_parser("llm-test", help="проверить подключение к ИИ-модели одним тестовым запросом")
+    _llm_args(t)
+    t.add_argument("-v", "--verbose", action="store_true")
+    t.set_defaults(fn=cmd_llm_test)
     rep = sub.add_parser("report", help="перестроить HTML/XLSX из results.json")
     rep.add_argument("results")
     rep.add_argument("--out")

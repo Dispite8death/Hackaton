@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import re
+from dataclasses import dataclass
 from datetime import date, datetime
 
 log = logging.getLogger(__name__)
@@ -140,52 +141,125 @@ class LLMChecker:
             self.usage["web_searches"] += getattr(stu, "web_search_requests", 0) or 0
 
 
-class GatewayChecker:
-    """OpenAI-совместимый /chat/completions. Для моделей Gemini включается Google Search grounding."""
+@dataclass
+class LLMSettings:
+    """Настройки ИИ-бэкенда. Источник — переменные окружения / файл .env, флаги CLI их переопределяют."""
 
-    def __init__(self, base_url: str, api_key: str, model: str, timeout: float = 120):
+    provider: str = "auto"          # auto | openai | anthropic
+    base_url: str = ""              # OpenAI-совместимый сервер: облачный шлюз или локальный (Ollama, LM Studio…)
+    api_key: str = ""               # для локальных серверов не нужен
+    model: str = ""
+    web_search: str = "auto"        # auto | google | off
+    json_mode: str = "json_object"  # json_object | json_schema | off
+    timeout: float = 120
+    max_tokens: int = 4000
+
+    @classmethod
+    def from_env(cls, **override) -> "LLMSettings":
+        def e(name: str, default: str) -> str:   # пустое значение в .env = значение по умолчанию
+            return (os.environ.get(name) or "").strip() or default
+
+        s = cls(provider=e("AUDIT_LLM_PROVIDER", "auto").lower(), base_url=e("AUDIT_LLM_BASE_URL", ""),
+                api_key=e("AUDIT_LLM_API_KEY", ""), model=e("AUDIT_LLM_MODEL", ""),
+                web_search=e("AUDIT_LLM_WEB_SEARCH", "auto").lower(),
+                json_mode=e("AUDIT_LLM_JSON_MODE", "json_object").lower(),
+                timeout=float(e("AUDIT_LLM_TIMEOUT", "120")), max_tokens=int(e("AUDIT_LLM_MAX_TOKENS", "4000")))
+        for k, v in override.items():
+            if v not in (None, ""):
+                setattr(s, k, v)
+        if s.provider == "auto":
+            s.provider = "openai" if s.base_url else "anthropic"
+        if not s.model:
+            s.model = DEFAULT_GATEWAY_MODEL if s.provider == "openai" else DEFAULT_MODEL
+        return s
+
+    def describe(self) -> str:
+        if self.provider == "anthropic":
+            return f"Anthropic API, модель {self.model}, веб-поиск Claude"
+        ws = {"google": "Google Search grounding", "off": "без веб-поиска"}[self.effective_web_search()]
+        return f"OpenAI-совместимый сервер {self.base_url}, модель {self.model}, {ws}"
+
+    def effective_web_search(self) -> str:
+        if self.web_search in ("google", "off"):
+            return self.web_search
+        return "google" if "gemini" in self.model.lower() else "off"
+
+
+class OpenAICompatChecker:
+    """Любой OpenAI-совместимый /chat/completions: облачные шлюзы (OpenRouter, LiteLLM, vLLM…)
+    и локальные серверы (Ollama, LM Studio, llama.cpp server). Для Gemini-моделей за прокси Vertex/LiteLLM
+    можно включить Google Search grounding (AUDIT_LLM_WEB_SEARCH=google)."""
+
+    def __init__(self, cfg: LLMSettings):
         import requests
 
+        if not cfg.base_url:
+            raise ValueError("не задан AUDIT_LLM_BASE_URL")
         self.requests = requests
-        self.url = base_url.rstrip("/") + "/chat/completions"
-        self.headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-        self.model = model
-        self.timeout = timeout
-        self.grounding = "gemini" in model.lower()
+        self.cfg = cfg
+        base = cfg.base_url.rstrip("/")
+        self.url = base if base.endswith("/chat/completions") else base + "/chat/completions"
+        self.headers = {"Content-Type": "application/json"}
+        if cfg.api_key:
+            self.headers["Authorization"] = f"Bearer {cfg.api_key}"
+        self.model = cfg.model
+        self.timeout = cfg.timeout
+        self.grounding = cfg.effective_web_search() == "google"
         self.usage = {"input_tokens": 0, "output_tokens": 0, "requests": 0, "web_searches": 0}
+
+    def _body(self, prompt: str) -> dict:
+        body = {"model": self.model, "max_tokens": self.cfg.max_tokens, "temperature": 0,
+                "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}]}
+        if self.grounding:
+            body["tools"] = [{"googleSearch": {}}]
+        elif self.cfg.json_mode == "json_object":
+            body["response_format"] = {"type": "json_object"}
+        elif self.cfg.json_mode == "json_schema":
+            body["response_format"] = {"type": "json_schema",
+                                       "json_schema": {"name": "news_check", "schema": SCHEMA, "strict": True}}
+        return body
+
+    def _post(self, body: dict):
+        import time
+
+        for attempt in range(4):
+            try:
+                r = self.requests.post(self.url, headers=self.headers, json=body, timeout=self.timeout)
+            except self.requests.RequestException as e:
+                log.warning("ИИ-сервер недоступен (%s): %s", self.url, e)
+                time.sleep(2 * (attempt + 1))
+                continue
+            if r.status_code in (429, 500, 502, 503, 504):
+                time.sleep(3 * (attempt + 1))
+                continue
+            if r.status_code in (400, 422) and ("response_format" in body or "tools" in body):
+                # сервер не поддерживает JSON-режим или googleSearch — повторяем без них
+                log.warning("ИИ-сервер отклонил %s (HTTP %s) — повтор без него",
+                            "response_format" if "response_format" in body else "веб-поиск", r.status_code)
+                if "tools" in body:
+                    body.pop("tools")
+                    self.grounding = False
+                else:
+                    body.pop("response_format")
+                continue
+            if r.status_code != 200:
+                log.warning("ИИ-сервер HTTP %s: %s", r.status_code, r.text[:200])
+                return None
+            return r.json()
+        return None
 
     def check_news(self, title: str, text: str, published: datetime, site_name: str) -> dict | None:
         prompt = (f"Учреждение: {site_name}\nДата публикации: {published:%Y-%m-%d %H:%M}\n"
                   f"Заголовок: {title}\n\nТекст новости:\n{text[:6000]}\n\n"
                   "Верни ТОЛЬКО JSON без пояснений по схеме: "
                   + json.dumps(SCHEMA["properties"], ensure_ascii=False))
-        body = {"model": self.model, "max_tokens": 4000, "temperature": 0,
-                "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}]}
-        if self.grounding:
-            body["tools"] = [{"googleSearch": {}}]
-        else:
-            body["response_format"] = {"type": "json_object"}
-        cache = _cache_file(self.model, prompt)
+        cache = _cache_file(f"{self.cfg.base_url}|{self.model}|{self.grounding}", prompt)
         if cache.exists():
             self.usage["cached"] = self.usage.get("cached", 0) + 1
             return _normalize(json.loads(cache.read_text(encoding="utf-8")))
-        for attempt in range(3):
-            try:
-                r = self.requests.post(self.url, headers=self.headers, json=body, timeout=self.timeout)
-            except self.requests.RequestException as e:
-                log.warning("LLM-шлюз недоступен: %s", e)
-                continue
-            if r.status_code in (429, 500, 502, 503, 504):
-                import time
-                time.sleep(3 * (attempt + 1))
-                continue
-            if r.status_code != 200:
-                log.warning("LLM-шлюз HTTP %s: %s", r.status_code, r.text[:200])
-                return None
-            break
-        else:
+        d = self._post(self._body(prompt))
+        if not d:
             return None
-        d = r.json()
         self.usage["requests"] += 1
         u = d.get("usage") or {}
         self.usage["input_tokens"] += u.get("prompt_tokens", 0) or 0
@@ -196,22 +270,30 @@ class GatewayChecker:
             self.usage["web_searches"] += 1
         data = _parse_json(msg.get("content") or "")
         if data is None:
+            log.warning("ИИ вернул не-JSON ответ: %s", (msg.get("content") or "")[:150])
             return None
         sources = ", ".join(dict.fromkeys(c.get("title", "") for c in cites if c.get("title")))[:200]
+        label = f"ИИ ({self.model}) + Google Search" if self.grounding else f"ИИ ({self.model}), без веб-поиска"
         for c in data.get("claims", []):
             src = str(c.get("source") or "").strip()
             if src.lower() in ("", "null", "none", "-"):
                 src = sources
-            c["source"] = f"ИИ ({self.model}) + Google Search: {src[:200] or 'источник не найден'}"
+            c["source"] = f"{label}: {src[:200] or 'источник не найден'}"
             if c.get("status") not in ("confirmed", "contradiction", "unverified"):
                 c["status"] = "unverified"
-            if c["status"] == "confirmed" and not cites:
-                c["status"] = "unverified"   # без найденных источников «подтверждено» не засчитываем
+            if not cites and c["status"] != "unverified":
+                # без найденных источников ни «подтверждено», ни «расхождение» не засчитываем:
+                # это мнение модели, а не проверка по открытым источникам
+                c["note"] = f"(мнение модели: {c['status']}) {c.get('note', '')}"
+                c["status"] = "unverified"
             c.setdefault("note", "")
             c.setdefault("claim", "")
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         return _normalize(data)
+
+
+GatewayChecker = OpenAICompatChecker   # обратная совместимость
 
 
 def _cache_file(model: str, prompt: str):
@@ -247,14 +329,16 @@ def _normalize(data: dict) -> dict:
     return data
 
 
-def make_checker(enabled: bool, model: str | None = None):
+def make_checker(enabled: bool, model: str | None = None, **override):
+    """Создаёт ИИ-бэкенд по настройкам (см. LLMSettings / README «Настройка ИИ»)."""
     if not enabled:
         return None
-    base, key = os.environ.get("AUDIT_LLM_BASE_URL"), os.environ.get("AUDIT_LLM_API_KEY")
+    cfg = LLMSettings.from_env(model=model, **override)
     try:
-        if base and key:
-            return GatewayChecker(base, key, model or os.environ.get("AUDIT_LLM_MODEL") or DEFAULT_GATEWAY_MODEL)
-        return LLMChecker(model or os.environ.get("AUDIT_LLM_MODEL") or DEFAULT_MODEL)
+        checker = OpenAICompatChecker(cfg) if cfg.provider == "openai" else LLMChecker(cfg.model)
     except Exception as e:  # noqa: BLE001 — нет пакета/ключа: работаем без ИИ
         log.warning("ИИ-проверка отключена: %s", e)
         return None
+    checker.settings = cfg
+    log.info("ИИ-проверка: %s", cfg.describe())
+    return checker
