@@ -6,5 +6,9 @@ openpyxl>=3.1
 pillow>=10.0
 # опционально: ИИ-факт-чекинг новостей (--llm)
 anthropic>=1.0
+# веб-интерфейс «Север» (python -m sever)
+starlette>=0.40
+uvicorn>=0.30
+pydantic>=2.5
 # тесты
 pytest>=8.0

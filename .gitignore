@@ -9,3 +9,5 @@ reports/*
 downloads/
 .env
 reports/latest/results.json
+# данные веб-интерфейса (SQLite, выгрузки запусков)
+data/app/
