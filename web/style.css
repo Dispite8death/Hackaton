@@ -139,7 +139,7 @@ h3 {font-size:16px;line-height:1.35;letter-spacing:-.014em}
 .subtle,.caption,.cell-muted {font-size:13px;color:var(--muted)}
 .caption {margin-top:10px}
 .stack {display:flex;width:100%;height:12px;border-radius:6px;background:#e9efed;overflow:hidden;gap:1px;margin:18px 0}
-.stack span,.bar i {background:var(--tone,#64847a)}
+.stack a,.bar i {background:var(--tone,#64847a)}
 .legend {display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
 .legend-row {display:flex;align-items:center;gap:7px;font-size:13px}
 .legend-row strong {margin-left:auto;font-size:14px}
@@ -235,3 +235,11 @@ tbody tr:hover {background:#f9fbfa}
   .shell{width:100%;padding:0}.panel,.list-panel,.kpi{break-inside:avoid}
   body {background:white}.find-body{display:block}.page-head{margin-bottom:10px}
 }
+
+.relationship-panel{margin-bottom:18px}.relationship-panel .panel-head{align-items:flex-start}.diagram-switch{display:flex;gap:3px;background:#edf3f1;padding:3px;border-radius:7px}.diagram-switch button{border:0;background:transparent;border-radius:5px;padding:6px 11px;font-size:12px;font-weight:650;color:#4b665d}.diagram-switch button[aria-pressed=true]{background:white;color:#165f4e;box-shadow:0 1px 5px #173b3929}.diagram-description{font-size:13px;color:var(--muted);margin:-4px 0 17px}.er-flow{display:flex;align-items:stretch;gap:7px;overflow-x:auto;padding-bottom:5px}.er-node{position:relative;flex:1 0 132px;border:1px solid #bfd5c9;background:#f5faf7;border-radius:8px;padding:12px 13px;min-height:87px}.er-node small{position:absolute;right:8px;top:7px;font-size:10px;background:#d6ece0;color:#23634e;border-radius:4px;padding:2px 5px}.er-node strong,.er-node code{display:block}.er-node strong{font-size:13px;margin:5px 20px 5px 0}.er-node code{font-size:10px;color:#5b756a;overflow-wrap:anywhere}.er-link{align-self:center;color:#2b876b;font-size:20px;font-weight:700;flex:none}
+a[data-drill]{color:inherit;text-decoration:none;cursor:pointer}
+a[data-drill]:is(:hover,:focus-visible){outline:2px solid #357767;outline-offset:2px}
+.chart-legend>a{display:flex;align-items:center;gap:6px;font-size:12px}
+.donut{position:relative;background:#edf1ee}
+.donut svg{position:absolute;inset:0;width:100%;height:100%}
+.donut>div{position:relative;pointer-events:none}

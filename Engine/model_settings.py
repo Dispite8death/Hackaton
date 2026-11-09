@@ -144,9 +144,12 @@ def portal_connection(conn):
         return "ИИ выключен", None, ""
     try:
         profile = checked(get_profile(conn))
+    except (KeyError, TypeError, ValueError) as error:
+        return "Проверьте профиль ИИ. " + str(error)[:180], None, ""
+    try:
         key = active_secret(conn, profile)
     except Exception:
-        return "Проверьте настройки подключения ИИ", None, ""
+        return "Не удалось прочитать ключ ИИ из хранилища учётных данных ОС", None, ""
     if profile.provider == "compatible" and not local_host(urlsplit(profile.endpoint).hostname) and not key.strip():
         return "Для ИИ нужен API-ключ", None, ""
     return "ИИ настроен", profile, key

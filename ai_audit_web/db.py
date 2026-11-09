@@ -340,6 +340,11 @@ def get_last_site_result(site_id):
         return dict(row) if row else None
 
 
+def save_summary(result_id, text):
+    with closing(conn()) as c, c:
+        c.execute("UPDATE run_sites SET llm_summary=? WHERE id=?", (text, result_id))
+
+
 def get_site_findings(run_id, site_id):
     with closing(conn()) as c, c:
         rows = c.execute("""

@@ -2,7 +2,7 @@ from html import escape
 
 
 def navigation(active, status):
-    modes = (("/", "Сводный аудит"), ("/quick", "Алгоритмический аудит"), ("/admin", "Настройки"))
+    modes = (("/archive", "Сводный аудит"), ("/quick", "Алгоритмический аудит"), ("/admin", "Настройки"))
     links = []
     for path, label in modes:
         current = ' aria-current="page"' if path == active else ""

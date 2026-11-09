@@ -20,7 +20,7 @@ SEVERITY={"high":"Высокая","medium":"Средняя","low":"Низкая"
 QUALITY={"excellent":"Отлично","good":"Хорошо","fair":"Удовлетворительно","poor":"Требует внимания","unrated":"Недостаточно данных"}
 CONFIDENCE={"high":"Высокая","medium":"Средняя","low":"Низкая","unknown":"Не установлена"}
 LABELS={"kind":KINDS,"category":CATEGORIES,"group":GROUPS,"severity":SEVERITY,"quality":QUALITY,
-        "confidence":CONFIDENCE,"status":STATUS}
+        "detector":{"ai":"ИИ","algorithm":"Алгоритм","none":"Ещё не проверено"},"confidence":CONFIDENCE,"status":STATUS}
 GRADING={
     "scale":"0–100","method":"Каждый применимый критерий имеет один голос. Если на проверенной странице выявлена проблема, "
     "критерий требует исправления. Балл равен доле подтверждённых критериев среди критериев с определённым результатом.",
@@ -238,7 +238,7 @@ def _collect(conn,filters):
           FROM crawl_run r LEFT JOIN crawl_fetch f ON f.run_id=r.id GROUP BY r.id ORDER BY r.started_at DESC,r.id DESC""")}
     findings={}
     def put(oid,criterion,status,description,*,pid=None,url=None,stamp=None,evidence="",source="Проверка архива",
-            confidence=None,title=None,identity=None,scored=True,source_id=None,materials=None):
+            confidence=None,title=None,identity=None,scored=True,source_id=None,materials=None,detector="algorithm"):
         if oid not in orgs:
             return
         org=orgs[oid]
@@ -261,7 +261,7 @@ def _collect(conn,filters):
             "info":"medium","unverified":"unknown"}[status],"priority":{"high":1,"medium":2,"low":3}[severity],
             "recommendation":remedy if status=="issue" else _acquisition(criterion) if status in {"review","unverified"} else "",
             "page_id":pid,"url":_url(url or (page[1] if page else org["site_url"])),"checked_at":_iso(stamp),
-            "source":source,"source_id":source_id,"materials":materials or [],"scored":bool(grade),"_ts":stamp or 0}
+            "detector":detector,"source":source,"source_id":source_id,"materials":materials or [],"scored":bool(grade),"_ts":stamp or 0}
 
     def page_evidence(pid,criterion,status,description,**kwargs):
         if pid in pages:
@@ -465,7 +465,7 @@ def _model_findings(conn,put,pages):
         allow=polarity!="informational" and check.get("visual",{}).get("include_in_score",True)
         ident="model:"+pages[pid][1]+":"+key
         put(pages[pid][0],criterion,state,description,pid=pid,stamp=ts,title=title,evidence=evidence[:800],identity=ident,
-            source="ИИ · "+model,source_id=aid,materials=refs,scored=allow,confidence="medium" if state in {"issue","pass","info"} else (
+            detector="ai",source="ИИ · "+model,source_id=aid,materials=refs,scored=allow,confidence="medium" if state in {"issue","pass","info"} else (
             "unknown" if state=="unverified" else "low"))
 
 
@@ -497,7 +497,7 @@ def _build(conn,filters,detail_id=None):
     all_per_org={}
     query=_key(filters.get("q"))
     choices={k:set(v) for k,v in filters.items() if isinstance(v,list)}
-    issue_filter=any(k in choices for k in ("status","confidence","severity","group","category"))
+    issue_filter=any(k in choices for k in ("status","confidence","severity","group","category","detector"))
     def selected(key,value):
         return key not in choices or value in choices[key]
     for oid,org in orgs.items():
@@ -510,7 +510,7 @@ def _build(conn,filters,detail_id=None):
                 "kind":org["kind"],"category":cat,"group":group,"title":title,"description":"Недостаточно данных. Для этого критерия нет проверенного результата в выбранном периоде.",
                 "evidence":"Материалы для вывода не подтверждены.","status":"unverified","severity":severity,"confidence":"unknown",
                 "priority":{"high":1,"medium":2,"low":3}[severity],"recommendation":_acquisition(key),
-                "url":_url(org["site_url"]),"page_id":None,"checked_at":None,"source":"План проверок","source_id":None,
+                "url":_url(org["site_url"]),"page_id":None,"checked_at":None,"detector":"none","source":"План проверок","source_id":None,
                 "materials":[],"scored":False,"_ts":0})
         grade=_grade(rows,applicable)
         quality=_quality(grade["score"],grade["coverage"],grade["verified_criteria"])
@@ -521,7 +521,7 @@ def _build(conn,filters,detail_id=None):
         if not selected("quality",quality):
             continue
         org_hit=not query or query==str(oid) or _matches(query,org["name"]+" "+org["site_url"])
-        selection=[r for r in rows if all(selected(k,r[k]) for k in ("status","confidence","severity","group","category"))
+        selection=[r for r in rows if all(selected(k,r[k]) for k in ("status","confidence","severity","group","category","detector"))
                    and (org_hit or _matches(query," ".join((r["title"],r["description"],r["evidence"],r["recommendation"],
                                                          CATEGORIES[r["category"]]))))]
         if (issue_filter or not org_hit) and not selection and detail_id is None:

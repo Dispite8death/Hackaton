@@ -57,7 +57,7 @@ def create_app():
         def serve():
             if media == "text/html":
                 html = (site.WEB / filename).read_text(encoding="utf8")
-                nav = navigation("/admin" if filename == "admin.html" else "/", ai_status())
+                nav = navigation("/admin" if filename == "admin.html" else "/archive", ai_status())
                 return Response(html.replace("<!--portal-navigation-->", nav), media_type=media,
                                 headers={"Cache-Control": "no-store"})
             return FileResponse(site.WEB / filename, media_type=media, headers={"Cache-Control":"no-cache"})
@@ -70,6 +70,11 @@ def create_app():
     @app.get("/api/access")
     def access():
         return {"ok":True,"service":"kontur-portal","admin":True,"ai_status":ai_status()}
+
+    @app.get("/api/admin/progress")
+    def job_progress():
+        with closing(config.connect_db()) as conn:
+            return {"job":site.portal_jobs.status(), "cycle":site.audit_worker.last_status(conn), "manual_cycle":site.JOB.copy()}
 
     @app.get("/api/admin/state")
     def state():

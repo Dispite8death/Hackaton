@@ -47,7 +47,7 @@ def audit_settings():
     values = db.get_settings()
     with closing(config.connect_db()) as conn:
         _, profile, key = model_settings.portal_connection(conn)
-    values.update(llm_enabled="1" if profile else "0", llm_api_key=key,
+    values.update(llm_enabled="1" if profile else "0", llm_api_key=key, llm_timeout=profile.timeout if profile else 30,
                   llm_base_url=profile.endpoint if profile else "",
                   llm_model=profile.model if profile else "", llm_mode="openai")
     return values

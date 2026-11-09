@@ -354,7 +354,6 @@ async def do_audit(offline=False, sites=None):
             try:
                 result = await core.audit_site(site, settings, offline=offline)
                 print("  -> ошибок: " + str(len(result.get("findings", []))) + ", балл: " + str(result.get("score")))
-                result["llm_summary"] = await llm.summarize(site, result["findings"], audit_settings())
                 db.save_site_result(run_id, site, result)
                 scores.append(result["score"])
             except Exception as e:
@@ -387,7 +386,6 @@ async def audit_single_site(site_id, offline=False):
         run_id = db.start_run(1)
         try:
             result = await core.audit_site(site, settings, offline=offline)
-            result["llm_summary"] = await llm.summarize(site, result["findings"], audit_settings())
             db.save_site_result(run_id, site, result)
             db.finish_run(run_id, "done", result["score"])
             print("[AUDIT SINGLE] === ЗАВЕРШЕНО. Балл: " + str(result["score"]) + " ===\n")
@@ -627,9 +625,9 @@ def site_detail(site_id: int):
         return
 
     layout(site["name"])
-    container = ui.column().classes("audit-container w-full gap-4 px-4")
-
     progress = ui.label().props("role=status").classes("audit-subnav")
+    container = ui.column().classes("audit-container w-full gap-4 px-4")
+    generating = False
 
     async def run_check(offline):
         if audit_lock.locked():
@@ -650,7 +648,7 @@ def site_detail(site_id: int):
                 ui.link("← К списку сайтов", "/sites").classes("text-primary")
                 linked_id = archive_id(site["url"])
                 if linked_id is not None:
-                    ui.link("Сводная карточка учреждения", f"/#institution/{linked_id}")
+                    ui.link("Сводная карточка учреждения", f"/archive#institution/{linked_id}")
                 ui.button("Проверить сайт", on_click=lambda: run_check(False)).props("color=primary icon=cloud_download")
                 cached = ui.button("Проверить сохранённые страницы", on_click=lambda: run_check(True)).props("color=teal icon=flash_on")
                 if not has_cache(site_id):
@@ -735,32 +733,39 @@ def site_detail(site_id: int):
                 else:
                     ui.label("Объяснения еще нет. Нажмите кнопку — нейросеть объяснит ошибки простыми словами.").classes("text-grey-7")
 
-                async def make_explanation():
-                    s = audit_settings()
-                    if s.get("llm_enabled") != "1":
-                        ui.notify("Сначала включите LLM в разделе «Настройки».", type="warning")
+                async def generate(summary=False):
+                    nonlocal generating
+                    if generating:
                         return
-                    r = db.get_last_site_result(site_id)
-                    if not r:
-                        ui.notify("Сначала запустите аудит этого сайта.", type="warning")
-                        return
-                    fnds = db.get_site_findings(r["run_id"], site_id)
-                    ui.notify("Нейросеть думает... 1–2 минуты.", type="info")
+                    generating = True
                     try:
-                        text = await llm.explain(site, fnds, s)
-                        if text is None:
-                            ui.notify("LLM выключен в настройках.", type="warning")
-                            return
-                        llm.save_explanation(site_id, text)
-                        ui.notify("Объяснение готово!", type="positive")
+                        settings = audit_settings()
+                        if settings["llm_enabled"] != "1":
+                            raise ValueError(ai_status() + ". Откройте настройки подключения.")
+                        progress.set_text("Ожидаем ответ модели…")
+                        text = await (llm.summarize if summary else llm.explain)(site, findings, settings)
+                        if not isinstance(text, str) or not text.strip():
+                            raise ValueError("Модель вернула пустой ответ.")
+                        if summary:
+                            db.save_summary(result["id"], text)
+                        else:
+                            llm.save_explanation(site_id, text)
+                        progress.set_text("Сводка сохранена." if summary else "Объяснение сохранено.")
                         render()
-                    except Exception as e:
-                        ui.notify("Ошибка LLM: " + str(e), type="negative")
-
-                explain_button = ui.button("Объяснить с помощью ИИ", on_click=make_explanation).props("color=primary icon=psychology")
-                if audit_settings()["llm_enabled"] != "1":
-                    explain_button.disable()
-                    ui.link("Настроить ИИ для объяснения", "/admin#model")
+                    except Exception as error:
+                        progress.set_text("Не удалось получить ответ ИИ. " + str(error))
+                    finally:
+                        generating = False
+                reason = ai_status()
+                for caption, summary in (("Составить сводку с ИИ", True), ("Объяснить с помощью ИИ", False)):
+                    with ui.element("span") as wrapper:
+                        button = ui.button(caption, on_click=lambda summary=summary: generate(summary))
+                        if reason != "ИИ настроен":
+                            button.disable()
+                            wrapper.props("tabindex=0")
+                            ui.tooltip(reason + ". Откройте настройки подключения.")
+                if reason != "ИИ настроен":
+                    ui.link("Настроить ИИ", "/admin#model")
 
             # ---------- Фото-аудит ----------
             with ui.card().classes("w-full p-4 bg-teal-50"):

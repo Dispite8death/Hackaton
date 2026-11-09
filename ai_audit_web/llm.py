@@ -23,30 +23,42 @@ async def _request(settings, prompt, timeout=300):
     mode = settings.get("llm_mode", "ollama")
     model = settings.get("llm_model", "qwen2.5:7b-instruct")
 
-    async with httpx.AsyncClient(timeout=timeout) as client:
-        if mode == "openai":
-            base = (settings.get("llm_base_url") or "http://127.0.0.1:11434/v1").rstrip("/")
-            url = base + "/chat/completions"
-            headers = {"Content-Type": "application/json"}
-            key = settings.get("llm_api_key", "")
-            if key:
-                headers["Authorization"] = f"Bearer {key}"
-            payload = {
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.3,
-                "stream": False,
-            }
-            r = await client.post(url, json=payload, headers=headers)
-            r.raise_for_status()
-            data = r.json()
-            return data["choices"][0]["message"]["content"]
-        else:
-            url = settings.get("llm_url") or "http://127.0.0.1:11434/api/generate"
-            payload = {"model": model, "prompt": prompt, "stream": False}
-            r = await client.post(url, json=payload)
-            r.raise_for_status()
-            return r.json().get("response", "")
+    try:
+        async with httpx.AsyncClient(timeout=settings.get("llm_timeout", timeout)) as client:
+            if mode == "openai":
+                base = (settings.get("llm_base_url") or "http://127.0.0.1:11434/v1").rstrip("/")
+                url = base + "/chat/completions"
+                headers = {"Content-Type": "application/json"}
+                key = settings.get("llm_api_key", "")
+                if key:
+                    headers["Authorization"] = f"Bearer {key}"
+                payload = {
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.3,
+                    "stream": False,
+                }
+                r = await client.post(url, json=payload, headers=headers)
+                r.raise_for_status()
+                data = r.json()
+                return data["choices"][0]["message"]["content"]
+            else:
+                url = settings.get("llm_url") or "http://127.0.0.1:11434/api/generate"
+                payload = {"model": model, "prompt": prompt, "stream": False}
+                r = await client.post(url, json=payload)
+                r.raise_for_status()
+                return r.json().get("response", "")
+    except httpx.TimeoutException as error:
+        raise ValueError("Истёк тайм-аут. Проверьте загрузку модели и тайм-аут в настройках.") from error
+    except httpx.HTTPStatusError as error:
+        code = error.response.status_code
+        reason = {401: "Проверьте ключ API.", 403: "У ключа нет доступа к модели.",
+                  404: "Проверьте адрес API и идентификатор модели.", 429: "Исчерпан лимит запросов или квота."}
+        raise ValueError(f"API вернул HTTP {code}. " + reason.get(code, "Проверьте параметры модели и состояние сервера.")) from error
+    except httpx.RequestError as error:
+        raise ValueError("Сервер модели недоступен. Проверьте адрес, порт и запущена ли модель.") from error
+    except (KeyError, IndexError, TypeError, ValueError) as error:
+        raise ValueError("Сервис вернул неожиданный формат ответа. Проверьте совместимость API.") from error
 
 
 def _findings_text(findings, limit=25):
@@ -69,8 +81,6 @@ def _findings_text(findings, limit=25):
 async def summarize(site, findings, settings):
     if not _enabled(settings):
         return ""
-    if not findings:
-        return "Критичных проблем не найдено."
     prompt = f"""Ты — помощник по аудиту сайтов школ и детских садов.
 Сайт: {site.get('name')} (тип: {site.get('type')})
 
@@ -78,10 +88,7 @@ async def summarize(site, findings, settings):
 {_findings_text(findings)}
 
 Составь краткую сводку (3–5 предложений) для администратора: общее состояние сайта и на что обратить внимание в первую очередь. На русском языке, без технического жаргона."""
-    try:
-        return await _request(settings, prompt)
-    except Exception as e:
-        return f"LLM недоступен или ошибка запроса: {e}"
+    return await _request(settings, prompt)
 
 
 # ============================================================

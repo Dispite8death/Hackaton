@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Контур · Аудит сайтов образования</title>
+  <meta name="description" content="Единая система проверки сайтов образовательных учреждений Магаданской области: быстрый алгоритмический и углублённый аудит.">
+  <link rel="stylesheet" href="system.css">
+<script>
+    const oldSections = /^#(?:institution\/\d+|overview|findings|institutions)$/;
+    const oldFilters = ["q","organization_id","kind","status","quality","severity","group","category","confidence","date_from","date_to","detector"];
+    const query = new URLSearchParams(location.search);
+    if (oldSections.test(location.hash) || oldFilters.some(key => query.has(key))) {
+      location.replace("/archive" + location.search + location.hash);
+    }
+  </script></head>
+<body>
+  <a class="skip" href="#main">К содержимому</a>
+  <header class="masthead"><div class="wrap mast-inner">
+    <div class="identity"><span class="symbol" aria-hidden="true"><i></i><i></i><i></i></span><span><strong>Контур</strong><small>Аудит сайтов образования</small></span></div>
+    <a href="/admin">Настройки</a><span class="region-tag">Магаданская область</span>
+  </div></header>
+  <main id="main">
+    <section class="landing-hero"><div class="wrap hero-grid">
+      <div><p class="eyebrow">Единая система · два контура проверки</p><h1>Проверка нужной глубины</h1>
+        <p class="hero-lead">Сначала выберите задачу. Быстрый контур проверяет выбранное учреждение. Углублённый собирает широкую картину по сайтам, документам и источникам.</p>
+      </div>
+      <div class="hero-diagram" aria-label="Два уровня аудита"><div><b>01</b><span>Выборочная проверка</span><strong>Алгоритмы</strong></div><div class="diagram-connector"></div><div><b>02</b><span>Полный массив материалов</span><strong>Алгоритмы + ИИ</strong></div></div>
+    </div></section>
+    <section class="wrap modes" aria-labelledby="choose"><div class="section-heading"><p class="eyebrow">Выбор режима</p><h2 id="choose">Какую проверку открыть?</h2><p>Оба режима работают с результатами проверок. Они отличаются глубиной и временем обработки.</p></div>
+      <div class="mode-grid">
+        <article class="mode-card"><div class="mode-top"><span class="mode-number">01 / БЫСТРЫЙ КОНТУР</span><span class="mode-icon" aria-hidden="true">↗</span></div>
+          <h3>Алгоритмический аудит</h3><p class="mode-intro">Выборочная проверка конкретного учреждения. Правила находят технические и содержательные сигналы; ИИ помогает со сводкой и объяснением.</p>
+          <ul><li>Проверка сайта по заданным правилам</li><li>Карточка учреждения и замечания</li><li>Сводка и объяснение ИИ по отдельному запросу</li></ul>
+          <a class="mode-link" href="/quick">Открыть быстрый контур <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="mode-card deep"><div class="mode-top"><span class="mode-number">02 / УГЛУБЛЁННЫЙ КОНТУР</span><span class="mode-icon" aria-hidden="true">◎</span></div>
+          <h3>Углублённый аудит</h3><p class="mode-intro">Широкий обход страниц и вложений, проверка критериев алгоритмами и локальной моделью, сопоставление доказательств и внешних источников.</p>
+          <p class="mode-cadence"><strong>Комплексный фоновый процесс</strong><span>Идёт партиями и требует времени. Сохранённые результаты доступны сразу; новый полный анализ не запускается как мгновенный запрос посетителя.</span></p>
+          <ul><li>Документы, новости, сотрудники и фото</li><li>Подтверждение, замечание или ручная сверка</li><li>Сводка по учреждениям и подробные основания</li></ul>
+          <a class="mode-link" href="/archive">Открыть углублённый контур <span aria-hidden="true">→</span></a>
+        </article>
+      </div>
+    </section>
+    <section class="wrap explanation"><div><p class="eyebrow">Почему два контура</p><h2>Выборочная проверка одного учреждения. Углублённая — для системной работы.</h2></div><p>Полный обход включает множество страниц, карточек и файлов. Часть выводов дополнительно проверяет локальная модель. Администратор может запустить очередной цикл вручную, но он обрабатывает ограниченную партию, а не мгновенно перепроверяет учреждение целиком. Поэтому быстрый контур показывает процесс, а углублённый — сохранённый массив результатов и доказательств.</p></section>
+  </main>
+  <footer class="wrap landing-footer"><span>Контур · Аудит сайтов образования</span><span>Магаданская область</span></footer>
+</body>
+</html>

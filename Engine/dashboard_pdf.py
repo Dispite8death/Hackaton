@@ -132,7 +132,7 @@ def _ranking(orgs,s):
 
 def _describe_filters(filters):
     titles={"kind":"Тип","organization_id":"Номера учреждений","category":"Раздел","group":"Группа",
-            "severity":"Критичность","quality":"Качество","confidence":"Уверенность","status":"Состояние",
+            "detector":"Кто проверил","severity":"Критичность","quality":"Качество","confidence":"Уверенность","status":"Состояние",
             "date_from":"С даты","date_to":"По дату","q":"Поиск"}
     parts=[]
     for k,v in filters.items():

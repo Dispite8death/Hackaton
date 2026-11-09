@@ -5,8 +5,9 @@ import threading
 from contextlib import closing
 from dataclasses import asdict
 from pathlib import Path
+from keyring.errors import KeyringError
 
-from . import audit_worker, config, retention, worker_schedule
+from . import audit_worker, config, portal_jobs, retention, worker_schedule
 from .crawl_store import initialize_db
 from .factcheck_sources import add_allowed_source, get_allowed_sources, remove_allowed_source
 from .home_terms import CATEGORY_LABELS, add_term, get_terms, remove_term
@@ -15,7 +16,7 @@ from .model_settings import DEFAULTS, Profile, get_profile, save_profile, save_s
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
-ASSETS = {"/":("index.html","text/html"),"/app.js":("app.js","text/javascript"),"/style.css":("style.css","text/css")}
+ASSETS = {"/":("home.html","text/html"),"/system.css":("system.css","text/css"),"/archive":("index.html","text/html"),"/app.js":("app.js","text/javascript"),"/style.css":("style.css","text/css")}
 ADMIN_ASSETS = {"/admin":("admin.html","text/html"),"/admin.js":("admin.js","text/javascript")}
 TOKEN = secrets.token_urlsafe(32)
 WORK = threading.Lock()
@@ -33,7 +34,8 @@ def prepare_database():
 
 
 def admin_state(conn):
-    return {"token":TOKEN,"settings":audit_worker.get_settings(conn),"retention":retention.get_policy(conn),
+    return {"organizations":[dict(row) for row in conn.execute("SELECT id,name,site_url FROM organization ORDER BY name,id")],
+            "token":TOKEN,"settings":audit_worker.get_settings(conn),"retention":retention.get_policy(conn),
             "sources":get_allowed_sources(conn),"words":get_terms(conn),"word_labels":CATEGORY_LABELS,
             "provider":get_profile(conn).provider,"profiles":{k:asdict(get_profile(conn,k)) for k in DEFAULTS},
             "ai_enabled":setting(conn,"portal_ai_enabled",False),"ai_status":portal_connection(conn)[0],
@@ -47,7 +49,7 @@ def start_work():
     def execute():
         try:
             with closing(config.connect_db()) as conn:
-                result = audit_worker.run_once(conn)
+                result = audit_worker.run_once(conn, overrides={"model_checks":0})
             JOB.update(state=result["state"])
         except Exception as error:
             JOB.update(state="error",error=str(error)[:400])
@@ -58,6 +60,18 @@ def start_work():
 
 
 def update_settings(conn, action, data):
+    if action == "plan":
+        return portal_jobs.preview(conn, data.get("ids"), data.get("mode"))
+    if action == "analyze":
+        return portal_jobs.start(conn, data.get("ids"), data.get("mode"), WORK, data.get("ticket"))
+    if action == "verify":
+        return portal_jobs.verify(conn)
+    if action == "benchmark":
+        if data.get("decline") is True:
+            profile, _ = portal_jobs.profile_for_job(conn)
+            portal_jobs.record_benchmark(conn, profile, None)
+            return {"message":"Отказ от теста сохранён для этого профиля"}
+        return portal_jobs.verify(conn, benchmark=True)
     if action=="settings":
         previous = audit_worker.get_settings(conn)["interval_minutes"]
         interval = data["settings"].get("interval_minutes", previous)
@@ -88,12 +102,19 @@ def update_settings(conn, action, data):
         with conn:
             (add_term if data["operation"]=="add" else remove_term)(conn,data["category"],data["word"])
         return {"words":get_terms(conn)}
+    if action=="disable-ai":
+        with conn:
+            set_setting(conn,"portal_ai_enabled",False)
+        return {"ai_status":"ИИ выключен"}
     if action=="profile":
         p = Profile(**data["profile"])
         with conn:
             save_profile(conn,p)
             if data.get("secret"):
-                save_secret(conn,p,data["secret"])
+                try:
+                    save_secret(conn,p,data["secret"])
+                except KeyringError as error:
+                    raise ValueError("Не удалось сохранить ключ в хранилище учётных данных ОС.") from error
             set_setting(conn,"portal_ai_enabled",data.get("enabled") is True)
         return {"provider":p.provider,"model":p.model,"ai_status":portal_connection(conn)[0]}
     if action=="factcheck" and type(data.get("enabled")) is bool:

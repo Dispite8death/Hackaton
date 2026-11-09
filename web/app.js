@@ -15,7 +15,7 @@
       contacts:"Контакты",schedule:"Расписание",programs:"Программы",layout:"Оформление",factcheck:"Фактчекинг",structure:"Структура"},
     group:{content:"Содержание",publication:"Публикации",layout:"Оформление",photos:"Фото",attachments:"Вложения",navigation:"Навигация"}
   };
-  const facets = {organization_id:"Учреждения",status:"Статус",severity:"Критичность",quality:"Уровень",
+  const facets = {detector:"Кто проверил",organization_id:"Учреждения",status:"Статус",severity:"Критичность",quality:"Уровень",
     category:"Категория",group:"Группа проверок",confidence:"Уверенность"};
   const known = ["kind", ...Object.keys(facets), "date_from","date_to","q"];
   const dateFmt = new Intl.DateTimeFormat("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Asia/Magadan"});
@@ -166,7 +166,11 @@
     return `<div class="empty"><h3>${esc(title)}</h3><p>${esc(text)}</p>${reset && params(filters)?'<button class="secondary" data-reset>Сбросить фильтры</button>':""}</div>`;
   }
   function kpi(title,value,detail,tone) {
-    return `<article class="kpi" style="--tone:${tone}"><p>${esc(title)}</p><strong>${esc(value)}</strong><small>${esc(detail)}</small></article>`;
+    const status={"Замечания":"issue","Требуют исправления":"issue","Нужна сверка":"review","Требуют сверки":"review"}[title];
+    const target=status?{status:[status]}:null;
+    if(target && route().id) target.organization_id=[String(route().id)];
+    const tag=target?"a":"article";
+    return `<${tag} class="kpi" ${target?drillAttrs(target):""} style="--tone:${tone}"><p>${esc(title)}</p><strong>${esc(value)}</strong><small>${esc(detail)}</small></${tag}>`;
   }
   function score(value) {return value==null ? "—" : num(value);}
   function sortFindings(list) {
@@ -194,18 +198,43 @@
       ${refs?`<div class="material-refs"><strong>Материалы проверки</strong><ul>${refs}</ul></div>`:""}
       <div class="wide-actions">${link}${inst}</div></div></details>`;
   }
+  function drill(extra, tab="findings", chart=false) {
+    const next={...filters};
+    for (const [key,value] of Object.entries(chart ? chartFilters : {})) if (value) next[key]=[value];
+    for (const [key,values] of Object.entries(extra)) {
+      const allowed=next[key];
+      next[key]=allowed ? values.filter(v=>allowed.includes(v)) : values;
+      if (!next[key].length) return "";
+    }
+    return "/archive?"+params(next)+"#"+tab;
+  }
+  function drillAttrs(extra, tab, chart=false) {
+    const href=drill(extra,tab,chart);
+    return href ? `href="${esc(href)}" data-drill title="Открыть соответствующие результаты"` : 'aria-disabled="true"';
+  }
+  let hoverTimer;
+  document.addEventListener("pointerover",e=>{
+    const link=e.target.closest("a[data-drill][href]");
+    if (!link || e.pointerType!=="mouse" || link.contains(e.relatedTarget)) return;
+    clearTimeout(hoverTimer);
+    hoverTimer=setTimeout(()=>{if(link.matches(":hover")) location.assign(link.href.baseVal || link.getAttribute("href"));},800);
+  });
+  document.addEventListener("pointerout",e=>{
+    const link=e.target.closest("a[data-drill]");
+    if(link && !link.contains(e.relatedTarget)) clearTimeout(hoverTimer);
+  });
   function resultsPanel(counts) {
     const sequence=["pass","issue","review","unverified","info"];
     const total=sequence.reduce((s,k)=>s+Number(counts[k]||0),0);
-    const stacks=sequence.filter(k=>counts[k]>0).map(k=>`<span class="${k}" style="flex:${Number(counts[k])}"></span>`).join("");
-    const legend=sequence.map(k=>`<div class="legend-row"><i class="dot ${k}"></i><span>${esc(label("status",k))}</span><strong>${num(counts[k]||0)}</strong></div>`).join("");
+    const stacks=sequence.filter(k=>counts[k]>0).map(k=>`<a ${drillAttrs({status:[k]})} aria-label="${esc(label("status",k))}" class="${k}" style="flex:${Number(counts[k])}"></a>`).join("");
+    const legend=sequence.map(k=>`<a class="legend-row" ${drillAttrs({status:[k]})}><i class="dot ${k}"></i><span>${esc(label("status",k))}</span><strong>${num(counts[k]||0)}</strong></a>`).join("");
     return `<section class="panel"><div class="panel-head"><h2>Результаты проверок</h2><span class="subtle">${num(total)} всего</span></div>
-      <div class="stack" aria-hidden="true">${stacks}</div><div class="legend">${legend}</div></section>`;
+      <div class="stack">${stacks}</div><div class="legend">${legend}</div></section>`;
   }
   function qualityPanel(counts) {
     const list=["excellent","good","fair","poor","unrated"];
     const max=Math.max(1,...list.map(k=>Number(counts[k]||0)));
-    const rows=list.map(k=>`<div class="quality-row"><span>${esc(label("quality",k))}</span><span class="bar" aria-hidden="true"><i class="${k}" style="width:${100*(counts[k]||0)/max}%"></i></span><strong>${num(counts[k]||0)}</strong></div>`).join("");
+    const rows=list.map(k=>`<a class="quality-row" ${drillAttrs({quality:[k]},"institutions")}><span>${esc(label("quality",k))}</span><span class="bar" aria-hidden="true"><i class="${k}" style="width:${100*(counts[k]||0)/max}%"></i></span><strong>${num(counts[k]||0)}</strong></a>`).join("");
     const grading=data.grading || {};
     const guidance=[grading.method,grading.coverage,grading.classification,grading.scope].filter(Boolean).map(t=>`<p>${esc(t)}</p>`).join("");
     return `<section class="panel"><div class="panel-head"><h2>Уровень учреждений</h2></div><div class="quality-list">${rows}</div>
@@ -221,7 +250,17 @@
     const count=k=>rows.filter(f=>f.status===k).length;
     const total=rows.length;
     let start=0;
-    const slices=statuses.map(k=>{const end=start+(total?100*count(k)/total:0);const part=`${palette[k]} ${start}% ${end}%`;start=end;return part;}).join(",");
+    const slices=statuses.map(k=>{
+      const n=count(k);
+      if (!n) return "";
+      const angle=n/total*2*Math.PI;
+      const arc=(r,t)=>[64+r*Math.sin(t),64-r*Math.cos(t)].join(" ");
+      const end=start+Math.min(angle,2*Math.PI-.000001);
+      const large=angle>Math.PI?1:0;
+      const d=`M ${arc(62,start)} A 62 62 0 ${large} 1 ${arc(62,end)} L ${arc(41,end)} A 41 41 0 ${large} 0 ${arc(41,start)} Z`;
+      start+=angle;
+      return `<a ${drillAttrs({status:[k]},"findings",true)} aria-label="${esc(label("status",k))}"><title>${esc(label("status",k))} · ${n}</title><path d="${d}" fill="${palette[k]}"/></a>`;
+    }).join("");
     const categories=optionList("category").map(item=>String(item.value));
     const categoryRows=categories.filter(k=>!chartFilters.category||k===chartFilters.category).map(k=>({key:k,value:rows.filter(f=>f.category===k && (f.status==="issue"||f.status==="review")).length})).sort((a,b)=>b.value-a.value).slice(0,6);
     const categoryMax=Math.max(1,...categoryRows.map(x=>x.value));
@@ -232,9 +271,18 @@
       ${select("status","Статус",statuses.map(k=>[k,label("status",k)]))}
       ${select("severity","Критичность",["high","medium","low"].map(k=>[k,label("severity",k)]))}
       ${select("category","Категория",categories.map(k=>[k,label("category",k)]))}</div></div>
-      <div class="chart-grid"><article class="panel chart-card"><div class="panel-head"><h3>Состояние проверок</h3><span class="subtle">${num(total)} результатов</span></div><div class="donut-layout"><div class="donut" style="background:${total?`conic-gradient(${slices})`:"#e9efed"}" role="img" aria-label="Распределение результатов по статусу"><div><strong>${num(total)}</strong><small>в выборке</small></div></div><div class="chart-legend">${statuses.map(k=>`<div><i style="background:${palette[k]}"></i><span>${esc(label("status",k))}</span><b>${num(count(k))}</b></div>`).join("")}</div></div></article>
-      <article class="panel chart-card"><div class="panel-head"><h3>Где нужна работа</h3><span class="subtle">Замечания + сверка</span></div><div class="chart-bars">${categoryRows.map(x=>`<div class="chart-bar-row"><span>${esc(label("category",x.key))}</span><div class="chart-track"><i style="width:${100*x.value/categoryMax}%"></i></div><b>${num(x.value)}</b></div>`).join("")}</div></article>
-      <article class="panel chart-card"><div class="panel-head"><h3>Критичность замечаний</h3><span class="subtle">Подтверждённые</span></div><div class="chart-bars">${severityRows.map(x=>`<div class="chart-bar-row"><span>${esc(label("severity",x.key))}</span><div class="chart-track severity-${x.key}"><i style="width:${100*x.value/severityMax}%"></i></div><b>${num(x.value)}</b></div>`).join("")}</div><p class="chart-note">Сверка и непроверенные критерии не включены.</p></article></div></section>`;
+      <div class="chart-grid"><article class="panel chart-card"><div class="panel-head"><h3>Состояние проверок</h3><span class="subtle">${num(total)} результатов</span></div><div class="donut-layout"><div class="donut"><svg viewBox="0 0 128 128" aria-label="Результаты по статусам">${slices}</svg><div><strong>${num(total)}</strong><small>в выборке</small></div></div><div class="chart-legend">${statuses.map(k=>`<a ${drillAttrs({status:[k]},"findings",true)}><i style="background:${palette[k]}"></i><span>${esc(label("status",k))}</span><b>${num(count(k))}</b></a>`).join("")}</div></div></article>
+      <article class="panel chart-card"><div class="panel-head"><h3>Где нужна работа</h3><span class="subtle">Замечания + сверка</span></div><div class="chart-bars">${categoryRows.map(x=>`<a class="chart-bar-row" ${drillAttrs({category:[x.key],status:["issue","review"]},"findings",true)}><span>${esc(label("category",x.key))}</span><div class="chart-track"><i style="width:${100*x.value/categoryMax}%"></i></div><b>${num(x.value)}</b></a>`).join("")}</div></article>
+      <article class="panel chart-card"><div class="panel-head"><h3>Критичность замечаний</h3><span class="subtle">Подтверждённые</span></div><div class="chart-bars">${severityRows.map(x=>`<a class="chart-bar-row" ${drillAttrs({severity:[x.key],status:["issue"]},"findings",true)}><span>${esc(label("severity",x.key))}</span><div class="chart-track severity-${x.key}"><i style="width:${100*x.value/severityMax}%"></i></div><b>${num(x.value)}</b></a>`).join("")}</div><p class="chart-note">Сверка и непроверенные критерии не включены.</p></article></div></section>`;
+  }
+  let diagram="archive";
+  function relationships() {
+    const archive=[["Учреждение","organization","1"],["Обход","crawl_run","N"],["Загрузка","crawl_fetch","N"],["Снимок страницы","page","1"],["Вложение","page_attachment","N"]];
+    const evidence=[["Снимок страницы","page","1"],["Проверка модели","model_assessment","N"],["Подтверждение","model_evidence_pass","N"]];
+    const items=diagram==="archive"?archive:evidence;
+    return `<section class="panel relationship-panel"><div class="panel-head"><div><p class="eyebrow">Связи данных</p><h2>От страницы до вывода</h2></div><div class="diagram-switch" role="group" aria-label="Тип ER-диаграммы"><button data-diagram="archive" aria-pressed="${diagram==="archive"}">Архив</button><button data-diagram="evidence" aria-pressed="${diagram==="evidence"}">Доказательства</button></div></div>
+      <p class="diagram-description">${diagram==="archive"?"Один сайт может иметь много обходов; каждый обход сохраняет загрузки страниц. Снимок может иметь вложения.":"Один снимок может участвовать в нескольких проверках модели. У проверки могут быть отдельные проходы проверки доказательств."}</p>
+      <div class="er-flow" aria-label="ER-диаграмма: ${diagram==="archive"?"архив":"доказательства"}">${items.map((item,i)=>`${i?'<span class="er-link" aria-hidden="true">→</span>':""}<a class="er-node" ${drillAttrs(item[1]==="organization"?{}:item[1]==="page_attachment"?{group:["attachments"],status:["issue","review"]}:diagram==="evidence"?{detector:["ai"],status:["issue","review"]}:{detector:["algorithm"],status:["issue","review"]},item[1]==="organization"?"institutions":"findings")}><small>${esc(item[2])}</small><strong>${esc(item[0])}</strong><code>${esc(item[1])}</code></a>`).join("")}</div></section>`;
   }
   function overview() {
     if (view==="simple") return simpleOverview();
@@ -254,13 +302,13 @@
     const urgent=sortFindings(data.findings||[]).filter(f=>f.status==="issue" && f.severity==="high").slice(0,4);
     const attention=[...(data.institutions||[])].sort((a,b)=>(b.counts?.issue||0)-(a.counts?.issue||0)).slice(0,5);
     return `<section class="brief-hero"><div><h2>Аудит сайтов учреждений</h2>
-      <p>Выберите учреждение для проверки по правилам или откройте сводные результаты по страницам, документам и фотографиям.</p></div>
-      <div class="hero-action"><a href="/quick" class="primary">Проверить учреждение</a><a href="#findings" class="small-link">Сводные результаты →</a></div></section>
+      <p>Выберите учреждения для анализа архива или откройте результаты по страницам, документам и фотографиям.</p></div>
+      <div class="hero-action"><a href="/admin#selected-audit" class="primary">Проверить учреждение</a><a href="#findings" class="small-link">Сводные результаты →</a></div></section>
       <div class="kpis">${kpi("Учреждений",num(s.total),"Школы "+num(s.schools)+" · сады "+num(s.kindergartens),"#257b68")}
       ${kpi("Требуют исправления",num(c.issue||0),"Подтверждённые замечания","#c36552")}
       ${kpi("Нужна сверка",num(c.review||0),"Решение принимает специалист","#c19a4d")}
       ${kpi("Охват",percent(s.coverage),"Доля оценённых критериев","#608b9d")}</div>
-      ${insightCharts()}
+      ${insightCharts()}${relationships()}
       <div class="brief-grid"><section class="list-panel"><div class="list-head"><div><p class="eyebrow">Приоритет</p><h2>Критичные замечания</h2></div><a class="small-link" href="#findings">Все результаты →</a></div>
       ${urgent.length?urgent.map(finding).join(""):empty("Критичных замечаний нет","Для этой выборки таких результатов не найдено.",false)}</section>
       <section class="list-panel"><div class="list-head"><div><p class="eyebrow">Где начать работу</p><h2>Учреждения с замечаниями</h2></div><a class="small-link" href="#institutions">Весь реестр →</a></div>
@@ -415,6 +463,8 @@
       saveFilters(next);
     } else if (el.hasAttribute("data-view")) {
       view=el.dataset.view;try { localStorage.setItem("audit-view",view); } catch {} refresh();
+    } else if (el.hasAttribute("data-diagram")) {
+      diagram=el.dataset.diagram;show();
     } else if (el.id==="toggle-filters") {
       const advanced=byId("advanced");
       advanced.hidden=!advanced.hidden;

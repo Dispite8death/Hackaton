@@ -90,7 +90,7 @@ def _can_run(check, has_pdf, has_full, has_viewport):
 @uses_archive
 def batch_assess(conn, *, page_ids=(), org_ids=(), run_ids=(), group=None, limit=10, plan=False,
                  force=False, on_result=None, include_photos=False, rotate=False, latest_only=False,
-                 attachment_role=None, check_ids=()):
+                 attachment_role=None, check_ids=(), before_check=None):
     if group is not None and group not in GROUPS:
         raise ValueError("Неизвестная группа проверок")
     if limit is not None and limit < 1:
@@ -153,6 +153,8 @@ def batch_assess(conn, *, page_ids=(), org_ids=(), run_ids=(), group=None, limit
                 totals["ready"] += 1
                 if plan:
                     continue
+                if before_check:
+                    before_check()
                 result = assess(conn,pid,check["id"],profile=profile)
                 last = {"page_id":pid,"check_id":check["id"],"assessment_id":result["assessment_id"],
                         "outcome":result["outcome"],"error":result["error"]}
