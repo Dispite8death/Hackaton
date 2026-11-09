@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Настройки · Аудит учреждений</title><link rel="stylesheet" href="/style.css">
+<style>
+body{margin:0;background:#f4f6f9;color:#162c43;font-family:Inter,"Segoe UI",sans-serif}
+.settings-shell{max-width:1080px;margin:auto;padding:28px 24px 60px}.settings-shell a{color:#145478}.settings-shell h1{margin:24px 0 8px;font-size:34px}.settings-shell p{margin:6px 0 16px}.sections{display:grid;grid-template-columns:minmax(0,3fr) minmax(240px,2fr);gap:18px}.settings-shell section{background:white;border:1px solid #d2dce2;border-radius:12px;padding:20px 24px;margin:14px 0;min-width:0}.settings-shell h2{font-size:19px;margin:0 0 15px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.settings-shell label{display:block;font-size:14px;font-weight:600;margin-bottom:10px}.settings-shell input:not([type=checkbox]):not([type=radio]),.settings-shell select{font:inherit;width:100%;margin-top:5px;padding:8px;border:1px solid #a9bac5;border-radius:6px;background:white;box-sizing:border-box}.settings-shell button{padding:9px 12px;border:1px solid #a8bbc6;border-radius:6px;background:white;color:#18384a;margin:5px 5px 0 0;cursor:pointer;font:inherit}.settings-shell .submit{background:#135e68;color:white;border-color:#135e68}.settings-shell output{display:block;white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0}.settings-shell ul{padding-left:20px;max-height:180px;overflow:auto}.settings-shell li{overflow-wrap:anywhere}.settings-shell .msg{min-height:26px;color:#14596a}.settings-shell [hidden]{display:none}@media(max-width:760px){.sections{grid-template-columns:1fr}.settings-shell{padding:18px 14px}.fields{grid-template-columns:1fr}}
+#org-list{max-height:210px;overflow:auto;border:1px solid #d2dce2;border-radius:6px;padding:6px 10px}
+#org-list label{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:start;overflow-wrap:anywhere;padding:6px;margin:0;cursor:pointer}
+#org-list input{width:16px;height:16px;margin:3px 0}#org-list label:has(:checked){background:#eaf4f3}#org-list label+label{border-top:1px solid #edf1f3}
+.help{display:block;font-weight:400;color:#48606e;margin-top:4px}
+#word-dialog{width:min(44rem,90vw);box-sizing:border-box;border:1px solid #aec0c9;border-radius:12px;padding:22px;color:inherit}#word-dialog::backdrop{background:#152c4299}#word-dialog ul{list-style:none;padding:0;max-height:40vh}#word-dialog li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;border-bottom:1px solid #d2dce2;padding:5px 0}#word-dialog textarea{width:100%;box-sizing:border-box;font:inherit;resize:vertical}#word-dialog header{display:flex;align-items:baseline;justify-content:space-between}#org-list small{display:block;color:#52676d;font-weight:400;overflow-wrap:anywhere}
+.settings-shell [aria-pressed="true"]{background:#135e68;color:white}.settings-shell button:disabled{opacity:.55;cursor:not-allowed}
+.registry-toggle{cursor:pointer;font-weight:650;color:#135e68}#registry pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6f5;padding:10px}#registry h3{font-size:16px}#registry-list{max-height:20rem;overflow:auto;padding-left:1.25rem}#registry-list li{margin-bottom:6px;overflow-wrap:anywhere}</style><script src="/admin.js" defer></script><link rel="stylesheet" href="/navigation.css"></head><body><!--portal-navigation--><main class="settings-shell">
+<h1>Настройки аудита</h1>
+<section id="demo-tools" hidden><h2>Демонстрационная копия</h2><p>Доступна локальная Qwen. Можно менять параметры модели и проверок. Реестр, адреса источников и системное расписание закреплены на время показа.</p><button id="restore-demo">Вернуть начальные настройки обоих инструментов</button></section>
+<p>Изменения доступны на компьютере, где запущена система.</p><output id="message" class="msg" aria-live="polite"></output>
+<section id="registry"><details><summary class="registry-toggle">Управление списком учреждений</summary>
+<p>Список применяется в обоих режимах аудита. Повторный импорт адреса обновляет название и тип учреждения.</p>
+<div class="fields"><form id="registry-add"><h3>Добавить учреждение</h3><label>Название<input name="name" required maxlength="600"></label>
+<label>Тип<select name="kind"><option value="school">Школа</option><option value="kindergarten">Детский сад</option></select></label>
+<label>Адрес сайта<input name="site_url" type="url" placeholder="https://school.example" required></label><button class="submit">Добавить</button></form>
+<form id="registry-import"><h3>Импорт из файла</h3><label>Формат<select id="registry-format"><option value="json">JSON</option><option value="csv">CSV</option><option value="txt">TXT</option></select></label>
+<label>Файл UTF-8<input id="registry-file" type="file" accept=".json" required></label>
+<p id="registry-help"></p><pre id="registry-schema"></pre><button class="submit">Импортировать файл</button></form></div>
+<output id="registry-message" role="status"></output><label>Найти в реестре<input id="registry-search" type="search" placeholder="Название или адрес сайта"></label>
+<p id="registry-count"></p><ul id="registry-list"></ul><button type="button" id="registry-clear">Очистить список</button></details></section>
+<section id="selected-audit"><h2>Проверка выбранных учреждений</h2>
+<div class="fields"><div id="scope" role="group" aria-label="Кого проверить"><button type="button" data-scope="one" aria-pressed="true">Одно учреждение</button><button type="button" data-scope="many" aria-pressed="false">Несколько учреждений</button></div>
+<label>Поиск по названию или адресу сайта<input id="org-query" type="search" autocomplete="off"></label></div>
+<div id="org-list" role="group" aria-label="Учреждения"></div><p id="org-count" role="status"></p>
+<label>Операция<select id="operation"><option value="algorithm">Алгоритмы по сохранённым страницам</option><option value="ai">Проверки ИИ по материалам архива</option><option value="download">Загрузка и обновление страниц и вложений</option><option value="download_algorithm">Загрузить и сразу проверить алгоритмами</option><option value="download_ai">Загрузить, проверить алгоритмами и передать готовые вопросы ИИ</option></select></label>
+<button id="plan">Проверить материалы и оценить время</button>
+<output id="estimate" aria-live="polite"></output>
+<details id="material-gaps" hidden><summary>Разделы без отдельной сохранённой страницы</summary><ul></ul></details>
+<span id="start-reason" tabindex="0"><button class="submit" id="run-selection" disabled>Запустить</button></span>
+<p class="help">Вкладку можно закрыть. Чтобы продолжить после остановки сервера, вернитесь сюда. Система повторит только незаконченный этап выбранного учреждения. Новый запуск заменяет задание, доступное для продолжения.</p><output id="job-progress" aria-live="polite"></output><details id="job-notes" hidden><summary></summary><ul></ul></details><button id="resume-job" type="button" hidden>Продолжить незаконченный этап</button></section>
+<div class="sections"><div>
+<section><h2>Фоновое обновление архива</h2><p>За один запуск система берёт часть сайтов из очереди, затем обрабатывает дополнительные страницы, вложения и публикации. Число сайтов, файлов и дополнительных страниц задаётся на один запуск для всего реестра. Лимит основных страниц, число переходов и период новостей также действуют при ручной загрузке выбранного сайта.</p><form id="settings"><div id="cycle-fields" class="fields"></div>
+<button class="submit">Сохранить интервал и лимиты</button></form>
+<button id="once">Обновить одну партию сейчас без ИИ</button><button id="sched-status">Состояние расписания</button>
+<button id="sched-enable">Включить расписание на этом ПК</button><button id="sched-disable">Отключить расписание</button>
+<p class="help">Сохранение параметров само по себе не включает расписание.</p><output id="settings-result" role="status"></output><output id="schedule-status" role="status"></output><output id="cycle-status"></output></section>
+<section><h2>Хранение старых файлов</h2>
+<form id="retention"><label>Хранить заменённые материалы, дней<input id="days" type="number" min="1" max="36500" required></label>
+<label><input id="clean" type="checkbox"> Очищать во время автоматического цикла</label>
+<button class="submit">Сохранить правило</button><button id="preview" type="button">Предпросмотр очистки</button></form>
+<output id="retention-result"></output></section>
+<section><h2>Независимые источники</h2><form id="fact"><label><input id="fact-auto" type="checkbox"> Проверять публикации при обновлении</label><button>Сохранить</button></form>
+<ul id="sources"></ul><form id="source-form"><label>Базовый URL издателя<input id="source-url" type="url" placeholder="https://example.org/news/" required></label>
+<button class="submit">Добавить источник</button></form></section>
+</div><div>
+<section><h2>Подключение к модели</h2><form id="model" novalidate><p id="ai-status" role="status"></p><output id="profile-state"></output><label><input type="checkbox" id="ai-enabled"> Использовать мой API или локальную модель</label><label>Профиль<select id="provider"></select></label>
+<label>Базовый URL API<input type="url" id="endpoint" required></label><label>Модель<input id="model-id" required></label>
+<label>Тайм-аут, сек.<input id="timeout" type="number" min="5" max="900" required></label>
+<label>Формат ответа<select id="response"><option value="json_schema">JSON по схеме</option><option value="json_object">JSON-объект</option><option value="prompt">По инструкции</option></select></label>
+<label><input id="thinking" type="checkbox"> Отключить режим рассуждений модели</label>
+<label>Новый ключ API<input id="secret" type="password" autocomplete="new-password" placeholder="Оставьте пустым для сохранения текущего"></label>
+<button class="submit">Сохранить настройки подключения</button></form>
+<span id="verify-reason" tabindex="0"><button id="verify-model">Проверить ответ модели</button></span>
+<output id="connection-result" role="status"></output><div id="benchmark-choice" hidden><p>Измерить время пробного текстового запроса? Внешний провайдер может списать средства.</p>
+<button id="benchmark-run">Измерить скорость</button><button id="benchmark-decline">Пропустить тест</button></div></section>
+<section><h2>Слова для поиска на сайтах</h2><button id="open-words" type="button">Открыть словарь</button><dialog id="word-dialog" aria-labelledby="word-heading"><header><h2 id="word-heading">Словарь поиска по сайтам</h2><button id="close-words" type="button">Закрыть</button></header><label>Категория<select id="word-cat"></select></label>
+<ul id="words"></ul><form id="word-form"><label>Слово или фраза<textarea id="word" rows="3" required></textarea></label><button class="submit">Добавить</button></form><output id="word-result" role="status"></output></dialog></section>
+</div></div></main></body></html>
