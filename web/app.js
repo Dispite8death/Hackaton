@@ -4,7 +4,7 @@
   const byId = id => document.getElementById(id);
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c =>
     ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"})[c]);
-  const names = {overview:"Обзор аудита", institutions:"Учреждения", findings:"Замечания", settings:"Настройки"};
+  const names = {overview:"Сводный аудит", institutions:"Учреждения", findings:"Результаты проверок"};
   const labels = {
     kind:{school:"Школа", kindergarten:"Детский сад"},
     status:{issue:"Замечание",pass:"Подтверждено",review:"Требует сверки",unverified:"Не проверено",info:"Справочно"},
@@ -23,15 +23,16 @@
   const sortNames = {rank:"По рейтингу", name:"По названию", issues:"По числу замечаний", coverage:"По охвату", date:"По дате проверки"};
   const pageSize = 25;
   const selected = new Set();
-  let access = false;
   let data = null;
   let controller = null;
   let options = {};
   let listPage = 0;
   let sort = "rank";
+  const chartFilters={status:"",severity:"",category:""};
   let queryTimer;
   let renderedHash = location.hash;
-
+  let view = "simple";
+  try { if (localStorage.getItem("audit-view")==="detailed") view="detailed"; } catch {}
   function readFilters() {
     const input = new URLSearchParams(location.search);
     const values = {};
@@ -116,7 +117,7 @@
   }
   function updateControls() {
     const activeKeys=Object.keys(filters).filter(key=>filters[key]?.length);
-    byId("query").value=filters.q || "";
+    if (document.activeElement !== byId("query")) byId("query").value=filters.q || "";
     byId("date-from").value=filters.date_from || "";
     byId("date-to").value=filters.date_to || "";
     for (const button of document.querySelectorAll("[data-kind]")) {
@@ -141,7 +142,10 @@
   }
   function drawFacets() {
     const open=new Set([...byId("facets").querySelectorAll("details[open]")].map(el=>el.dataset.facet));
-    const find=byId("facets").querySelector(".org-search")?.value || "";
+    const previousField=byId("facets").querySelector(".org-search");
+    const find=previousField?.value || "";
+    const caret=previousField && previousField===document.activeElement
+      ? [previousField.selectionStart,previousField.selectionEnd] : null;
     byId("facets").innerHTML=Object.entries(facets).map(([key,title])=>{
       const selectedValues=filters[key] || [];
       const list=optionList(key).map(item=>{
@@ -152,6 +156,7 @@
     }).join("");
     const field=byId("facets").querySelector(".org-search");
     if (field && find) {field.value=find; filterOrganizations(field);}
+    if (field && caret) {field.focus({preventScroll:true});field.setSelectionRange(...caret);}
   }
   function filterOrganizations(field) {
     const term=field.value.toLocaleLowerCase("ru").trim();
@@ -206,7 +211,33 @@
     return `<section class="panel"><div class="panel-head"><h2>Уровень учреждений</h2></div><div class="quality-list">${rows}</div>
       ${guidance?`<details class="grading"><summary>Как рассчитывается оценка <i class="caret"></i></summary>${guidance}</details>`:""}</section>`;
   }
+  function insightCharts() {
+    const source=data.findings||[];
+    const rows=source.filter(f=>(!chartFilters.status||f.status===chartFilters.status) &&
+      (!chartFilters.severity||f.severity===chartFilters.severity) &&
+      (!chartFilters.category||f.category===chartFilters.category));
+    const statuses=["issue","review","pass","unverified","info"];
+    const palette={issue:"#c96957",review:"#d5a24f",pass:"#27876b",unverified:"#a4b4b5",info:"#6895ab"};
+    const count=k=>rows.filter(f=>f.status===k).length;
+    const total=rows.length;
+    let start=0;
+    const slices=statuses.map(k=>{const end=start+(total?100*count(k)/total:0);const part=`${palette[k]} ${start}% ${end}%`;start=end;return part;}).join(",");
+    const categories=optionList("category").map(item=>String(item.value));
+    const categoryRows=categories.filter(k=>!chartFilters.category||k===chartFilters.category).map(k=>({key:k,value:rows.filter(f=>f.category===k && (f.status==="issue"||f.status==="review")).length})).sort((a,b)=>b.value-a.value).slice(0,6);
+    const categoryMax=Math.max(1,...categoryRows.map(x=>x.value));
+    const severityRows=["high","medium","low"].map(k=>({key:k,value:rows.filter(f=>f.status==="issue"&&f.severity===k).length}));
+    const severityMax=Math.max(1,...severityRows.map(x=>x.value));
+    const select=(key,title,choices)=>`<label>${esc(title)}<select data-chart-filter="${key}"><option value="">Все</option>${choices.map(([value,label])=>`<option value="${esc(value)}" ${chartFilters[key]===value?"selected":""}>${esc(label)}</option>`).join("")}</select></label>`;
+    return `<section class="analytics"><div class="analytics-head"><div><p class="eyebrow">Аналитика среза</p><h2>Что видно в результатах</h2><p>Графики пересчитываются по выбранным учреждениям и условиям.</p></div><div class="chart-filters">
+      ${select("status","Статус",statuses.map(k=>[k,label("status",k)]))}
+      ${select("severity","Критичность",["high","medium","low"].map(k=>[k,label("severity",k)]))}
+      ${select("category","Категория",categories.map(k=>[k,label("category",k)]))}</div></div>
+      <div class="chart-grid"><article class="panel chart-card"><div class="panel-head"><h3>Состояние проверок</h3><span class="subtle">${num(total)} результатов</span></div><div class="donut-layout"><div class="donut" style="background:${total?`conic-gradient(${slices})`:"#e9efed"}" role="img" aria-label="Распределение результатов по статусу"><div><strong>${num(total)}</strong><small>в выборке</small></div></div><div class="chart-legend">${statuses.map(k=>`<div><i style="background:${palette[k]}"></i><span>${esc(label("status",k))}</span><b>${num(count(k))}</b></div>`).join("")}</div></div></article>
+      <article class="panel chart-card"><div class="panel-head"><h3>Где нужна работа</h3><span class="subtle">Замечания + сверка</span></div><div class="chart-bars">${categoryRows.map(x=>`<div class="chart-bar-row"><span>${esc(label("category",x.key))}</span><div class="chart-track"><i style="width:${100*x.value/categoryMax}%"></i></div><b>${num(x.value)}</b></div>`).join("")}</div></article>
+      <article class="panel chart-card"><div class="panel-head"><h3>Критичность замечаний</h3><span class="subtle">Подтверждённые</span></div><div class="chart-bars">${severityRows.map(x=>`<div class="chart-bar-row"><span>${esc(label("severity",x.key))}</span><div class="chart-track severity-${x.key}"><i style="width:${100*x.value/severityMax}%"></i></div><b>${num(x.value)}</b></div>`).join("")}</div><p class="chart-note">Сверка и непроверенные критерии не включены.</p></article></div></section>`;
+  }
   function overview() {
+    if (view==="simple") return simpleOverview();
     const s=data.summary || {}, counts=s.counts || {};
     const priority=sortFindings(data.findings||[]).filter(x=>["issue","review"].includes(x.status)).slice(0,5);
     return `<div class="kpis">${kpi("Учреждения",num(s.total),"Школы "+num(s.schools)+" · Сады "+num(s.kindergartens),"#257b68")}
@@ -217,6 +248,24 @@
       <div class="panels">${resultsPanel(counts)}${qualityPanel(s.quality_counts || {})}</div>
       <section class="list-panel"><div class="list-head"><h2>На что обратить внимание</h2><a class="small-link" href="#findings">Все результаты →</a></div>
       ${priority.length?priority.map(finding).join(""):empty("Замечаний в выборке нет","Для этой выборки нет подтверждённых замечаний и результатов на сверку.",false)}</section>`;
+  }
+  function simpleOverview() {
+    const s=data.summary||{}, c=s.counts||{};
+    const urgent=sortFindings(data.findings||[]).filter(f=>f.status==="issue" && f.severity==="high").slice(0,4);
+    const attention=[...(data.institutions||[])].sort((a,b)=>(b.counts?.issue||0)-(a.counts?.issue||0)).slice(0,5);
+    return `<section class="brief-hero"><div><h2>Аудит сайтов учреждений</h2>
+      <p>Выберите учреждение для проверки по правилам или откройте сводные результаты по страницам, документам и фотографиям.</p></div>
+      <div class="hero-action"><a href="/quick" class="primary">Проверить учреждение</a><a href="#findings" class="small-link">Сводные результаты →</a></div></section>
+      <div class="kpis">${kpi("Учреждений",num(s.total),"Школы "+num(s.schools)+" · сады "+num(s.kindergartens),"#257b68")}
+      ${kpi("Требуют исправления",num(c.issue||0),"Подтверждённые замечания","#c36552")}
+      ${kpi("Нужна сверка",num(c.review||0),"Решение принимает специалист","#c19a4d")}
+      ${kpi("Охват",percent(s.coverage),"Доля оценённых критериев","#608b9d")}</div>
+      ${insightCharts()}
+      <div class="brief-grid"><section class="list-panel"><div class="list-head"><div><p class="eyebrow">Приоритет</p><h2>Критичные замечания</h2></div><a class="small-link" href="#findings">Все результаты →</a></div>
+      ${urgent.length?urgent.map(finding).join(""):empty("Критичных замечаний нет","Для этой выборки таких результатов не найдено.",false)}</section>
+      <section class="list-panel"><div class="list-head"><div><p class="eyebrow">Где начать работу</p><h2>Учреждения с замечаниями</h2></div><a class="small-link" href="#institutions">Весь реестр →</a></div>
+      <div class="attention-list">${attention.map(row=>`<a href="#institution/${Number(row.id)}"><span><strong>${esc(row.name)}</strong><small>${esc(label("kind",row.kind))} · охват ${percent(row.coverage)}</small></span><b>${num(row.counts?.issue||0)}</b></a>`).join("")}</div></section></div>
+      <p class="scope-note">Это углублённый анализ сохранённого массива материалов, поэтому новый полный обход требует времени. Недостаток данных и результаты на сверку не считаются подтверждёнными ошибками. <button type="button" data-view="detailed">Показать методику и все показатели →</button></p>`;
   }
   function pager(total) {
     const pages=Math.max(1,Math.ceil(total/pageSize));
@@ -277,15 +326,11 @@
       ${gaps?`<details><summary>Какие материалы проверить или догрузить <i class="caret"></i></summary><ul>${gaps}</ul></details>`:""}
       ${pendingModel?"<p>Для части критериев снимки уже сохранены. Откройте непроверенные результаты и повторите проверку по их основаниям.</p>":""}
       ${!gaps&&!pendingModel?"<p>Проверьте результаты на сверку или расширьте период и фильтры.</p>":""}</section>` : "";
-    return `<div class="kpis">${kpi("Оценка",score(row.score),"Из 100 баллов","#257b68")}${kpi("Охват проверок",percent(row.coverage),label("quality",row.quality),"#608b9d")}
+    const quickLink=data.quick_id ? `<p><a class="small-link" href="/site/${Number(data.quick_id)}">Открыть алгоритмическую проверку этого учреждения →</a></p>` : "";
+    return `${quickLink}<div class="kpis">${kpi("Оценка",score(row.score),"Из 100 баллов","#257b68")}${kpi("Охват проверок",percent(row.coverage),label("quality",row.quality),"#608b9d")}
       ${kpi("Замечания",num(row.counts?.issue||0),"В выбранном периоде","#c36552")}${kpi("Требуют сверки",num(row.counts?.review||0),"В выбранном периоде","#c19a4d")}</div>
       ${nextSteps}<div class="panels"><section class="list-panel"><div class="list-head"><h2>По категориям</h2></div>${categoriesRows?`<div class="table-wrap"><table><thead><tr><th>Категория</th><th>Замечания</th><th>Сверка</th><th>Охват</th><th>Балл</th></tr></thead><tbody>${categoriesRows}</tbody></table></div>`:empty("Категории пока не оценены","Проверки появятся после обработки материалов.",false)}</section>
       <section class="list-panel"><div class="list-head"><h2>История обходов</h2>${external(row.site_url,"Сайт учреждения")}</div>${historyRows?`<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Обход</th><th>Страниц</th><th>Состояние</th></tr></thead><tbody>${historyRows}</tbody></table></div>`:empty("Обходов в периоде нет","Выберите другой интервал дат.",false)}</section></div>${findings()}`;
-  }
-  function settings() {
-    return `<section class="panel settings"><h2>Администрирование</h2>${access?
-      '<p>Откройте локальную панель для настройки ИИ, источников, обходов и хранения материалов.</p><a class="primary" href="/admin">Открыть панель администратора →</a>':
-      '<p>В публичном режиме доступны просмотр результатов и выгрузка PDF. Управление обходами, моделями и источниками доступно на компьютере администратора.</p>'}</section>`;
   }
   function selectionState() {
     const el=byId("selected-count");
@@ -300,8 +345,7 @@
   }
   function show() {
     const r=route();
-    byId("content").innerHTML=r.tab==="settings"?settings():
-      r.tab==="overview"?overview():r.tab==="institutions"?institutions():r.tab==="findings"?findings():institution();
+    byId("content").innerHTML=r.tab==="overview"?overview():r.tab==="institutions"?institutions():r.tab==="findings"?findings():institution();
     byId("content").setAttribute("aria-busy","false");
     selectionState();
   }
@@ -322,13 +366,11 @@
       else a.removeAttribute("aria-current");
     });
     byId("title").textContent=names[r.tab] || "Карточка учреждения";
+    document.querySelectorAll("[data-view]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.view===view)));
     document.title=byId("title").textContent+" · Аудит сайтов образования";
     byId("breadcrumb").innerHTML=r.id?'<a class="back" href="#institutions">← К учреждениям</a>':"";
-    byId("filters").hidden=r.tab==="settings";
-    byId("download").hidden=r.tab==="settings";
     byId("asof").textContent="";
     updateControls();
-    if (r.tab==="settings") {show();return;}
     byId("content").setAttribute("aria-busy","true");
     const query=params(filters);
     const path=r.id?"/api/institution/"+r.id:"/api/dashboard";
@@ -371,6 +413,8 @@
       const next={...filters};
       if (el.dataset.kind) next.kind=[el.dataset.kind]; else delete next.kind;
       saveFilters(next);
+    } else if (el.hasAttribute("data-view")) {
+      view=el.dataset.view;try { localStorage.setItem("audit-view",view); } catch {} refresh();
     } else if (el.id==="toggle-filters") {
       const advanced=byId("advanced");
       advanced.hidden=!advanced.hidden;
@@ -398,7 +442,9 @@
   },true);
   document.addEventListener("change",event=>{
     const el=event.target;
-    if (el.dataset.set) {
+    if (el.dataset.chartFilter) {
+      chartFilters[el.dataset.chartFilter]=el.value;show();
+    } else if (el.dataset.set) {
       const key=el.dataset.set,next={...filters};
       const values=new Set(next[key]||[]);
       if (el.checked) values.add(el.value); else values.delete(el.value);
@@ -426,7 +472,7 @@
     if (event.target.matches(".org-search")) filterOrganizations(event.target);
     if (event.target.id==="query") {
       clearTimeout(queryTimer);
-      queryTimer=setTimeout(()=>saveFilters({...filters,q:byId("query").value.trim()}),320);
+      queryTimer=setTimeout(()=>saveFilters({...filters,q:byId("query").value}),320);
     }
   });
   document.addEventListener("keydown",event=>{
@@ -437,14 +483,17 @@
       }
     }
   });
+  let printOpen=[];
+  addEventListener("beforeprint",()=>{
+    printOpen=[...document.querySelectorAll("details.find-row[open]")];
+    document.querySelectorAll("details.find-row").forEach(el=>{el.open=true;});
+  });
+  addEventListener("afterprint",()=>{
+    document.querySelectorAll("details.find-row").forEach(el=>{el.open=printOpen.includes(el);});
+  });
   addEventListener("hashchange",()=>{filters=readFilters();listPage=0;refresh();window.scrollTo(0,0);});
   addEventListener("popstate",()=>{
     if (renderedHash===location.hash) {filters=readFilters();listPage=0;refresh();}
   });
-  fetchJson("/api/access").then(result=>{
-    access=result.admin===true;
-    byId("access").textContent=access?"Локальный доступ":"Только просмотр";
-    if (route().tab==="settings") show();
-  }).catch(()=>{});
   refresh();
 })();

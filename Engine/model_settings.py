@@ -136,3 +136,17 @@ def set_secret(profile, secret):
 def save_secret(conn, profile, secret):
     set_secret(profile, secret)
     set_setting(conn, "credential:"+_credential_name(profile), bool(secret))
+
+
+def portal_connection(conn):
+    """Opt-in is specific to this installation; no credential is bundled with the portal."""
+    if not setting(conn, "portal_ai_enabled", False):
+        return "ИИ выключен", None, ""
+    try:
+        profile = checked(get_profile(conn))
+        key = active_secret(conn, profile)
+    except Exception:
+        return "Проверьте настройки подключения ИИ", None, ""
+    if profile.provider == "compatible" and not local_host(urlsplit(profile.endpoint).hostname) and not key.strip():
+        return "Для ИИ нужен API-ключ", None, ""
+    return "ИИ настроен", profile, key

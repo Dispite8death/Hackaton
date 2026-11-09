@@ -181,8 +181,10 @@ def _attachments(conn, settings):
 
 def _models(conn, settings):
     profiles=_engine("model_settings")
-    profile=profiles.get_profile(conn)
-    ready=_engine("local_model_service").prepare_local_service(profile,key=profiles.active_secret(conn,profile))
+    status,profile,key=profiles.portal_connection(conn)
+    if profile is None:
+        return {"state":"disabled","processed":0,"detail":status}
+    ready=_engine("local_model_service").prepare_local_service(profile,key=key)
     if not ready["ready"]:
         return {"processed":0,"service":ready,"stop_reason":ready["detail"]}
     result=_engine("model_batch").batch_assess(conn,limit=settings["model_checks"],include_photos=True,rotate=True,

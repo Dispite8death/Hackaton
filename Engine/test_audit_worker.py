@@ -39,6 +39,7 @@ class AuditWorkerTest(unittest.TestCase):
         self.assertEqual(worker.get_settings(self.db)["frontier_pages"],6)
 
     def test_busy_stage_failure_does_not_stop_models_or_factcheck(self):
+        self.db.execute("""INSERT OR REPLACE INTO app_setting VALUES ('portal_ai_enabled','true')""")
         def unavailable(conn,settings):
             self.assertEqual(worker.run_once(conn,overrides=self.off)["state"],"busy")
             raise OSError("server offline")
@@ -53,6 +54,7 @@ class AuditWorkerTest(unittest.TestCase):
         self.assertFalse(report["stages"]["factcheck"]["enabled"])
 
     def test_model_wait_leaves_questions_available_and_retention_requires_explicit_policy(self):
+        self.db.execute("""INSERT OR REPLACE INTO app_setting VALUES ('portal_ai_enabled','true')""")
         with patch("local_model_service.prepare_local_service",
                 return_value={"ready":False,"status":"waiting","detail":"Модель ещё загружается."}), \
                 patch("model_batch.batch_assess") as assess,patch("retention.maintain") as cleanup:

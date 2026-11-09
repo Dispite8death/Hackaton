@@ -42,6 +42,11 @@ function profile(){
   byId("model-id").value=p.model;byId("timeout").value=p.timeout;byId("response").value=p.response_mode;
   byId("thinking").checked=p.disable_thinking;byId("secret").value="";
 }
+function showAiStatus(status) {
+  byId("ai-status").textContent=status;
+  byId("access").textContent=status;
+  document.querySelector('[name="model_checks"]').disabled=status!=="ИИ настроен";
+}
 async function init() {
   state=await call("state");
   for (const [key,name] of Object.entries(fieldLabels)){
@@ -52,6 +57,7 @@ async function init() {
   byId("clean").checked=state.retention.enabled;byId("days").value=state.retention.days;
   byId("fact-auto").checked=state.factcheck_auto;
   for(const [key,title] of Object.entries(profiles))option(byId("provider"),key,title);
+  byId("ai-enabled").checked=state.ai_enabled;showAiStatus(state.ai_status);
   byId("provider").value=state.provider;profile();sources();
   for(const [key,title] of Object.entries(state.word_labels))option(byId("word-cat"),key,title);
   words();
@@ -68,6 +74,6 @@ async function init() {
   bind("source-form","submit",async()=>{state.sources=(await call("sources",{operation:"add",url:byId("source-url").value})).sources;byId("source-url").value="";sources();});
   bind("word-form","submit",async()=>{state.words=(await call("words",{operation:"add",category:byId("word-cat").value,word:byId("word").value})).words;byId("word").value="";words();});
   bind("model","submit",async()=>{const provider=byId("provider").value,p={provider,endpoint:byId("endpoint").value,model:byId("model-id").value,timeout:Number(byId("timeout").value),response_mode:byId("response").value,disable_thinking:byId("thinking").checked};
-    await call("profile",{profile:p,secret:byId("secret").value});state.profiles[provider]=p;byId("secret").value="";byId("message").textContent="Активный профиль сохранён";});
+    const saved=await call("profile",{profile:p,enabled:byId("ai-enabled").checked,secret:byId("secret").value});showAiStatus(saved.ai_status);state.profiles[provider]=p;byId("secret").value="";byId("message").textContent="Активный профиль сохранён";});
 }
 init().catch(e=>byId("message").textContent=e.message);
