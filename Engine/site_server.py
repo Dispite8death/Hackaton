@@ -8,7 +8,7 @@ from dataclasses import asdict
 from pathlib import Path
 from keyring.errors import KeyringError
 
-from . import audit_worker, config, portal_jobs, roster, retention, worker_schedule
+from . import audit_worker, config, portal_jobs, operation_log, roster, retention, worker_schedule
 from .crawl_store import initialize_db
 from .factcheck_sources import add_allowed_source, get_allowed_sources, remove_allowed_source
 from .home_terms import CATEGORY_LABELS, add_term, get_terms, remove_term
@@ -28,15 +28,18 @@ def prepare_database():
     from .importer import seed_if_empty
     with closing(config.connect_db()) as conn:
         initialize_db(conn)
+        operation_log.initialize(conn)
         seed_if_empty(conn)
 
 
 def admin_state(conn):
+    probe_key = "last_probe_" + portal_jobs.benchmark_key(get_profile(conn))
     return {"organizations":roster.organizations(conn),"windows_schedule":os.name=="nt",
             "token":TOKEN,"settings":audit_worker.get_settings(conn),"retention":retention.get_policy(conn),
             "sources":get_allowed_sources(conn),"words":get_terms(conn),"word_labels":CATEGORY_LABELS,
             "provider":get_profile(conn).provider,"profiles":{k:asdict(get_profile(conn,k)) for k in DEFAULTS},
             "ai_enabled":setting(conn,"portal_ai_enabled",False),"ai_status":portal_connection(conn)[0],
+            "last_probe":setting(conn,probe_key,""),
             "factcheck_auto":setting(conn,"factcheck_auto",False),"job":JOB.copy(),"cycle":audit_worker.last_status(conn)}
 
 
@@ -47,8 +50,12 @@ def start_work():
     def execute():
         try:
             with closing(config.connect_db()) as conn:
-                result = audit_worker.run_once(conn, overrides={"model_checks":0})
+                result = audit_worker.run_once(conn, overrides={"model_checks":0}, before_stage=operation_log.checkpoint)
             JOB.update(state=result["state"])
+            if result["state"] == "busy":
+                JOB.update(error="Архив занят другим заданием. Повторите запуск после его завершения.")
+        except operation_log.ServerStopping:
+            JOB.update(state="interrupted")
         except Exception as error:
             JOB.update(state="error",error=str(error)[:400])
         finally:
@@ -72,8 +79,23 @@ def update_settings(conn, action, data):
         return portal_jobs.preview(conn, data.get("ids"), data.get("mode"))
     if action == "analyze":
         return portal_jobs.start(conn, data.get("ids"), data.get("mode"), WORK, data.get("ticket"))
+    if action == "resume":
+        if type(data.get("id")) != int:
+            raise ValueError("Не указано задание для продолжения.")
+        return portal_jobs.start(conn, None, None, WORK, resume_id=data["id"])
     if action == "verify":
-        return portal_jobs.verify(conn)
+        from datetime import datetime
+        probe_key = "last_probe_" + portal_jobs.benchmark_key(get_profile(conn))
+        stamp = datetime.now().strftime("%d.%m.%Y %H:%M")
+        try:
+            result = portal_jobs.verify(conn)
+        except ValueError as error:
+            with conn:
+                set_setting(conn, probe_key, f"Последняя проверка {stamp} · {error}"[:500])
+            raise
+        with conn:
+            set_setting(conn, probe_key, f"Последняя проверка {stamp} · модель ответила.")
+        return result
     if action == "benchmark":
         if data.get("decline") is True:
             profile, _ = portal_jobs.profile_for_job(conn)
@@ -124,7 +146,7 @@ def update_settings(conn, action, data):
                 except KeyringError as error:
                     raise ValueError("Не удалось сохранить ключ в хранилище учётных данных ОС.") from error
             set_setting(conn,"portal_ai_enabled",data.get("enabled") is True)
-        return {"provider":p.provider,"model":p.model,"ai_status":portal_connection(conn)[0]}
+        return {"provider":p.provider,"model":p.model,"ai_status":portal_connection(conn)[0],"profile":asdict(get_profile(conn))}
     if action=="factcheck" and type(data.get("enabled")) is bool:
         with conn:
             set_setting(conn,"factcheck_auto",data["enabled"])

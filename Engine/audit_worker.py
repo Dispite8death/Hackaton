@@ -57,6 +57,18 @@ def last_status(conn):
             "settings":json.loads(row[5]),"stages":json.loads(row[6])}
 
 
+def observed_status(conn):
+    cycle = last_status(conn)
+    if cycle and cycle["state"] == "running":
+        with _cycle_lock(conn) as owned:
+            if owned:
+                with conn:
+                    conn.execute("UPDATE audit_worker_cycle SET state='interrupted' WHERE id=? AND state='running'",
+                                 (cycle["id"],))
+                return last_status(conn)
+    return cycle
+
+
 @contextmanager
 def _cycle_lock(conn):
     # File ownership, including release on process termination, belongs to the OS.
@@ -208,7 +220,7 @@ def _retention(conn, settings):
     return retention.maintain(conn,apply=True,limit=200)
 
 
-def run_once(conn, *, overrides=None, refresh_now=False):
+def run_once(conn, *, overrides=None, refresh_now=False, before_stage=None):
     """Use the supplied database in every stage, including nested browser visits."""
     settings=_validated({**get_settings(conn),**(overrides or {})})
     with _cycle_lock(conn) as acquired:
@@ -230,6 +242,8 @@ def run_once(conn, *, overrides=None, refresh_now=False):
                 conn.execute("UPDATE audit_worker_cycle SET stage=? WHERE id=?",(name,cycle))
             started=time.monotonic()
             try:
+                if before_stage:
+                    before_stage()
                 value=action(conn,settings) if budget is None or settings[budget] else {"state":"disabled","processed":0}
                 if value.get("errors") or value.get("error") or value.get("stop_reason"):
                     state="partial"
@@ -273,7 +287,7 @@ def main(argv=None):
     with closing(_engine("config").connect_db(path)) as conn:
         _engine("crawl_store").initialize_db(conn)
         if args.status:
-            print(json.dumps(last_status(conn),ensure_ascii=False))
+            print(json.dumps(observed_status(conn),ensure_ascii=False))
             return 0
         _engine("importer").seed_if_empty(conn)
         refresh=args.refresh_now

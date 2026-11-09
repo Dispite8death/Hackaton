@@ -1,7 +1,7 @@
 """Preflight, scoped archive jobs and progress for the local administration panel."""
 from contextlib import closing
 from dataclasses import asdict
-from threading import Lock, Thread
+from threading import Lock, Thread, local
 import time
 import json
 from hashlib import sha256
@@ -9,23 +9,33 @@ import secrets
 
 from . import audit_worker, config, crawl_store, model_batch, model_gateway, model_settings
 from .loadPage import crawl_organization
-from . import attached_files, backfill_materials
+from . import attached_files, backfill_materials, operation_log
 from .navigation import resolve_url
 from .coverage_report import REQUIRED_SECTIONS, SECTION_LABELS
 
 _lock = Lock()
-_job = {"state": "idle"}
+_current = local()
 _plans = {}
+STAGES = {"algorithm": ("algorithm",), "download": ("download",), "ai": ("ai",),
+          "download_algorithm": ("download", "algorithm"), "download_ai": ("download", "algorithm", "ai")}
+LABELS = {"download": "Загрузка", "algorithm": "Алгоритмы", "ai": "Проверка ИИ"}
 
 
 def progress(**fields):
-    with _lock:
-        _job.update(fields)
+    operation_log.checkpoint()
+    callback = getattr(_current, "report", None)
+    if callback:
+        callback(**fields)
 
 
-def status():
-    with _lock:
-        return dict(_job)
+def close_interrupted_visit(conn, job):
+    rid = job.get("crawl_run")
+    if rid and conn.execute("SELECT 1 FROM crawl_run WHERE id=? AND state='running'", (rid,)).fetchone():
+        crawl_store.finish_run(conn, rid, "interrupted", reason="portal_interrupted")
+
+
+def status(conn):
+    return operation_log.status(conn, close_interrupted_visit)
 
 
 def profile_for_job(conn):
@@ -92,7 +102,7 @@ def latest_pages(conn, oid):
 
 
 def plan(conn, ids, mode):
-    if mode not in ("download", "algorithm", "ai"):
+    if mode not in STAGES:
         raise ValueError("Выберите вид операции.")
     orgs = selected(conn, ids)
     pages = 0
@@ -121,17 +131,17 @@ def plan(conn, ids, mode):
     reason = ("Пользователь отказался от теста производительности." if same and speed is None
               else "Тест производительности этого профиля ещё не выполнен.")
     counts = {"ready": 0, "missing": 0, "completed": 0}
-    if pages and mode != "algorithm":
+    counts_known = True
+    if pages and mode not in ("algorithm", "download_algorithm"):
         try:
             model_settings.checked(profile)
         except ValueError:
-            if mode != "download":
-                raise
+            counts_known = False
             reason = "Для оценки обработки ИИ исправьте профиль модели."
             speed = None
         else:
             counts = model_batch.batch_assess(conn, org_ids=tuple(ids), latest_only=True, include_photos=True, plan=True)
-    return {"organizations": len(orgs), "pages": pages, "empty": empty, "gaps":gaps, "ready": counts["ready"],
+    return {"organizations": len(orgs), "pages": pages, "empty": empty, "gaps":gaps, "ready": counts["ready"], "counts_known":counts_known,
             "missing": counts["missing"], "completed": counts["completed"], "page_limit": settings["pages_per_org"],
             "download_seconds": sum(durations) if len(durations) == len(orgs) else None,
             "model_seconds": round(counts["ready"] * speed, 2) if speed and pages else None,
@@ -166,7 +176,8 @@ def download(conn, org, opts):
     started = time.monotonic()
     progress(detail=name + " · основной обход")
     result = crawl_organization(org, max_pages=opts["pages_per_org"], max_depth=opts["max_depth"],
-                               news_months=opts["news_months"], archive_files=False, db=conn)
+                               news_months=opts["news_months"], archive_files=False, db=conn,
+                               before_page=lambda rid: progress(crawl_run=rid))
     failures = result.errors
     target = (oid, resolve_url(org["site_url"], ""), org["kind"])
     progress(detail=name + " · поиск дополнительных ссылок")
@@ -179,7 +190,7 @@ def download(conn, org, opts):
         failures += sum(r["errors"] for r in runs)
         if not n and conn.execute(pending_sql, (oid,)).fetchone()[0] >= remaining:
             break
-    remaining = conn.execute(pending_sql, (oid,)).fetchone()[0]
+    remaining = conn.execute("SELECT count(*) FROM material_backfill WHERE organization_id=? AND state IN ('pending','working')", (oid,)).fetchone()[0]
     file_pages = conn.execute("""SELECT DISTINCT a.page_id FROM page_attachment a JOIN page p ON p.id=a.page_id
         WHERE p.id_organization=? AND a.state IN ('pending','error')""", (oid,)).fetchall()
     for index, (pid,) in enumerate(file_pages, 1):
@@ -191,7 +202,9 @@ def download(conn, org, opts):
         (SELECT 1 FROM page n WHERE n.id_organization=p.id_organization AND n.url=p.url
          AND (n.date_loaded,n.id)>(p.date_loaded,p.id))""", (oid,)).fetchone()[0]
     if failures or remaining or unavailable or result.state in ("failed","interrupted"):
-        return f"{name} · ошибок: {failures}, страниц отложено: {remaining}, вложений недоступно: {unavailable} ({result.reason})"
+        return (f"Сохранено основных страниц: {result.loaded}. Ошибок загрузки: {failures}. "
+                f"Страниц в очереди: {remaining}. Недоступных вложений: {unavailable}. "
+                "Для проверки используются последние доступные копии.")
     with conn:
         model_settings.set_setting(conn, "portal_download_" + str(oid),
                                    {"limits": download_limits(opts), "seconds": time.monotonic()-started})
@@ -205,6 +218,7 @@ def run(conn, ids, mode, info):
     done = 0
     if mode == "ai":
         def ensure_profile():
+            operation_log.checkpoint()
             current, _ = profile_for_job(conn)
             if asdict(current) != info["verified_profile"]:
                 raise ValueError("Профиль ИИ изменился. Повторите проверку подключения.")
@@ -247,18 +261,82 @@ def run(conn, ids, mode, info):
                         crawl_store.audit_run(conn, rid)
             if mode == "algorithm" and org["name"] in info["empty"]:
                 errors.append(org["name"] + " · нужно загрузить страницы")
-    if mode == "ai" and (info["missing"] or info["empty"]):
-        errors.append("Часть вопросов ждёт материалов.")
-    progress(state="partial" if errors else "completed", detail=" · ".join(errors) or "Готово")
+    if mode == "ai" and info["missing"]:
+        errors.append(f'Ожидают материалов: {info["missing"]} вопросов.')
+    return " · ".join(errors)
 
 
-def start(conn, ids, mode, work, ticket=None):
+def _stage(db, job, oid, stage, name):
+    operation_log.checkpoint()
+    prefix = name + " · " + LABELS[stage]
+    job.update(detail=prefix, unit_done=0, unit_total=None, unit_estimate=None, unit_started=time.time())
+    operation_log.save(db, job)
+
+    def report(done=None, detail=None, crawl_run=None):
+        new_visit = crawl_run is not None and crawl_run != job.get("crawl_run")
+        if new_visit:
+            job["crawl_run"] = crawl_run
+        if done is not None:
+            job["unit_done"] = done
+        if detail:
+            job["detail"] = detail if detail.startswith(name) else prefix + " · " + detail
+        if not db.in_transaction and (new_visit or time.time() - job["updated"] >= 1):
+            operation_log.save(db, job)
+
+    _current.report = report
+    # Count model questions only for the AI step, after the newer pages have been indexed.
+    item = plan(db, [oid], "algorithm" if stage == "download" else stage)
+    item["verified_profile"] = job["context"]["profile"]
+    job["unit_total"] = {"algorithm": item["pages"], "ai": item["ready"], "download": 1}[stage]
+    if stage == "download":
+        job["unit_estimate"] = item["download_seconds"]
+    elif stage == "ai":
+        job["unit_estimate"] = item["model_seconds"]
+    operation_log.save(db, job)
+    if stage == "ai" and not item["ready"]:
+        note = (f'Вопросов с материалами для новой проверки нет. Уже проверено: {item["completed"]}. '
+                f'Ожидают материалов: {item["missing"]}.' if item["pages"] else "В архиве нет страниц учреждения.")
+    else:
+        note = run(db, [oid], stage, item)
+    if stage == "algorithm" and item["gaps"]:
+        note = "Нет сохранённой страницы раздела: " + ", ".join(item["gaps"][0]["sections"])
+    totals = job.setdefault("processed", {})
+    totals[stage] = totals.get(stage, 0) + job["unit_done"]
+    operation_log.complete_step(db, job, prefix + " · " + note if note else None)
+
+
+def _execute(job, ownership, work):
+    try:
+        with closing(config.connect_db()) as db:
+            try:
+                for oid, stage, name in job["steps"][job["done"]:]:
+                    _stage(db, job, oid, stage, name)
+            except BaseException as exc:
+                operation_log.stop(db, exc)
+    finally:
+        ownership.close()
+        work.release()
+
+
+def start(conn, ids, mode, work, ticket=None, *, resume_id=None):
     if not work.acquire(blocking=False):
         raise ValueError("Другая проверка уже выполняется.")
+    ownership = None
     try:
-        selected(conn, ids)
+        ownership = operation_log.lease(conn)
+        operation_log.initialize(conn)
+        old = operation_log.recover(conn, close_interrupted_visit)
+        if resume_id is not None:
+            if old.get("id") != resume_id or old["state"] not in ("interrupted", "error"):
+                raise ValueError("Нет прерванного задания для продолжения.")
+            mode = old["mode"]
+            ids = list(dict.fromkeys(step[0] for step in old["steps"][old["done"]:]))
+        orgs = selected(conn, ids)
+        if mode not in STAGES:
+            raise ValueError("Выберите вид операции.")
+        needs_ai = "ai" in STAGES[mode]
         verified = None
-        if mode == "ai":
+        if needs_ai:
             verified, _ = profile_for_job(conn)
         if ticket is None:
             info = plan(conn, ids, mode)
@@ -270,30 +348,23 @@ def start(conn, ids, mode, work, ticket=None):
                 raise ValueError("Параметры изменились или план устарел. Повторите оценку материалов.")
             # The worker rechecks available evidence and completed questions when processing.
             info = dict(cached[2])
-        if mode == "algorithm" and not info["pages"]:
+        if resume_id is None and mode == "algorithm" and not info["pages"]:
             raise ValueError("В архиве нет страниц этих учреждений. Сначала загрузите материалы.")
-        if mode == "ai":
-            if not info["ready"]:
+        if needs_ai:
+            if resume_id is None and mode == "ai" and not info["ready"]:
                 raise ValueError("Нет готовых вопросов ИИ. Проверьте материалы и уже обработанные вопросы.")
+            if resume_id is not None and old["context"].get("profile") != asdict(verified):
+                raise ValueError("Профиль модели изменился. Верните прежний профиль или начните новую проверку.")
             verify(conn)
-            info["verified_profile"] = asdict(verified)
-        total = {"ai": info["ready"], "algorithm": info["pages"], "download": info["organizations"]}[mode]
-        estimate = {"ai": info["model_seconds"], "algorithm": None, "download": info["download_seconds"]}[mode]
-        progress(state="running", mode=mode, total=total, done=0, started=time.time(), estimate=estimate, detail="Начинаем")
-        def execute():
-            try:
-                with closing(config.connect_db()) as db, audit_worker._cycle_lock(db) as owned:
-                    if not owned:
-                        raise ValueError("Архив занят другим циклом. Повторите после его завершения.")
-                    run(db, ids, mode, info)
-            except Exception as exc:
-                progress(state="error", detail=str(exc)[:500])
-            finally:
-                work.release()
-        Thread(target=execute, daemon=True).start()
+        steps = [[org["id"], stage, org["name"]] for org in orgs for stage in STAGES[mode]]
+        job = operation_log.begin(conn, mode, steps, resume_id=resume_id,
+                                  context={"profile": asdict(verified) if verified else None})
+        Thread(target=_execute, args=(job, ownership, work), daemon=True).start()
         with _lock:
             _plans.pop(ticket, None)
     except BaseException:
+        if ownership is not None:
+            ownership.close()
         work.release()
         raise
-    return status()
+    return {"state": "running", "id": job["id"]}

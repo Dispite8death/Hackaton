@@ -48,6 +48,8 @@ def create_app():
 
     site.prepare_database()
     initialize()
+    site.operation_log.stopping.clear()
+    quick.app.on_shutdown(site.operation_log.stopping.set)
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.add_middleware(GZipMiddleware, minimum_size=8192)
     app.add_middleware(LocalAccess)
@@ -74,7 +76,20 @@ def create_app():
     @app.get("/api/admin/progress")
     def job_progress():
         with closing(config.connect_db()) as conn:
-            return {"job":site.portal_jobs.status(), "cycle":site.audit_worker.last_status(conn), "manual_cycle":site.JOB.copy()}
+            job = site.portal_jobs.status(conn)
+            cycle = site.audit_worker.observed_status(conn)
+            return {"job":job, "cycle":cycle, "manual_cycle":site.JOB.copy()}
+
+    @app.get("/api/operations")
+    def operations():
+        with closing(config.connect_db()) as conn:
+            archive_job = site.portal_jobs.status(conn)
+            cycle = site.audit_worker.observed_status(conn)
+        result = {name: {k:job[k] for k in ("state","done","total","mode") if k in job}
+                  for name,job in (("archive",archive_job), ("quick",quick.operations.status()))}
+        if cycle:
+            result["cycle"] = {"state":cycle["state"], "id":cycle["id"]}
+        return result
 
     @app.get("/api/admin/state")
     def state():

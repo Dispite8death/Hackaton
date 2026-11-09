@@ -22,6 +22,31 @@
     <a href="/admin">Настройки</a><span class="region-tag">Магаданская область</span>
   </div></header>
   <main id="main">
+    <div class="wrap" id="recent-operations" hidden aria-label="Последние задания"></div>
+    <script>
+      async function refreshOperations(){
+        try {
+          const response=await fetch("/api/operations",{cache:"no-store"});
+          if(!response.ok)return;
+          const jobs=await response.json(), links=[];
+          const labels={running:"выполняется",completed:"завершено",interrupted:"прервано",error:"ошибка",partial:"есть замечания к сбору"};
+          for(const [key,title,path] of [["quick","Алгоритмический аудит","/quick/run"],["archive","Сводный аудит","/admin#selected-audit"]]){
+            const job=jobs[key];
+            if(job.state==="idle")continue;
+            const link=document.createElement("a");link.href=path;
+            link.textContent=title+" · "+labels[job.state]+" · этапов "+job.done+" из "+job.total;
+            links.push(link);
+          }
+          if(jobs.cycle){
+            const link=document.createElement("a");link.href="/admin#settings";
+            link.textContent="Фоновое обновление № "+jobs.cycle.id+" · "+labels[jobs.cycle.state];links.push(link);
+          }
+          const panel=document.getElementById("recent-operations");
+          panel.replaceChildren(...links);panel.hidden=!links.length;
+        }catch(error){/* The next poll retries when the local server returns. */}
+      }
+      refreshOperations();setInterval(refreshOperations,5000);
+    </script>
     <section class="landing-hero"><div class="wrap hero-grid">
       <div><p class="eyebrow">Единая система · два контура проверки</p><h1>Проверка нужной глубины</h1>
         <p class="hero-lead">Сначала выберите задачу. Быстрый контур проверяет выбранное учреждение. Углублённый собирает широкую картину по сайтам, документам и источникам.</p>

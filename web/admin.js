@@ -1,10 +1,17 @@
 "use strict";
 const byId = id => document.getElementById(id);
-const fieldLabels = {interval_minutes:"Интервал запуска, минут",revisit_days:"Повторный обход каждого сайта через, дней",
-  organizations_per_tick:"Учреждений за цикл",pages_per_org:"Страниц основного обхода на сайт",
-  max_depth:"Глубина основного обхода",frontier_pages:"Дополнительных страниц за цикл",
-  attachment_files:"Вложений за цикл",model_checks:"Вопросов модели за цикл",
-  factcheck_items:"Публикаций для фактчекинга",news_months:"Глубина новостей, месяцев"};
+const fieldLabels = {
+  interval_minutes:["Как часто запускать обновление, минут","1440 означает один запуск в сутки при включённом расписании."],
+  revisit_days:["Через сколько дней сайт снова попадёт в очередь","Сначала обходятся новые и давно не проверявшиеся сайты. Это минимальный интервал между обычными обходами."],
+  organizations_per_tick:["Сколько сайтов открыть за запуск","Например, при одном сайте в день первый обход 80 учреждений займёт минимум 80 запусков. Ноль отключает этот этап."],
+  pages_per_org:["Сколько основных страниц загрузить с одного сайта","Главная и страницы из её меню входят в этот лимит. Дополнительные ссылки учитываются отдельно."],
+  max_depth:["На сколько переходов уходить от главной","0 — только главная, 1 — также страницы по ссылкам с главной, 2 — ещё один переход."],
+  frontier_pages:["Сколько дополнительных страниц взять из очереди","Общий лимит для всех учреждений за запуск. Например, страницы документов и профили сотрудников."],
+  attachment_files:["Сколько файлов скачать за запуск","Общий лимит для вложений, например PDF с расписанием. Ноль пропускает загрузку файлов."],
+  model_checks:["Сколько вопросов передать ИИ за запуск","Действует при включённом ИИ. Один вопрос по большому документу может потребовать нескольких запросов."],
+  factcheck_items:["Сколько публикаций сверить с независимыми источниками","Общий лимит за запуск. Сверка работает при включённой проверке публикаций в разделе источников."],
+  news_months:["За сколько последних месяцев собирать новости","Например, 12 ограничивает глубину сбора новостей последним годом."]
+};
 const profiles = {lmstudio:"LM Studio",ollama:"Ollama",compatible:"OpenAI-совместимый API"};
 let state;
 async function call(action, data) {
@@ -25,9 +32,9 @@ function option(parent,value,title){parent.add(new Option(title,value));}
 function displayList(id,items,remove) {
   const list=byId(id);list.replaceChildren();
   items.forEach(value=>{
-    const item=document.createElement("li");item.append(document.createTextNode(value+" "));
+    const item=document.createElement("li");const phrase=document.createElement("span");phrase.textContent=value;item.append(phrase);
     const button=document.createElement("button");button.type="button";button.textContent="Удалить";
-    button.addEventListener("click",()=>remove(value).catch(e=>byId("message").textContent=e.message));
+    button.addEventListener("click",()=>remove(value).catch(e=>byId(id==="words"?"word-result":"message").textContent=e.message));
     item.append(button);list.append(item);
   });
 }
@@ -35,7 +42,7 @@ function sources(){displayList("sources",state.sources,async url=>{
   state.sources=(await call("sources",{operation:"remove",url})).sources;sources();
 });}
 function words(){const category=byId("word-cat").value;displayList("words",state.words[category]||[],async word=>{
-  state.words=(await call("words",{operation:"remove",category,word})).words;words();
+  state.words=(await call("words",{operation:"remove",category,word})).words;words();byId("word-result").textContent="Фраза удалена.";
 });}
 function profile(){
   const p=state.profiles[byId("provider").value];byId("endpoint").value=p.endpoint;
@@ -44,8 +51,9 @@ function profile(){
 }
 function showAiStatus(status) {
   state.ai_status=status;
-  byId("ai-status").textContent=status;
-  byId("access").textContent=status;
+  const label=status==="ИИ настроен"?"ИИ включён":status;
+  byId("ai-status").textContent=label;
+  byId("access").textContent=label;
   const budget=document.querySelector('[name="model_checks"]');
   budget.disabled=status!=="ИИ настроен";
   budget.parentElement.title=budget.disabled?status+". Настройте подключение, чтобы менять лимит вопросов ИИ.":"";
@@ -102,10 +110,10 @@ async function init() {
     for (const id of ["sched-status","sched-enable","sched-disable"]) byId(id).hidden=true;
     byId("schedule-status").textContent="В Linux запустите sh start.sh --once для одного цикла или sh start.sh --loop для повторения с заданным интервалом.";
   }
-  for (const [key,name] of Object.entries(fieldLabels)){
+  for (const [key,[name,help]] of Object.entries(fieldLabels)){
     const label=document.createElement("label"),input=document.createElement("input");
     input.type="number";input.required=true;input.min=["interval_minutes","revisit_days","pages_per_org","news_months"].includes(key)?1:0;
-    input.name=key;input.value=state.settings[key];label.append(document.createTextNode(name),input);byId("cycle-fields").append(label);
+    input.name=key;input.value=state.settings[key];const hint=document.createElement("small");hint.className="help";hint.textContent=help;label.append(document.createTextNode(name),input,hint);byId("cycle-fields").append(label);
   }
   byId("clean").checked=state.retention.enabled;byId("days").value=state.retention.days;
   byId("fact-auto").checked=state.factcheck_auto;
@@ -114,9 +122,14 @@ async function init() {
   byId("provider").value=state.provider;profile();sources();
   for(const [key,title] of Object.entries(state.word_labels))option(byId("word-cat"),key,title);
   words();
-  bind("provider","change",profile);bind("word-cat","change",words);
+  byId("open-words").onclick=()=>byId("word-dialog").showModal();
+  byId("close-words").onclick=()=>byId("word-dialog").close();
+  byId("model").oninput=()=>{dirtyProfile=true;byId("profile-state").textContent="Есть несохранённые изменения.";byId("benchmark-choice").hidden=true;byId("connection-result").textContent="";updateActions();};
+  byId("profile-state").textContent="Сохранённый профиль · "+profiles[state.provider]+".";
+  if(state.last_probe) byId("connection-result").textContent=state.last_probe;
+  bind("provider","change",profile);bind("word-cat","change",()=>{byId("word-result").textContent="";words();});
   bind("settings","submit",async()=>{const settings=Object.fromEntries([...new FormData(byId("settings"))].map(([k,v])=>[k,Number(v)]));
-    byId("message").textContent=(await call("settings",{settings})).message;});
+    byId("settings-result").textContent=(await call("settings",{settings})).message;});
   bind("once","click",async()=>{await call("cycle",{});byId("cycle-status").textContent="Один цикл запущен.";await pollProgress();});
   for(const operation of ["enable","disable","status"])bind("sched-"+operation,"click",async()=>{
     const r=await call("schedule",{operation});byId("schedule-status").textContent=r.detail||"Настройка сохранена.";
@@ -125,17 +138,28 @@ async function init() {
   bind("preview","click",async()=>{const r=await call("retention",{preview:true});byId("retention-result").textContent="Подходящих снимков: "+r.snapshots+". Освобождаемый объём: "+(r.bytes/1048576).toFixed(1)+" МиБ.";});
   bind("fact","submit",async()=>{await call("factcheck",{enabled:byId("fact-auto").checked});byId("message").textContent="Настройка фактчекинга сохранена";});
   bind("source-form","submit",async()=>{state.sources=(await call("sources",{operation:"add",url:byId("source-url").value})).sources;byId("source-url").value="";sources();});
-  bind("word-form","submit",async()=>{state.words=(await call("words",{operation:"add",category:byId("word-cat").value,word:byId("word").value})).words;byId("word").value="";words();});
-  bind("model","submit",async()=>{
-    if (!byId("model").checkValidity()) {
-      if (byId("ai-enabled").checked) {byId("model").reportValidity();return;}
-      const saved=await call("disable-ai",{});showAiStatus(saved.ai_status);invalidatePlan();
-      byId("benchmark-choice").hidden=true;byId("connection-result").textContent="";byId("message").textContent="ИИ выключен";return;
-    }
-    const provider=byId("provider").value,p={provider,endpoint:byId("endpoint").value,model:byId("model-id").value,timeout:Number(byId("timeout").value),response_mode:byId("response").value,disable_thinking:byId("thinking").checked};
-    const saved=await call("profile",{profile:p,enabled:byId("ai-enabled").checked,secret:byId("secret").value});showAiStatus(saved.ai_status);state.profiles[provider]=p;byId("secret").value="";byId("message").textContent="Активный профиль сохранён";invalidatePlan();byId("benchmark-choice").hidden=true;byId("connection-result").textContent="";if(saved.ai_status==="ИИ настроен") await verifyModel();});
+  bind("word-form","submit",async()=>{
+    try{state.words=(await call("words",{operation:"add",category:byId("word-cat").value,word:byId("word").value})).words;byId("word").value="";words();byId("word-result").textContent="Словарь сохранён.";}
+    catch(e){byId("word-result").textContent=e.message;}
+  });
+  bind("model","submit",async()=>{try{await saveProfile();}catch(e){byId("profile-state").textContent="Не удалось сохранить. "+e.message;}});
   wireSelection();wireRegistry();
 }
+let dirtyProfile=false;
+let probing=false;
+async function saveProfile() {
+  const enabled=byId("ai-enabled").checked, form=byId("model");
+  if (!form.checkValidity() && enabled){form.reportValidity();throw Error("Проверьте поля подключения.");}
+  const provider=byId("provider").value;
+  const p={provider,endpoint:byId("endpoint").value,model:byId("model-id").value,timeout:Number(byId("timeout").value),response_mode:byId("response").value,disable_thinking:byId("thinking").checked};
+  const saved=form.checkValidity()?await call("profile",{profile:p,enabled,secret:byId("secret").value}):await call("disable-ai",{});
+  if(saved.profile){state.provider=provider;state.profiles[provider]=saved.profile;}
+  byId("provider").value=state.provider;profile();dirtyProfile=false;
+  byId("profile-state").textContent=(saved.profile?"Настройки сохранены. ":"Использование ИИ выключено. ")+profiles[state.provider]+".";
+  byId("connection-result").textContent="";byId("benchmark-choice").hidden=true;
+  showAiStatus(saved.ai_status);invalidatePlan();
+}
+let lastJob=null;
 const chosen = new Set();
 let currentPlan = null;
 let revision = 0;
@@ -160,14 +184,16 @@ function disableWithReason(id,wrapper,reason) {
 function updateActions(){
   const configured=state.ai_status==="ИИ настроен";
   const reason=!configured ? state.ai_status+". Откройте настройки подключения." : "";
-  disableWithReason("verify-model","verify-reason",reason);
+  const canSaveAndVerify=dirtyProfile && byId("ai-enabled").checked;
+  byId("verify-model").textContent=canSaveAndVerify?"Сохранить и проверить ответ модели":"Проверить ответ модели";
+  disableWithReason("verify-model","verify-reason",probing?"Идёт проверка ответа модели.":dirtyProfile?(canSaveAndVerify?"":"Включите использование модели для проверки."):reason);
   const mode=byId("operation").value;
   byId("once").disabled=running || starting;
-  byId("run-selection").textContent=mode==="download"?"Загрузить материалы":scope==="one"?"Начать анализ учреждения":"Начать анализ выбранных учреждений";
+  byId("run-selection").textContent=mode.startsWith("download_")?"Загрузить и проверить":mode==="download"?"Загрузить материалы":scope==="one"?"Начать анализ учреждения":"Начать анализ выбранных учреждений";
   let why="";
   if (starting || running) why="Дождитесь завершения текущей операции.";
   else if (!chosen.size) why="Выберите учреждение.";
-  else if (mode==="ai" && !configured) why=reason;
+  else if (["ai","download_ai"].includes(mode) && !configured) why=reason;
   else if (!currentPlan) why="Сначала проверьте материалы и оцените время.";
   else if (mode==="ai" && !currentPlan.ready) why="Нет готовых вопросов. Проверьте материалы и уже обработанные вопросы.";
   else if (mode==="algorithm" && !currentPlan.pages) why="Нужны сохранённые страницы. Сначала загрузите материалы.";
@@ -184,11 +210,14 @@ function renderOrgs(){
     input.addEventListener("change",()=>{
       if (!many) chosen.clear();
       if(input.checked) chosen.add(org.id);else chosen.delete(org.id);
-      invalidatePlan();renderOrgs();
+      invalidatePlan();showSelectedCount();
     });
     text.textContent=org.name;url.textContent=org.site_url;text.append(url);label.append(input,text);list.append(label);
   }
   if (!list.childElementCount) list.textContent="Совпадений нет.";
+  showSelectedCount();
+}
+function showSelectedCount(){
   byId("org-count").textContent="Выбрано учреждений: "+chosen.size+" из "+state.organizations.length;
 }
 function duration(seconds) {
@@ -205,13 +234,16 @@ function showPlan(p){
     const li=document.createElement("li");li.textContent=g.name+" — "+g.sections.join(", ");return li;
   }));
   if (p.empty.length) lines.push("Нужна первичная загрузка: "+p.empty.join(", ")+".");
-  if(byId("operation").value!=="algorithm"){
+  if((p.gaps.length||p.empty.length) && ["ai","algorithm"].includes(byId("operation").value))
+    lines.push("Проверка охватит доступные материалы. Чтобы сначала пополнить архив, выберите «Загрузить и сразу проверить алгоритмами» или вариант с ИИ.");
+  if(["ai","download_ai","download"].includes(byId("operation").value) && p.counts_known){
     lines.push("Вопросы ИИ в текущем архиве: готово "+p.ready+", уже обработано "+p.completed+", не хватает материалов "+p.missing+".");
     lines.push("Обработка ИИ: "+(p.model_seconds===null ? p.benchmark_reason || "Станет известна после загрузки материалов." : "около "+duration(p.model_seconds)+" по текстовой пробе. Фото и PDF могут занять больше времени."));
   }
   if(byId("operation").value==="ai" && p.ready)
     lines.push("Запуск обработает готовые вопросы выбранных учреждений. Для многостраничного документа один вопрос может потребовать нескольких обращений к API.");
-  if(byId("operation").value==="download") lines.push("Загрузка: "+duration(p.download_seconds)+" по предыдущим полным загрузкам при тех же лимитах. До "+p.page_limit+" страниц в основном обходе на учреждение, затем дополнительные ссылки и вложения. После загрузки оцените новый объём обработки.");
+  if(byId("operation").value.startsWith("download")) lines.push("Загрузка: "+duration(p.download_seconds)+" по предыдущим полным загрузкам при тех же лимитах. До "+p.page_limit+" страниц в основном обходе на учреждение, затем дополнительные ссылки и вложения. В совмещённом режиме система пересчитает объём анализа после загрузки.");
+  if(!p.counts_known && ["ai","download_ai"].includes(byId("operation").value)) lines.push(p.benchmark_reason);
   lines.push("Большая выборка может занять длительное время. Оставьте приложение запущенным.");
   byId("estimate").textContent=lines.join("\n");
 }
@@ -221,31 +253,57 @@ async function pollProgress(){
     const s=await call("progress");
     const j=s.job;
     const cycle=s.cycle;
-    running=j.state==="running" || s.manual_cycle.state==="running";
+    lastJob=j;
+    running=j.state==="running" || s.manual_cycle.state==="running" || cycle?.state==="running";
+    byId("resume-job").hidden=!["error","interrupted"].includes(j.state);
+    byId("resume-job").disabled=running || starting;
     if(j.state!=="idle"){
-      const elapsed=Math.max(0,Date.now()/1000-j.started);
-      const left=j.done>0 ? elapsed*(j.total-j.done)/j.done : j.estimate==null?null:Math.max(0,j.estimate-elapsed);
-      const stages={download:"Загрузка",ai:"Проверка ИИ",algorithm:"Проверка страниц"};
-      const states={running:"Выполняется",completed:"Завершено",partial:"Завершено частично",error:"Ошибка"};
-      byId("job-progress").textContent=[stages[j.mode],states[j.state],j.done+" из "+j.total,j.detail,j.state==="running" && left!==null?(left>0?"Осталось примерно "+duration(left):"Шаг ещё выполняется"):""].filter(Boolean).join(" · ");
+      const now=Date.now()/1000,active=j.state==="running";
+      const elapsed=j.elapsed+(active?Math.max(0,now-j.updated):0);
+      const modes={download:"Загрузка",ai:"Проверка ИИ",algorithm:"Алгоритмы",download_algorithm:"Загрузка и алгоритмы",download_ai:"Загрузка, алгоритмы и ИИ"};
+      const states={running:"Выполняется",completed:"Все запланированные этапы завершены",interrupted:"Прервано при остановке сервера",error:"Остановлено из-за ошибки"};
+      const lines=[modes[j.mode]+" · "+states[j.state], "Этапов: "+j.done+" из "+j.total+" · время работы: "+Math.floor(elapsed/60)+" мин "+Math.floor(elapsed%60)+" с"];
+      if(j.detail && j.state!=="completed") lines.push(j.detail);
+      const units={algorithm:"Страниц проверено",ai:"Ответов ИИ получено",download:"Обходов выполнено"};
+      for(const [stage,n] of Object.entries(j.processed||{}))lines.push(units[stage]+": "+n);
+      if(active && j.unit_total){
+        const t=Math.max(0,now-j.unit_started);
+        const left=j.unit_done>0?t*(j.unit_total-j.unit_done)/j.unit_done:j.unit_estimate==null?null:Math.max(0,j.unit_estimate-t);
+        lines.push("На текущем этапе: "+j.unit_done+" из "+j.unit_total+(left>0?" · осталось примерно "+duration(left):""));
+      }
+      const details=byId("job-notes");
+      details.hidden=!j.notes?.length;
+      if(!details.hidden){
+        details.querySelector("summary").textContent="Что осталось без проверки или загрузки ("+j.notes.length+")";
+        details.querySelector("ul").replaceChildren(...j.notes.map(note=>{const li=document.createElement("li");li.textContent=note;return li;}));
+      }
+      byId("job-progress").textContent=lines.join("\n");
     }
     if (s.manual_cycle.error) byId("cycle-status").textContent=s.manual_cycle.error;
     else if (cycle) {
       const names={crawl:"сайты",frontier:"дополнительные страницы",attachments:"вложения",factcheck:"публикации",models:"ИИ",retention:"очистка"};
-      byId("cycle-status").textContent="Цикл № "+cycle.id+" · "+({running:"Выполняется",partial:"Завершён частично",completed:"Завершён",interrupted:"Прерван"}[cycle.state]||cycle.state)+(cycle.stage?" · "+(names[cycle.stage]||cycle.stage):"");
+      byId("cycle-status").textContent="Цикл № "+cycle.id+" · "+({running:"Выполняется",partial:"Цикл закончился с замечаниями",completed:"Завершён",interrupted:"Прерван"}[cycle.state]||cycle.state)+(cycle.stage?" · "+(names[cycle.stage]||cycle.stage):"");
+      const timing=cycle.state==="interrupted"?Object.values(cycle.stages).reduce((n,s)=>n+(s.seconds||0),0):(cycle.finished_at||Date.now()/1000)-cycle.started_at;
+      byId("cycle-status").textContent+=" · "+(cycle.state==="interrupted"?"время сохранённых этапов: ":"время: ")+duration(Math.max(0,timing));
+      for(const [stage,v] of Object.entries(cycle.stages)){if(v.error||v.errors||v.stop_reason)byId("cycle-status").textContent+="\n"+(names[stage]||stage)+" · "+(v.error||v.stop_reason||("Ошибок: "+v.errors));}
+      if(cycle.state==="interrupted")byId("cycle-status").textContent+=". Следующий запуск возьмёт оставшиеся материалы из очереди.";
     }
     updateActions();
   } catch(error){byId("job-progress").textContent="Не удалось обновить состояние. "+error.message;}
   refreshTimer=setTimeout(pollProgress,running?1500:8000);
 }
 async function verifyModel() {
+  if(probing)return;
+  probing=true;updateActions();
   byId("benchmark-choice").hidden=true;
   byId("connection-result").textContent="Ждём ответ выбранной модели…";
   try {
+    if(dirtyProfile) await saveProfile();
     const r=await call("verify",{});
-    byId("connection-result").textContent=r.model+" · "+r.message;
-    byId("benchmark-choice").hidden=false;
-  } catch(e){byId("connection-result").textContent="Проверка подключения не прошла. "+e.message;}
+    byId("connection-result").textContent=r.model+" · "+r.message+" · "+r.seconds+" с";
+    byId("benchmark-choice").hidden=dirtyProfile;
+  } catch(e){byId("connection-result").textContent="Проверка подключения не прошла. "+e.message+(byId("provider").value==="compatible"?"":" Проверьте, что сервер запущен и модель доступна по указанному адресу.");}
+  finally{probing=false;updateActions();}
 }
 function wireSelection(){
   renderOrgs();updateActions();
@@ -269,6 +327,11 @@ function wireSelection(){
     try{await call("analyze",{...selection(),ticket:currentPlan.ticket});invalidatePlan();await pollProgress();}
     catch(e){byId("message").textContent=byId("job-progress").textContent="Запуск отклонён. "+e.message;}
     finally{starting=false;updateActions();}
+  });
+  bind("resume-job","click",async()=>{
+    starting=true;updateActions();byId("resume-job").disabled=true;
+    try{await call("resume",{id:lastJob.id});}catch(e){byId("message").textContent=e.message;}
+    finally{starting=false;await pollProgress();}
   });
   bind("verify-model","click",verifyModel);
   for(const [button,decline] of [["benchmark-run",false],["benchmark-decline",true]]) bind(button,"click",async()=>{

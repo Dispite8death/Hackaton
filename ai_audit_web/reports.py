@@ -41,8 +41,8 @@ def latest():
         rows = []
         for site in sites:
             result = conn.execute("""
-                SELECT rs.*,r.finished_at FROM run_sites rs JOIN runs r ON rs.run_id=r.id
-                WHERE rs.site_id=? AND r.status IN ('done','error')
+                SELECT rs.*,coalesce(rs.checked_at,r.finished_at) AS finished_at FROM run_sites rs JOIN runs r ON rs.run_id=r.id
+                WHERE rs.site_id=? AND (r.status IN ('done','error') OR rs.checked_at IS NOT NULL)
                 ORDER BY rs.run_id DESC,rs.id DESC LIMIT 1""", (site["id"],)).fetchone()
             if result is None:
                 continue

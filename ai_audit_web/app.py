@@ -1,4 +1,4 @@
-import asyncio
+import time
 import csv
 import io
 import json
@@ -15,10 +15,11 @@ from . import core
 from . import llm
 from . import vision, reports
 
-from .integration import archive_id, audit_settings, ai_status
+from .integration import archive_id, ai_status
 from Engine.portal_nav import navigation
 
-audit_lock = asyncio.Lock()
+from . import operations
+from .operations import audit_lock
 
 
 def _photo_summary(sm):
@@ -324,74 +325,44 @@ def export_csv(cols=None, include_ok=None, selection=None):
 # Фоновые задачи
 # ============================================================
 
-async def do_audit(offline=False, sites=None):
-    async with audit_lock:
-        settings = db.get_settings()
-        if sites is None:
-            sites = db.get_sites(active_only=True)
-            if offline:
-                sites = [site for site in sites if has_cache(site["id"])]
-        if not sites:
-            print("[AUDIT] Нет активных сайтов для проверки.")
-            return
-        mode = "ПО КЭШУ" if offline else "ПОЛНЫЙ"
-        print("\n[AUDIT] === " + mode + " АУДИТ " + str(len(sites)) + " САЙТОВ ===")
-        run_id = db.start_run(len(sites))
-        scores = []
-        for site in sites:
-            print("\n[AUDIT] Обрабатываю: " + site["name"])
-            try:
-                result = await core.audit_site(site, settings, offline=offline)
-                print("  -> ошибок: " + str(len(result.get("findings", []))) + ", балл: " + str(result.get("score")))
-                db.save_site_result(run_id, site, result)
-                scores.append(result["score"])
-            except Exception as e:
-                print("  -> [ОШИБКА] " + site["name"] + ": " + str(e))
-                import traceback
-                traceback.print_exc()
-                fallback = {
-                    "score": 0,
-                    "counts": {"CRITICAL": 1, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0},
-                    "findings": [{"agent": "system", "severity": "CRITICAL", "code": "UNHANDLED_ERROR",
-                                  "message": "Ошибка обработки: " + str(e), "url": site["url"],
-                                  "recommendation": "Проверить доступность сайта и настройки сети."}],
-                    "metrics": {}, "llm_summary": "",
-                }
-                db.save_site_result(run_id, site, fallback)
-                scores.append(0)
-        avg = sum(scores) / len(scores) if scores else 0
-        print("\n[AUDIT] === ЗАВЕРШЕН. Средний балл: " + str(round(avg, 1)) + " ===\n")
-        db.finish_run(run_id, "done", avg)
-
-
-async def audit_single_site(site_id, offline=False):
-    async with audit_lock:
-        settings = db.get_settings()
-        site = db.get_site(site_id)
-        if not site:
-            return
-        mode = "ПО КЭШУ" if offline else "ПОЛНЫЙ"
-        print("\n[AUDIT SINGLE] === " + mode + ": " + site["name"] + " ===")
-        run_id = db.start_run(1)
+def job_panel(on_complete=None, site_id=None):
+    ui.label("Вкладку можно закрыть. После остановки сервера продолжите последнее задание здесь. Новый запуск заменит его. Незаконченный запрос ИИ при продолжении может быть отправлен повторно.")
+    line = ui.label().props("role=status")
+    message = ui.label()
+    last = None
+    async def resume():
         try:
-            result = await core.audit_site(site, settings, offline=offline)
-            db.save_site_result(run_id, site, result)
-            db.finish_run(run_id, "done", result["score"])
-            print("[AUDIT SINGLE] === ЗАВЕРШЕНО. Балл: " + str(result["score"]) + " ===\n")
-        except Exception as e:
-            print("  -> [ОШИБКА] " + site["name"] + ": " + str(e))
-            import traceback
-            traceback.print_exc()
-            fallback = {
-                "score": 0,
-                "counts": {"CRITICAL": 1, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0},
-                "findings": [{"agent": "system", "severity": "CRITICAL", "code": "UNHANDLED_ERROR",
-                              "message": "Ошибка обработки: " + str(e), "url": site["url"],
-                              "recommendation": "Проверить доступность сайта и настройки сети."}],
-                "metrics": {}, "llm_summary": "",
-            }
-            db.save_site_result(run_id, site, fallback)
-            db.finish_run(run_id, "error", 0)
+            await operations.start(resume_id=last[0])
+            message.set_text("")
+        except ValueError as error:
+            message.set_text(str(error))
+        refresh()
+    button = ui.button("Продолжить незаконченный этап", on_click=resume).props("outline")
+    def refresh():
+        nonlocal last
+        job = operations.status()
+        state = job["state"]
+        button.set_visibility(state in ("error", "interrupted"))
+        if state == "idle":
+            line.set_text("Заданий ещё не было.")
+            last = (None, state)
+            return
+        elapsed = job["elapsed"] + (max(0, time.time()-job["updated"]) if state == "running" else 0)
+        done, total = job["done"], job["total"]
+        names = {"running":"Выполняется", "interrupted":"Прервано при остановке сервера",
+                 "completed":"Задание завершено", "error":"Остановлено из-за ошибки"}
+        parts = [operations.LABELS[job["mode"]], names[state], f"Этапов: {done} из {total}",
+                 f"Время работы: {int(elapsed)//60} мин {int(elapsed)%60} с", job["detail"]]
+        if state == "running" and 0 < done < total:
+            parts.append(f"Осталось ориентировочно {round(job['elapsed'] / done * (total-done))} с по завершённым учреждениям")
+        line.set_text(" · ".join(parts + job["notes"]))
+        key = (job["id"], state)
+        matches = site_id is None or any(step[0] == site_id for step in job["steps"])
+        if on_complete and last is not None and last != key and state == "completed" and matches:
+            on_complete()
+        last = key
+    refresh()
+    ui.timer(2, refresh)
 
 
 def has_cache(site_id):
@@ -500,19 +471,17 @@ def run_page():
             if not selected or audit_lock.locked():
                 status.set_text("Выберите учреждения." if not selected else "Сейчас уже идёт проверка.")
                 return
-            eligible = [s for s in selected if not offline or has_cache(s["id"])]
-            if not eligible:
-                status.set_text("Для выбранных учреждений нет сохранённых страниц. Запустите проверку сайтов.")
-                return
-            skipped = len(selected) - len(eligible)
-            status.set_text(f"Идёт проверка учреждений: {len(eligible)}.")
-            await do_audit(offline, eligible)
-            status.set_text(f"Проверка завершена. Обработано: {len(eligible)}. Пропущено без сохранённых страниц: {skipped}.")
+            try:
+                await operations.start("cache" if offline else "online", selected)
+                status.set_text("Задание принято. Ход проверки показан ниже.")
+            except ValueError as error:
+                status.set_text(str(error))
         with ui.row():
             ui.button("Выбрать все", on_click=lambda: chosen.set_value(list(site_options(sites)))).props("flat")
             ui.button("Проверить сайты", on_click=lambda: run(False))
             ui.button("Проверить сохранённые страницы", on_click=lambda: run(True)).props("outline")
         count()
+        job_panel()
         ui.link("Посмотреть результаты", "/report")
 
 
@@ -536,16 +505,15 @@ def site_detail(site_id: int):
 
     layout(site["name"])
     progress = ui.label().props("role=status").classes("audit-subnav")
+    job_status = ui.column().classes("audit-container w-full gap-1")
     container = ui.column().classes("audit-container w-full gap-4 px-4")
 
     async def run_check(offline):
-        if audit_lock.locked():
-            ui.notify("Дождитесь окончания текущей проверки.", type="warning")
-            return
-        progress.set_text("Проверяем сохранённые страницы…" if offline else "Загружаем и проверяем страницы сайта…")
-        await audit_single_site(site_id, offline=offline)
-        progress.set_text("Готово. Результат проверки показан в карточке.")
-        render()
+        try:
+            await operations.start("cache" if offline else "online", [site])
+            progress.set_text("Задание принято.")
+        except ValueError as error:
+            progress.set_text(str(error))
 
     def render():
         container.clear()
@@ -716,6 +684,8 @@ def site_detail(site_id: int):
                         ui.label("Сравнение «было / стало» появится после второй проверки сайта.").classes("text-grey-7 mt-2")
 
     render()
+    with job_status:
+        job_panel(on_complete=render, site_id=site_id)
 
 
 # ============================================================
@@ -963,7 +933,6 @@ def ai_report_page(site_id: int = 0):
         selected = ui.select(site_options([row["site"] for row in rows.values()]), value=site_id if site_id in rows else None,
                              label="Учреждение с готовым отчётом", with_input=True).props("outlined clearable").classes("w-full")
         panel = ui.column().classes("w-full")
-        busy = False
         def draw():
             panel.clear()
             row = rows.get(selected.value)
@@ -982,29 +951,13 @@ def ai_report_page(site_id: int = 0):
                     ui.link("Открыть карточку учреждения", f"/site/{row['site']['id']}")
                 status = ui.label().props("role=status")
                 async def generate(summary):
-                    nonlocal busy
-                    if busy or not row:
+                    if not row:
                         return
-                    busy = True
-                    selected.disable()
                     try:
-                        settings = audit_settings()
-                        if settings["llm_enabled"] != "1":
-                            raise ValueError(ai_status())
-                        status.set_text("Ожидаем ответ модели…")
-                        answer = await (llm.summarize if summary else llm.explain)(row["site"], row["findings"], settings)
-                        if summary:
-                            db.save_summary(result["id"], answer)
-                        else:
-                            db.save_explanation(result["id"], answer)
-                        result["llm_summary" if summary else "ai_explanation"] = answer
-                        ui.notify("Ответ сохранён в отчёте.", type="positive")
-                        draw()
-                    except (ValueError, OSError) as error:
-                        status.set_text("Не удалось получить разбор. " + str(error))
-                    finally:
-                        selected.enable()
-                        busy = False
+                        await operations.start("summary" if summary else "explain", [row["site"]], result_id=result["id"])
+                        status.set_text("Запрос принят. Ответ будет сохранён в этом отчёте.")
+                    except ValueError as error:
+                        status.set_text(str(error))
                 with ui.row():
                     for title, summary in (("Краткая сводка с ИИ", True), ("План исправления с ИИ", False)):
                         with ui.element("span") as wrapper:
@@ -1025,6 +978,10 @@ def ai_report_page(site_id: int = 0):
                             ui.label(legacy).classes("whitespace-pre-wrap")
         selected.on_value_change(draw)
         draw()
+        def refresh_answers():
+            rows.update({row["site"]["id"]: row for row in reports.latest()})
+            draw()
+        job_panel(on_complete=refresh_answers)
 
 
 @ui.page("/settings")
@@ -1069,18 +1026,20 @@ def settings_page():
 
 @app.post("/api/run")
 async def api_run():
-    if audit_lock.locked():
-        return {"status": "already_running"}
-    asyncio.create_task(do_audit(offline=False))
-    return {"status": "started"}
+    try:
+        job_id = await operations.start("online", db.get_sites(active_only=True))
+        return {"status": "started", "id": job_id}
+    except ValueError as error:
+        return {"status": "already_running" if audit_lock.locked() else "unavailable", "detail": str(error)}
 
 
 @app.post("/api/run_cache")
 async def api_run_cache():
-    if audit_lock.locked():
-        return {"status": "already_running"}
-    asyncio.create_task(do_audit(offline=True))
-    return {"status": "started"}
+    try:
+        job_id = await operations.start("cache", db.get_sites(active_only=True))
+        return {"status": "started", "id": job_id}
+    except ValueError as error:
+        return {"status": "already_running" if audit_lock.locked() else "unavailable", "detail": str(error)}
 
 
 # ============================================================

@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 
 from .paths import DATA_DIR
+from Engine import operation_log
 
 DB_PATH = DATA_DIR / "audit.db"
 
@@ -17,6 +18,7 @@ def conn():
 
 def init():
     with closing(conn()) as c, c:
+        operation_log.initialize(c)
         c.execute("""
         CREATE TABLE IF NOT EXISTS sites (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,8 +64,11 @@ def init():
         )
         """)
 
-        if "ai_explanation" not in {r[1] for r in c.execute("PRAGMA table_info(run_sites)")}:
+        columns = {r[1] for r in c.execute("PRAGMA table_info(run_sites)")}
+        if "ai_explanation" not in columns:
             c.execute("ALTER TABLE run_sites ADD COLUMN ai_explanation TEXT")
+        if "checked_at" not in columns:
+            c.execute("ALTER TABLE run_sites ADD COLUMN checked_at TEXT")
         c.execute("CREATE INDEX IF NOT EXISTS quick_site_runs ON run_sites(site_id,run_id DESC)")
         c.execute("""
         CREATE TABLE IF NOT EXISTS findings (
@@ -340,7 +345,8 @@ def get_last_site_result(site_id):
     with closing(conn()) as c, c:
         row = c.execute("""
             SELECT rs.* FROM run_sites rs JOIN runs r ON rs.run_id = r.id
-            WHERE rs.site_id=? AND r.status IN ('done','error') ORDER BY r.id DESC LIMIT 1""", (site_id,)).fetchone()
+            WHERE rs.site_id=? AND (r.status IN ('done','error') OR rs.checked_at IS NOT NULL)
+            ORDER BY r.id DESC LIMIT 1""", (site_id,)).fetchone()
         return dict(row) if row else None
 
 
@@ -389,8 +395,8 @@ def get_findings_diff(site_id):
         if len(runs) < 2:
             return None
         cur_id, prev_id = runs[0]["run_id"], runs[1]["run_id"]
-        cur = [dict(r) for r in c.execute("SELECT * FROM findings WHERE run_id=?", (cur_id,)).fetchall()]
-        prev = [dict(r) for r in c.execute("SELECT * FROM findings WHERE run_id=?", (prev_id,)).fetchall()]
+        cur = [dict(r) for r in c.execute("SELECT * FROM findings WHERE run_id=? AND site_id=?", (cur_id,site_id))]
+        prev = [dict(r) for r in c.execute("SELECT * FROM findings WHERE run_id=? AND site_id=?", (prev_id,site_id))]
     cur_keys = {_finding_key(f): f for f in cur}
     prev_keys = {_finding_key(f): f for f in prev}
     fixed = [prev_keys[k] for k in prev_keys if k not in cur_keys]

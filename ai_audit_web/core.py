@@ -104,8 +104,13 @@ def load_manifest(cache_dir):
 
 
 def save_manifest(cache_dir, manifest):
-    (cache_dir / "manifest.json").write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    atomic_text(cache_dir / "manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
+
+
+def atomic_text(path, text):
+    pending = path.with_suffix(path.suffix + ".pending")
+    pending.write_text(text, encoding="utf-8")
+    pending.replace(path)
 
 
 def get_page_from_cache(cache_dir, url):
@@ -117,7 +122,7 @@ def get_page_from_cache(cache_dir, url):
 
 def save_page_to_cache(cache_dir, url, html):
     p = cache_dir / "pages" / (hashlib.md5(url.encode()).hexdigest() + ".html")
-    p.write_text(html, encoding="utf-8")
+    atomic_text(p, html)
 
 
 def clean_cache(cache_dir, current_urls):
@@ -276,6 +281,8 @@ def crawl_http(start_url, allowed_hosts, settings, site_id):
     new_manifest = {}
 
     for raw_url in list(queue):
+        if check := settings.get("checkpoint"):
+            check()
         if len(pages) >= max_pages:
             break
         url, _ = urldefrag(raw_url)
@@ -318,8 +325,13 @@ def crawl_http(start_url, allowed_hosts, settings, site_id):
                 if len(queue) < 800:
                     queue.append(href)
 
-    clean_cache(cache_dir, list(new_manifest.keys()))
-    save_manifest(cache_dir, new_manifest)
+    if new_manifest:
+        # A temporary fetch failure must not remove the last available offline copy.
+        for page in pages:
+            if page.get("error") and page["url"] in manifest:
+                new_manifest[page["url"]] = manifest[page["url"]]
+        save_manifest(cache_dir, new_manifest)
+        clean_cache(cache_dir, list(new_manifest))
 
     try:
         (ROOT / "storage" / str(site_id)).mkdir(parents=True, exist_ok=True)

@@ -50,7 +50,7 @@ class Result:
 
 def crawl_organization(org, *, max_pages=32, max_depth=3, timeout=12, fetch=None, capture=None,
                        purpose=None, archive_photos=None, render_wait=45, news_only=False, archive_staff=None,
-                       archive_files=None, db=None, news_months=12, news_as_of=None):
+                       archive_files=None, db=None, news_months=12, news_as_of=None, before_page=None):
     """Normal visits capture PDF, both screenshots and DOM. Tests can supply a transport."""
     purpose = purpose or ("sample" if news_only else "audit")
     if fetch is None and capture is None:
@@ -65,13 +65,13 @@ def crawl_organization(org, *, max_pages=32, max_depth=3, timeout=12, fetch=None
         with BrowserCapture(pdf=True, ready_timeout=render_wait) as browser:
             return _crawl(org, max_pages, max_depth, timeout, None, browser, purpose,
                           archive_photos or archive_home_images, news_only, archive_staff or archive_staff_photos,
-                          download_pending if archive_files is None else archive_files, db,news_months,news_as_of)
+                          download_pending if archive_files is None else archive_files, db,news_months,news_as_of,before_page)
     return _crawl(org, max_pages, max_depth, timeout, fetch, capture, purpose, archive_photos, news_only, archive_staff,
-                  archive_files, db,news_months,news_as_of)
+                  archive_files, db,news_months,news_as_of,before_page)
 
 
 def _crawl(org, max_pages, max_depth, timeout, fetch, capture, purpose, archive_photos, news_only, archive_staff,
-           archive_files=None, db=None, news_months=12,news_as_of=None):
+           archive_files=None, db=None, news_months=12,news_as_of=None,before_page=None):
     site = resolve_url(org["site_url"], "")
     if not site:
         raise ValueError(f"Некорректный адрес учреждения {org['id']}")
@@ -113,6 +113,8 @@ def _crawl(org, max_pages, max_depth, timeout, fetch, capture, purpose, archive_
         run = start_run(conn, org["id"], max_depth=max_depth, max_pages=max_pages, purpose=purpose)
         try:
             while pending and loaded + errors < max_pages:
+                if before_page:
+                    before_page(run)
                 current = min(pending.values(), key=priority)
                 del pending[current.url]
                 visited.add(current.url)

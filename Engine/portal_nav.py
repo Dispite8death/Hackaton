@@ -10,4 +10,5 @@ def navigation(active, status):
     return ('<div class="kontur-bar"><div class="kontur-inner">'
             '<a class="kontur-brand" href="/">Контур<small>Аудит сайтов образования</small></a>'
             '<nav class="kontur-links" aria-label="Режимы аудита">' + "".join(links) + '</nav>'
-            '<a class="kontur-status" id="access" href="/admin#model">' + escape(status) + '</a></div></div>')
+            '<a class="kontur-status" id="access" href="/admin#model">' +
+            escape("ИИ включён" if status == "ИИ настроен" else status) + '</a></div></div>')
