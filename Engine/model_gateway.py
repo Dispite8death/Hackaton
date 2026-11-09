@@ -7,6 +7,7 @@ import json
 import re
 import time
 from contextlib import closing
+from dataclasses import replace
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
@@ -60,6 +61,8 @@ def _api(profile, route, key="", payload=None):
         hints = {401: "Проверьте ключ API.", 403: "У ключа нет доступа к модели.",
                  404: "Проверьте адрес API и название модели.", 429: "Исчерпан лимит запросов или квота."}
         hint = hints.get(error.code, "Проверьте параметры модели и состояние сервера.")
+        if error.code==400 and "response_format" in message.lower():
+            hint = "Сервер отклонил формат ответа. В настройках модели выберите поддерживаемый режим «JSON по схеме» или «По инструкции» и повторите проверку."
         raise ValueError(f"API вернул HTTP {error.code}. {hint} {message[:500]}".strip()) from error
     except (URLError, TimeoutError, OSError) as error:
         raise ValueError(f"Нет ответа от {profile.endpoint}. {error}") from error
@@ -214,6 +217,18 @@ def apply_response_options(profile, payload, name, schema):
 
 
 def _predict(profile, key, check, materials, parts, *, trace=None):
+    text_layer_only = False
+    if (profile.provider=="ollama" and profile.endpoint.endswith("/v1")
+            and any(part.get("type")=="image_url" for part in parts)):
+        native = replace(profile, endpoint=profile.endpoint[:-3])
+        capabilities = _api(native, "/api/show", key, {"model":profile.model}).get("capabilities")
+        if isinstance(capabilities, list) and "vision" not in capabilities:
+            text_layer_only = (bool(materials) and all(m.get("text_length") for m in materials)
+                               and bool(check.get("attachment") or {"html","dom"}.intersection(check["material_kinds"])))
+            if not text_layer_only:
+                return {"outcome":"uncertain","material_ids":[],
+                        "evidence":"Выбранная модель Ollama не поддерживает изображения. Для этой проверки нужна модель с функцией зрения."}, None
+            parts = [part for part in parts if part["type"]!="image_url"]
     ids = allowed_material_ids(check,materials)
     schema = {"type":"object","additionalProperties":False,"properties":{
         "outcome":{"type":"string","enum":list(outcomes_for(check))},
@@ -260,6 +275,8 @@ def _predict(profile, key, check, materials, parts, *, trace=None):
         raise ValueError("Сервер не вернул завершённый JSON-ответ по вопросу") from exc
     if not isinstance(result,dict) or set(result)!={"outcome","material_ids","evidence"}:
         raise ValueError("Поля ответа не соответствуют контракту")
+    if text_layer_only and result["outcome"]=="absent":
+        result = dict(result,outcome="uncertain",evidence="В текстовом слое не найдено подтверждение. Изображения документа требуют визуальной проверки.")
     return result,data.get("usage")
 
 

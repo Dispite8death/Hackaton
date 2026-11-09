@@ -4,7 +4,6 @@ import base64
 import time
 from contextlib import ExitStack, suppress
 from dataclasses import dataclass
-from pathlib import Path
 
 if __package__:
     from .http_page import MAX_HTML_BYTES, PageResponse, decode_html, same_site
@@ -196,8 +195,8 @@ class BrowserCapture:
         try:
             pw = self._stack.enter_context(sync_playwright())
             engine = pw.chromium
-            channels = [None] if Path(engine.executable_path).is_file() else []
-            channels += ["chrome", "msedge"]
+            # Playwright may have only its headless shell installed.
+            channels = [None, "chrome", "msedge"]
             for channel in channels:
                 try:
                     self.browser = engine.launch(channel=channel, headless=True, chromium_sandbox=True)

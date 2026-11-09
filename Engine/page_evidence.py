@@ -349,6 +349,12 @@ def print_witness(materials,result):
             and any(_normalize(a) in answer for a in pdf["unmatched_dom_anchors"]))
 
 
+def unconfirmed_times(evidence, source):
+    def times(text):
+        return {f"{int(h)}:{m}" for h,m in re.findall(r"(?<!\d)([01]?\d|2[0-3]):([0-5]\d)(?!\d)", text)}
+    return sorted(times(evidence) - times(source))
+
+
 def text_witness(piece,result,check_id):
     """Check claims against the actual text layer; do not OCR a scanned sheet implicitly."""
     if result["outcome"]!="present":
@@ -364,9 +370,10 @@ def text_witness(piece,result,check_id):
             return "Уровень образования сотрудника или диплом не подтверждены. Курсы и удостоверения о повышении квалификации учитываются отдельно."
     schedule = check_id.startswith("attachment_schedule_") or check_id in {"schedule_body_lessons","schedule_visible_lessons"}
     if schedule and len(re.findall(r"[а-яa-z]{2,}",text,re.I))<6:
-        return ("Модель распознала на изображении таблицу, похожую на расписание занятий. "
-                "Конкретная строка с классом, предметом и временем требует сверки по оригиналу: "
+        return ("Конкретная строка с классом, предметом и временем требует сверки по оригиналу: "
                 "независимого подтверждения прочитанного текста нет.")
+    if piece.source_text and (schedule or check_id=="section_content") and unconfirmed_times(answer, piece.source_text):
+        return "Модель указала время занятия, которого нет в текстовом материале. Сверьте строку с оригиналом."
     if not piece.source_text:
         return None
     if check_id=="event_date_in_text" or check_id.startswith("event_plan_"):

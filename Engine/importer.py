@@ -44,6 +44,14 @@ def read_organizations(path: Path) -> list[tuple[str, str, str]]:
     return organizations
 
 
+def seed_if_empty(conn) -> None:
+    with conn:
+        conn.execute("BEGIN IMMEDIATE")
+        if not conn.execute("SELECT 1 FROM organization LIMIT 1").fetchone():
+            conn.executemany("INSERT OR IGNORE INTO organization(name,site_url,kind) VALUES(?,?,?)",
+                             read_organizations(SOURCE))
+
+
 def import_organizations(path: Path = SOURCE) -> int:
     organizations = read_organizations(path)
     with closing(connect_db()) as conn, conn:

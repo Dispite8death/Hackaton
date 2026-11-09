@@ -185,6 +185,16 @@ def deterministic_metrics(path):
 # Фильтр целевого размера + оценка портрета
 # ============================================================
 
+def parse_target_sizes(raw):
+    sizes = []
+    for part in raw.split(","):
+        match = re.fullmatch(r"\s*([1-9]\d{0,4})\s*[xх×*]\s*([1-9]\d{0,4})\s*", part.lower())
+        if not match:
+            return []
+        sizes.append(tuple(map(int, match.groups())))
+    return sizes
+
+
 def _load_target_sizes():
     """Целевые размеры портретов. По умолчанию 714x952.
     Можно переопределить настройкой БД photo_target_sizes = '714x952, 800x1067'."""
@@ -195,16 +205,7 @@ def _load_target_sizes():
         raw = (s.get("photo_target_sizes") or "").strip()
     except Exception:
         raw = ""
-    sizes = []
-    if raw:
-        for part in raw.split(","):
-            part = part.strip().lower().replace("х", "x").replace("*", "x")
-            m = re.match(r"(\d+)\s*x\s*(\d+)", part)
-            if m:
-                sizes.append((int(m.group(1)), int(m.group(2))))
-    if not sizes:
-        sizes = [(TARGET_W, TARGET_H)]
-    return sizes
+    return parse_target_sizes(raw) or [(TARGET_W, TARGET_H)]
 
 
 def is_portrait_target(m, sizes, tol):

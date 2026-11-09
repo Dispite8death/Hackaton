@@ -275,6 +275,7 @@ def main(argv=None):
         if args.status:
             print(json.dumps(last_status(conn),ensure_ascii=False))
             return 0
+        _engine("importer").seed_if_empty(conn)
         refresh=args.refresh_now
         while True:
             report=run_once(conn,overrides=options,refresh_now=refresh)

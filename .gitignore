@@ -1,6 +1,7 @@
 # Publish the application and case inputs. Local archives and launch credentials stay on this machine.
 /*
 !/.gitignore
+!/.gitattributes
 !/Engine/
 !/web/
 !/Задание/
@@ -9,6 +10,7 @@
 !/requirements.txt
 !/requirements-render.txt
 !/start.sh
+!/Запустить аудит.sh
 !/start.cmd
 **/__pycache__/
 *.py[cod]

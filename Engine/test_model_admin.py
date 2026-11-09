@@ -57,6 +57,15 @@ class AdminAndGatewayTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 gateway.list_models(self.ollama)
 
+    def test_ollama_text_model_never_receives_an_image(self):
+        with patch.object(gateway, "_api", return_value={"capabilities":["completion"]}) as api:
+            result, _ = gateway._predict(self.ollama, "", {"id":"schedule_visible_lessons"},
+                                         [], [{"type":"image_url"}])
+        self.assertEqual(result["outcome"], "uncertain")
+        self.assertIn("не поддерживает изображения", result["evidence"])
+        self.assertEqual(api.call_count, 1)
+        self.assertEqual(api.call_args.args[1], "/api/show")
+
     def test_active_profile_drives_actual_http_request_and_secret_is_scoped(self):
         passwords=self.mock_keyring()
         old_secret="test-only-value-for-first-address"
@@ -257,11 +266,15 @@ class AdminAndGatewayTest(unittest.TestCase):
                                 VALUES(23,500,'https://example.test/','partial',32,48,'{}',?)""",
                                 (output.getvalue(),))
                 answers = [reply("present" if n==3 else "absent",f"Лист {n}",f"p23-pdf-s{n}") for n in range(1,pages+1)]
-                with patch.object(gateway,"_api",side_effect=answers) as api:
+                def vision_api(profile, route, key, payload):
+                    if route == "/api/show":
+                        return {"capabilities":["completion","vision"]}
+                    return answers.pop(0)
+                with patch.object(gateway,"_api",side_effect=vision_api) as api:
                     result = gateway.assess(self.db,23,"section_content",profile=self.ollama)
                 parts = api.call_args.args[-1]["messages"][-1]["content"]
                 urls = [p["image_url"]["url"] for p in parts if p["type"]=="image_url"]
-                self.assertEqual(api.call_count,pages)
+                self.assertEqual(sum(call.args[1]=="/chat/completions" for call in api.call_args_list),pages)
                 self.assertEqual(len(urls),1)
                 self.assertTrue(all(url.startswith("data:image/jpeg;base64,") for url in urls))
                 raw = self.db.execute("SELECT request FROM model_assessment WHERE id=?",

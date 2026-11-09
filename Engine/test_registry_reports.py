@@ -78,16 +78,21 @@ class SharedRegistryTest(unittest.TestCase):
 
 
 class ReportProtocolTest(unittest.TestCase):
+    def test_header_only_and_foreign_language_report_are_rejected(self):
+        for text in ("ЧТО ОЗНАЧАЮТ ПРОБЛЕМЫ", "В отчёте this paragraph contains generic filler without findings"):
+            with self.assertRaises(ValueError):
+                llm.validate_report_text(text)
+
     def test_provider_and_response_format(self):
         for provider in model_settings.DEFAULTS:
             for mode in ("prompt","json_schema","json_object"):
                 with self.subTest(provider=provider, mode=mode):
                     profile = model_settings.Profile(provider, "http://localhost:1234/v1", "test-model", 15, mode, True)
                     settings = {"llm_enabled":"1","llm_profile":profile,"llm_api_key":"test-key"}
-                    answer = "Разбор" if mode == "prompt" else json.dumps({"text":"Разбор"})
+                    answer = "Проверьте наличие телефона в разделе контактов учреждения." if mode == "prompt" else json.dumps({"text":"Проверьте наличие телефона в разделе контактов учреждения."})
                     reply = {"choices":[{"finish_reason":"stop","message":{"content":answer}}]}
                     with patch.object(llm, "_api", return_value=reply) as api:
-                        self.assertEqual(asyncio.run(llm.explain({"name":"A"}, [], settings)), "Разбор")
+                        self.assertEqual(asyncio.run(llm.explain({"name":"A"}, [], settings)), "Проверьте наличие телефона в разделе контактов учреждения.")
                     actual, route, key, body = api.call_args.args
                     self.assertEqual((actual,route,key), (profile,"/chat/completions","test-key"))
                     self.assertEqual(body["model"],profile.model)

@@ -329,6 +329,8 @@ async def do_audit(offline=False, sites=None):
         settings = db.get_settings()
         if sites is None:
             sites = db.get_sites(active_only=True)
+            if offline:
+                sites = [site for site in sites if has_cache(site["id"])]
         if not sites:
             print("[AUDIT] Нет активных сайтов для проверки.")
             return
@@ -738,7 +740,7 @@ def rules_page():
         with container:
             ui.label("Каждая строка редактируется на месте. Синонимы одного документа/раздела "
                      "перечисляйте через | или ; прямо в строке — достаточно встретить ЛЮБОЙ вариант. "
-                     "Встроенного словаря синонимов нет: ищется строго то, что ты вписал. "
+                     "Проверка ищет указанные вами варианты. "
                      "Изменения применяются при следующем аудите (по кэшу — быстро).").classes("text-grey-7")
 
             def save_rule(rule_id, input_el):
@@ -847,7 +849,7 @@ def rules_page():
 
                 ui.upload(label="Загрузить эталонное фото (образец стандарта)",
                           auto_upload=True, on_upload=handle_ref).props("accept='image/*'").classes("w-full mt-2")
-                ui.label("После смены эталона, разделов или целевого размера — «⚡ По кэшу» (быстро, без сети).").classes("text-caption text-grey-7")
+                ui.link("Повторить проверку сохранённых страниц с новыми правилами", "/quick/run")
 
     render()
 
@@ -996,8 +998,8 @@ def ai_report_page(site_id: int = 0):
                         else:
                             db.save_explanation(result["id"], answer)
                         result["llm_summary" if summary else "ai_explanation"] = answer
-                        draw()
                         ui.notify("Ответ сохранён в отчёте.", type="positive")
+                        draw()
                     except (ValueError, OSError) as error:
                         status.set_text("Не удалось получить разбор. " + str(error))
                     finally:
@@ -1035,13 +1037,21 @@ def settings_page():
             ui.label("Настройки краулера (HTTP, без браузера)").classes("text-subtitle1 font-bold mb-2")
             extra_hosts = ui.textarea("Дополнительные разрешённые хосты (через запятую)", value=s.get("extra_hosts", "")).classes("w-full")
             max_pages = ui.number("Максимум страниц на один сайт", value=int(s.get("max_pages", "40")), min=1, max=200).classes("w-full mt-2")
-            news_age = ui.number("Порог старины новости (дней) — старше = OLD_NEWS",
+            news_age = ui.number("Через сколько дней новость считается устаревшей",
                                  value=int(s.get("news_max_age_days", "14")), min=1, max=365).classes("w-full mt-2")
             auto_type = ui.switch("Автоопределять тип учреждения по структуре сайта",
                                   value=s.get("auto_detect_type", "1") == "1")
             target_sizes = ui.input("Целевые размеры портретов (напр. 714x952, 800x1067)",
                                     value=s.get("photo_target_sizes", "714x952")).classes("w-full mt-2")
         def save():
+            for field, name, limit in ((max_pages, "Максимум страниц", 200), (news_age, "Возраст новости", 365)):
+                value = field.value
+                if not isinstance(value, (int, float)) or not 1 <= value <= limit or int(value) != value:
+                    ui.notify(f"Укажите целое число от 1 до {limit} в поле «{name}».", type="warning")
+                    return
+            if not vision.parse_target_sizes(target_sizes.value or ""):
+                ui.notify("Укажите размеры фотографий, например 714x952, 800x1067.", type="warning")
+                return
             db.save_settings({
                 "extra_hosts": extra_hosts.value.strip(), "max_pages": str(int(max_pages.value)),
                 "news_max_age_days": str(int(news_age.value)),

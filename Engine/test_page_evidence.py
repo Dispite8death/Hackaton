@@ -28,6 +28,14 @@ class PageEvidenceTest(unittest.TestCase):
         return {"id":"program_content","instruction":"Опубликована ли программа?",
                 "material_kinds":kinds,"evidence_policy":{"sources":sources,"aggregation":aggregation}}
 
+    def test_schedule_times_must_be_present_in_the_text_layer(self):
+        piece = Piece([], [], "Расписание седьмого класса на понедельник. 09:00 Математика. 10:00 История.")
+        for key in ("section_content", "schedule_body_lessons"):
+            result = {"outcome":"present", "evidence":"В 9:00 начинается математика."}
+            self.assertIsNone(text_witness(piece, result, key))
+            result["evidence"] = "Урок истории идёт с 10:00 до 11:00."
+            self.assertIn("время", text_witness(piece, result, key))
+
     def test_entire_middle_of_long_text_and_boundaries_are_kept(self):
         body = "Устав "*900+"Сведения об уникальном событии"+" описание"*1000
         self.db.execute("UPDATE page SET text_page=?",("<main>"+body+"</main>",))

@@ -1,5 +1,6 @@
 """Serve the audit dashboard and its loopback-only administration panel."""
 
+import os
 import secrets
 import threading
 from contextlib import closing
@@ -24,17 +25,14 @@ JOB = {"state":"idle"}
 
 
 def prepare_database():
-    from .importer import SOURCE, read_organizations
+    from .importer import seed_if_empty
     with closing(config.connect_db()) as conn:
         initialize_db(conn)
-        if not conn.execute("SELECT 1 FROM organization LIMIT 1").fetchone():
-            with conn:
-                conn.executemany("INSERT OR IGNORE INTO organization(name,site_url,kind) VALUES(?,?,?)",
-                                 read_organizations(SOURCE))
+        seed_if_empty(conn)
 
 
 def admin_state(conn):
-    return {"organizations":roster.organizations(conn),
+    return {"organizations":roster.organizations(conn),"windows_schedule":os.name=="nt",
             "token":TOKEN,"settings":audit_worker.get_settings(conn),"retention":retention.get_policy(conn),
             "sources":get_allowed_sources(conn),"words":get_terms(conn),"word_labels":CATEGORY_LABELS,
             "provider":get_profile(conn).provider,"profiles":{k:asdict(get_profile(conn,k)) for k in DEFAULTS},

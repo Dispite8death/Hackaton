@@ -98,6 +98,10 @@ function wireRegistry() {
 }
 async function init() {
   state=await call("state");
+  if (!state.windows_schedule) {
+    for (const id of ["sched-status","sched-enable","sched-disable"]) byId(id).hidden=true;
+    byId("schedule-status").textContent="В Linux запустите sh start.sh --once для одного цикла или sh start.sh --loop для повторения с заданным интервалом.";
+  }
   for (const [key,name] of Object.entries(fieldLabels)){
     const label=document.createElement("label"),input=document.createElement("input");
     input.type="number";input.required=true;input.min=["interval_minutes","revisit_days","pages_per_org","news_months"].includes(key)?1:0;

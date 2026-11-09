@@ -51,7 +51,7 @@ def verify(conn, benchmark=False):
     except (TypeError, IndexError, KeyError) as exc:
         raise ValueError("Сервис ответил, но в ответе нет сообщения выбранной модели.") from exc
     if not isinstance(answer, str) or not answer.strip():
-        raise ValueError("Модель вернула пустой ответ. Проверьте идентификатор и режим генерации.")
+        raise ValueError("Модель вернула пустой итоговый ответ. Проверьте модель и формат ответа. Для модели с рассуждениями попробуйте включить «Отключить режим рассуждений модели».")
     if not benchmark:
         try:
             valid = json.loads(answer).get("ok") is True
