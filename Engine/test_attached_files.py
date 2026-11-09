@@ -28,11 +28,15 @@ class AttachmentsTest(unittest.TestCase):
         self.db=sqlite3.connect(self.folder/"test.sqlite3")
         self.addCleanup(self.db.close)
         self.db.executescript("""
-            CREATE TABLE page(id PRIMARY KEY,date_loaded INTEGER);
+            CREATE TABLE organization(id INTEGER PRIMARY KEY);
+            CREATE TABLE inactive_organization(id INTEGER PRIMARY KEY);
+            CREATE VIEW active_organization AS SELECT id FROM organization EXCEPT SELECT id FROM inactive_organization;
+            CREATE TABLE page(id PRIMARY KEY,date_loaded INTEGER,id_organization INTEGER DEFAULT 1);
             CREATE TABLE crawl_fetch(page_id,run_id);
             CREATE TABLE institution_document_link(page_id,catalog,section,url,title,format);
             CREATE TABLE school_schedule_page(page_id,evidence);
-            INSERT INTO page VALUES(1,10),(2,20),(3,30);
+            INSERT INTO organization VALUES (1);
+            INSERT INTO page(id,date_loaded) VALUES(1,10),(2,20),(3,30);
             INSERT INTO crawl_fetch VALUES(1,1),(2,1),(3,2);
         """+files.ATTACHMENT_SCHEMA_SQL)
         self.url="https://school.example/docs/timetable"
@@ -50,6 +54,14 @@ class AttachmentsTest(unittest.TestCase):
                            final_url=url,http_status=200 WHERE page_id=?""",(sha,fmt,len(data),pid))
         self.db.commit()
         return path
+
+    def test_removed_sites_keep_evidence_but_skip_network_queue(self):
+        files.index_attachments(self.db, run_id=1)
+        self.db.execute("INSERT INTO inactive_organization VALUES(1)")
+        self.db.commit()
+        with patch.object(files, "_download", side_effect=AssertionError("unexpected download")):
+            self.assertEqual(files.download_pending(self.db)["total"], 0)
+        self.assertGreater(self.db.execute("SELECT count(*) FROM page_attachment").fetchone()[0], 0)
 
     def test_run_filter_schedule_precedence_reuse_and_fresh_snapshot(self):
         self.assertGreater(files.index_attachments(self.db,run_id=1),0)

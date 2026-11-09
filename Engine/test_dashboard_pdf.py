@@ -22,3 +22,17 @@ class FilteredPDFTest(unittest.TestCase):
         self.assertIn("персональные профили",text)
         self.assertNotIn("Школа Олимп",text)
         self.assertTrue(all(len(t)>150 for t in pages))
+
+    def test_multiple_institutions_with_criterion_and_detector(self):
+        fixture = fixtures.DashboardCase()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        fixture.assess("school_history_facts", "absent")
+        fixture.assess("feedback_banner_overlap", "present")
+        filters = {"organization_id":[1,2], "criterion":"history", "detector":"ai", "status":"issue"}
+        data = build_pdf(fixture.conn, filters)
+        with pdfium.PdfDocument(data) as doc:
+            text = " ".join(doc[i].get_textpage().get_text_bounded() for i in range(len(doc)))
+        self.assertIn("Школа Олимп", text)
+        self.assertIn("Наблюдение в архиве", text)
+        self.assertNotIn("Детский сад Ландыш", text)

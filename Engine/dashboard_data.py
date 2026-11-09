@@ -74,6 +74,9 @@ EXTRA={
  "staff_match":("staff","content","Совпадение ФИО в учреждениях","low","Уточните кадровые сведения. Совпадение ФИО само по себе не устанавливает личность."),
 }
 
+LABELS["criterion"] = {key: spec[2] for key, spec in {**SPECS, **EXTRA}.items()}
+
+
 def _acquisition(key):
     if key in {"address","phone","email","hours","reception"}:
         return "Сохраните шапку главной и страницу контактов. Сверьте поле «"+SPECS[key][2]+"» в тексте."
@@ -230,7 +233,7 @@ def _collect(conn,filters):
         stamp=(_iso(ts) or "")[:10]
         return bool(stamp and filters.get("date_from","")<=stamp<=filters.get("date_to","9999"))
     orgs={r[0]:dict(id=r[0],name=r[1],kind=r[2],site_url=r[3]) for r in
-          conn.execute("SELECT id,name,kind,site_url FROM organization ORDER BY id")}
+          conn.execute("SELECT id,name,kind,site_url FROM active_organization ORDER BY id")}
     pages={p:(oid,url,ts) for p,oid,url,ts in conn.execute("SELECT id,id_organization,url,date_loaded FROM page")}
     runs={r[0]:dict(run_id=r[0],organization_id=r[1],date=_iso(r[2]),finished=_iso(r[3]),state=r[4],purpose=r[5],
                    stop_reason=r[6],pages=r[7],started_at=r[2]) for r in conn.execute("""
@@ -490,14 +493,14 @@ def _build(conn,filters,detail_id=None):
     for r in runs.values():
         run_byorg[r["organization_id"]].append(r)
     options={key:[{"value":v,"label":label} for v,label in labels.items()] for key,labels in LABELS.items()}
-    options["organization_id"]=[{"value":oid,"label":o["name"]} for oid,o in orgs.items()]
+    options["organization_id"]=[{"value":oid,"label":o["name"],"url":o["site_url"]} for oid,o in orgs.items()]
     included=[]
     rank_candidates=[]
     visible=[]
     all_per_org={}
     query=_key(filters.get("q"))
     choices={k:set(v) for k,v in filters.items() if isinstance(v,list)}
-    issue_filter=any(k in choices for k in ("status","confidence","severity","group","category","detector"))
+    issue_filter=any(k in choices for k in ("status","confidence","severity","group","category","detector","criterion"))
     def selected(key,value):
         return key not in choices or value in choices[key]
     for oid,org in orgs.items():
@@ -521,7 +524,7 @@ def _build(conn,filters,detail_id=None):
         if not selected("quality",quality):
             continue
         org_hit=not query or query==str(oid) or _matches(query,org["name"]+" "+org["site_url"])
-        selection=[r for r in rows if all(selected(k,r[k]) for k in ("status","confidence","severity","group","category","detector"))
+        selection=[r for r in rows if all(selected(k,r[k]) for k in ("status","confidence","severity","group","category","detector","criterion"))
                    and (org_hit or _matches(query," ".join((r["title"],r["description"],r["evidence"],r["recommendation"],
                                                          CATEGORIES[r["category"]]))))]
         if (issue_filter or not org_hit) and not selection and detail_id is None:

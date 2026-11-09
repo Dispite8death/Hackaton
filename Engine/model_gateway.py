@@ -57,12 +57,18 @@ def _api(profile, route, key="", payload=None):
             message = error.read(1400).decode(errors="replace")
         if key:
             message = message.replace(key,"***")
-        raise ValueError(f"API вернул HTTP {error.code}. {message[:550]}") from error
+        hints = {401: "Проверьте ключ API.", 403: "У ключа нет доступа к модели.",
+                 404: "Проверьте адрес API и название модели.", 429: "Исчерпан лимит запросов или квота."}
+        hint = hints.get(error.code, "Проверьте параметры модели и состояние сервера.")
+        raise ValueError(f"API вернул HTTP {error.code}. {hint} {message[:500]}".strip()) from error
     except (URLError, TimeoutError, OSError) as error:
         raise ValueError(f"Нет ответа от {profile.endpoint}. {error}") from error
     if len(raw) > 4_000_000:
         raise ValueError("Ответ API превышает 4 МБ")
-    result = json.loads(raw)
+    try:
+        result = json.loads(raw)
+    except (UnicodeDecodeError, ValueError) as error:
+        raise ValueError("Сервер вернул ответ в другом формате. Проверьте базовый URL совместимого API.") from error
     if not isinstance(result, dict):
         raise ValueError("API вернул неожиданный формат")
     return result
@@ -194,6 +200,19 @@ def _inputs(conn, page_id, check, *, include_guide=True):
     return materials, parts
 
 
+def apply_response_options(profile, payload, name, schema):
+    if profile.disable_thinking:
+        payload["reasoning_effort"] = "none"
+        if profile.provider=="lmstudio":
+            payload["chat_template_kwargs"] = {"enable_thinking":False}
+    if schema is None:
+        return
+    if profile.response_mode == "json_schema":
+        payload["response_format"] = {"type":"json_schema","json_schema":{"name":name,"strict":True,"schema":schema}}
+    elif profile.response_mode == "json_object":
+        payload["response_format"] = {"type":"json_object"}
+
+
 def _predict(profile, key, check, materials, parts, *, trace=None):
     ids = allowed_material_ids(check,materials)
     schema = {"type":"object","additionalProperties":False,"properties":{
@@ -226,14 +245,7 @@ def _predict(profile, key, check, materials, parts, *, trace=None):
                {"role":"user","content":[{"type":"text","text":check["instruction"]},*parts]}]}
     if profile.provider in ("lmstudio","ollama"):
         payload.update(temperature=0,max_tokens=1100)
-    if profile.disable_thinking:
-        payload["reasoning_effort"] = "none"
-        if profile.provider=="lmstudio":
-            payload["chat_template_kwargs"] = {"enable_thinking":False}
-    if profile.response_mode == "json_schema":
-        payload["response_format"] = {"type":"json_schema","json_schema":{"name":"audit_check","strict":True,"schema":schema}}
-    elif profile.response_mode == "json_object":
-        payload["response_format"] = {"type":"json_object"}
+    apply_response_options(profile, payload, "audit_check", schema)
     data = _api(profile,"/chat/completions",key,payload)
     if trace is not None:
         trace["usage"] = data.get("usage")

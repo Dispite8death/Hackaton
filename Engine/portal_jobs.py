@@ -41,16 +41,9 @@ def verify(conn, benchmark=False):
               "новости: указаны участники и тема, отсутствуют дата, фотография и ссылка на источник."
               if benchmark else 'Верни JSON с единственным полем ok и значением true: {"ok":true}.')
     payload = {"model": profile.model, "messages": [{"role": "user", "content": prompt}]}
-    if not benchmark and profile.response_mode != "prompt":
-        payload["response_format"] = {"type": "json_object"}
-        if profile.response_mode == "json_schema":
-            payload["response_format"] = {"type": "json_schema", "json_schema": {"name": "connection", "strict": True,
-                "schema": {"type": "object", "properties": {"ok": {"type": "boolean"}},
-                           "required": ["ok"], "additionalProperties": False}}}
-    if profile.disable_thinking:
-        payload["reasoning_effort"] = "none"
-        if profile.provider == "lmstudio":
-            payload["chat_template_kwargs"] = {"enable_thinking": False}
+    schema = {"type":"object", "properties":{"ok":{"type":"boolean"}},
+              "required":["ok"], "additionalProperties":False}
+    model_gateway.apply_response_options(profile, payload, "connection", None if benchmark else schema)
     start = time.monotonic()
     reply = model_gateway._api(profile, "/chat/completions", key, payload)
     try:
@@ -86,7 +79,7 @@ def selected(conn, ids):
     if not isinstance(ids, list) or not 1 <= len(ids) <= 500 or any(type(i) != int or not 0 < i < 2**63 for i in ids):
         raise ValueError("Выберите учреждения из списка.")
     ids = sorted(set(ids))
-    rows = conn.execute("SELECT * FROM organization WHERE id IN (" + ",".join("?" for _ in ids) + ") ORDER BY id", ids).fetchall()
+    rows = conn.execute("SELECT * FROM active_organization WHERE id IN (" + ",".join("?" for _ in ids) + ") ORDER BY id", ids).fetchall()
     if len(rows) != len(ids):
         raise ValueError("Одно из выбранных учреждений больше не существует.")
     return rows

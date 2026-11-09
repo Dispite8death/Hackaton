@@ -267,6 +267,7 @@ def download_pending(conn, *, workers=8, timeout=45, roles=(), limit=None, retry
     if roles:
         where += " AND role IN (" + ",".join("?" for _ in roles) + ")"
     scope,args=_page_filter(page_id,run_id)
+    scope += " AND page_id IN (SELECT p.id FROM page p JOIN active_organization o ON o.id=p.id_organization)"
     if max_attempts is not None:
         scope+=" AND attempts<?"
         args=(*args,max_attempts)

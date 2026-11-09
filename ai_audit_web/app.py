@@ -6,14 +6,14 @@ import logging
 from html import escape
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import urlparse, quote
+from urllib.parse import quote
 
 from nicegui import ui, app
 
 from . import db
 from . import core
 from . import llm
-from . import vision
+from . import vision, reports
 
 from .integration import archive_id, audit_settings, ai_status
 from Engine.portal_nav import navigation
@@ -43,7 +43,7 @@ HTML_BLOCKS = [
     ("summary", "Сводка (KPI: всего сайтов, средний балл, критичные)"),
     ("sites_table", "Таблица сайтов (баллы и количество ошибок)"),
     ("details", "Детальный разбор по каждому сайту"),
-    ("llm_summary", "LLM-сводка по сайту"),
+    ("llm_summary", "Сводка ИИ по сайту"),
     ("explanation", "ИИ-объяснение ошибок простым языком"),
     ("history", "История изменений (динамика балла)"),
     ("photo_audit", "Фото-аудит (таблица проблемных портретов, без картинок)"),
@@ -94,24 +94,15 @@ def report_link(url, label):
     return f'<a href="{escape(url)}" target="_blank" rel="noopener noreferrer">{label}</a>'
 
 
-def export_html(blocks=None):
-    stats = db.dashboard_stats()
-    if not stats["has_run"]:
-        ui.notify("Сначала запустите аудит.", type="warning")
+def export_html(blocks=None, selection=None):
+    site_results = reports.latest() if selection is None else selection
+    if not site_results:
+        ui.notify("В выборке нет результатов.", type="warning")
         return
+    stats = reports.stats(site_results)
     if blocks is None:
         blocks, _, _ = _get_report_config()
-
-    last_run_id = stats["last_run"]["id"]
     stamp = datetime.now().strftime("%d.%m.%Y %H:%M")
-
-    site_results = []
-    for s in db.get_sites():
-        r = db.get_last_site_result(s["id"])
-        if r and r.get("run_id") == last_run_id:
-            findings = db.get_site_findings(last_run_id, s["id"])
-            site_results.append({"site": s, "result": r, "findings": findings})
-
     parts = []
     parts.append(
         "<!DOCTYPE html>\n<html lang=\"ru\">\n<head>\n<meta charset=\"UTF-8\">\n"
@@ -166,19 +157,20 @@ def export_html(blocks=None):
     if "sites_table" in blocks:
         parts.append(
             "<h2>Сводка по сайтам</h2>\n<table>\n"
-            "<tr><th>Сайт</th><th>Тип</th><th>Балл</th><th>Critical</th><th>High</th><th>Medium</th><th>Low</th><th>Всего ошибок</th></tr>\n"
+            "<tr><th>Сайт</th><th>Тип</th><th>Балл</th><th>Критических</th><th>Высоких</th><th>Средних</th><th>Низких</th><th>Всего ошибок</th></tr>\n"
         )
         for sr in sorted(site_results, key=lambda x: x["result"]["score"]):
             s = sr["site"]
             r = sr["result"]
-            total_err = r["critical"] + r["high"] + r["medium"] + r["low"]
+            counts = reports.stats([sr])["severity_counts"]
+            total_err = len(sr["findings"])
             parts.append(
-                "<tr><td><b>" + escape(s["name"]) + "</b></td><td>" + escape(s["type"]) + "</td>"
+                "<tr><td><b>" + escape(s["name"]) + "</b></td><td>" + escape(reports.KINDS.get(s["type"], s["type"])) + "</td>"
                 "<td><b>" + str(r["score"]) + "</b></td>"
-                "<td class=\"severity-CRITICAL\">" + str(r["critical"]) + "</td>"
-                "<td class=\"severity-HIGH\">" + str(r["high"]) + "</td>"
-                "<td class=\"severity-MEDIUM\">" + str(r["medium"]) + "</td>"
-                "<td class=\"severity-LOW\">" + str(r["low"]) + "</td>"
+                "<td class=\"severity-CRITICAL\">" + str(counts["CRITICAL"]) + "</td>"
+                "<td class=\"severity-HIGH\">" + str(counts["HIGH"]) + "</td>"
+                "<td class=\"severity-MEDIUM\">" + str(counts["MEDIUM"]) + "</td>"
+                "<td class=\"severity-LOW\">" + str(counts["LOW"]) + "</td>"
                 "<td><b>" + str(total_err) + "</b></td></tr>"
             )
         parts.append("</table>")
@@ -193,19 +185,19 @@ def export_html(blocks=None):
                 "<div class=\"site-card\"><div class=\"site-header\">"
                 "<div><h3 style=\"margin:0;\">" + escape(s["name"]) + "</h3>"
                 "<p style=\"margin:5px 0 0 0; color:#757575;\">" + escape(s["url"]) + "</p>"
-                "<p style=\"margin:2px 0 0 0; color:#757575;\">Тип: " + escape(s["type"]) + "</p></div>"
+                "<p style=\"margin:2px 0 0 0; color:#757575;\">Тип: " + escape(reports.KINDS.get(s["type"], s["type"])) + "</p></div>"
                 "<div class=\"site-score\">" + str(r["score"]) + "</div></div>"
             )
 
-            if "llm_summary" in blocks and r.get("llm_summary"):
-                parts.append("<div class=\"llm-box\"><b>LLM-сводка:</b><br>" + escape(r["llm_summary"]) + "</div>")
+            if not sr.get("partial") and "llm_summary" in blocks and r.get("llm_summary"):
+                parts.append("<div class=\"llm-box\"><b>Сводка ИИ:</b><br>" + escape(r["llm_summary"]) + "</div>")
 
-            if "explanation" in blocks:
-                explanation = llm.load_explanation(s["id"])
+            if not sr.get("partial") and "explanation" in blocks:
+                explanation = r.get("ai_explanation")
                 if explanation:
                     parts.append("<div class=\"explain-box\"><b>ИИ-объяснение для ответственного:</b><br>" + escape(explanation) + "</div>")
 
-            if "history" in blocks:
+            if not sr.get("partial") and "history" in blocks:
                 history = db.get_site_history(s["id"])
                 if history:
                     parts.append("<div class=\"history-box\"><b>История проверок:</b><br>")
@@ -213,7 +205,7 @@ def export_html(blocks=None):
                         parts.append(h["started_at"][:16].replace("T", " ") + " — балл: <b>" + str(h["score"]) + "</b><br>")
                     parts.append("</div>")
 
-            if "photo_audit" in blocks:
+            if not sr.get("partial") and "photo_audit" in blocks:
                 preport = vision.load_photo_report(s["id"])
                 if preport and preport.get("images"):
                     sm = _photo_summary(preport.get("summary"))
@@ -250,8 +242,8 @@ def export_html(blocks=None):
                         if f.get("url"):
                             page_link = report_link(f["url"], "открыть")
                         parts.append(
-                            "<tr><td class=\"severity-" + escape(f["severity"]) + "\">" + escape(f["severity"]) + "</td>"
-                            "<td>" + escape(f["agent"]) + "</td><td>" + escape(f["message"]) + "</td>"
+                            "<tr><td class=\"severity-" + escape(f["severity"]) + "\">" + escape(reports.LEVELS.get(f["severity"], f["severity"])) + "</td>"
+                            "<td>" + escape(reports.SECTIONS.get(f["agent"], f["agent"])) + "</td><td>" + escape(f["message"]) + "</td>"
                             "<td>" + escape(f["recommendation"]) + "</td><td>" + page_link + "</td></tr>"
                         )
                 else:
@@ -261,8 +253,8 @@ def export_html(blocks=None):
                         if f.get("url"):
                             page_link = report_link(f["url"], "открыть")
                         parts.append(
-                            "<tr><td class=\"severity-" + escape(f["severity"]) + "\">" + escape(f["severity"]) + "</td>"
-                            "<td>" + escape(f["agent"]) + "</td><td>" + escape(f["message"]) + "</td><td>" + page_link + "</td></tr>"
+                            "<tr><td class=\"severity-" + escape(f["severity"]) + "\">" + escape(reports.LEVELS.get(f["severity"], f["severity"])) + "</td>"
+                            "<td>" + escape(reports.SECTIONS.get(f["agent"], f["agent"])) + "</td><td>" + escape(f["message"]) + "</td><td>" + page_link + "</td></tr>"
                         )
                 parts.append("</table>")
             parts.append("</div>")
@@ -285,13 +277,13 @@ def _csv_value(col, s, r, f):
     if col == "col_url":
         return s["url"]
     if col == "col_type":
-        return s["type"]
+        return reports.KINDS.get(s["type"], s["type"])
     if col == "col_score":
         return r["score"]
     if col == "col_severity":
-        return f.get("severity", "OK") if f else "OK"
+        return reports.LEVELS.get(f["severity"], f["severity"]) if f else "Без замечаний"
     if col == "col_agent":
-        return f.get("agent", "-") if f else "-"
+        return reports.SECTIONS.get(f["agent"], f["agent"]) if f else "-"
     if col == "col_message":
         return f.get("message", "Проблем не найдено") if f else "Проблем не найдено"
     if col == "col_recommendation":
@@ -301,33 +293,28 @@ def _csv_value(col, s, r, f):
     return ""
 
 
-def export_csv(cols=None, include_ok=None):
-    stats = db.dashboard_stats()
-    if not stats["has_run"]:
-        ui.notify("Сначала запустите аудит.", type="warning")
+def export_csv(cols=None, include_ok=None, selection=None):
+    selection = reports.latest() if selection is None else selection
+    if not selection:
+        ui.notify("В выборке нет результатов.", type="warning")
         return
     _, saved_cols, saved_ok = _get_report_config()
     if cols is None:
         cols = saved_cols
     if include_ok is None:
         include_ok = saved_ok
-    last_run_id = stats["last_run"]["id"]
     header_map = dict(CSV_COLS)
     header = [header_map[c] for c in cols if c in header_map]
     output = io.StringIO()
     output.write('\ufeff')
     writer = csv.writer(output, delimiter=';')
     writer.writerow(header)
-    for s in db.get_sites():
-        r = db.get_last_site_result(s["id"])
-        if r and r.get("run_id") == last_run_id:
-            findings = db.get_site_findings(last_run_id, s["id"])
-            if not findings:
-                if include_ok:
-                    writer.writerow([_csv_value(c, s, r, None) for c in cols])
-            else:
-                for f in findings:
-                    writer.writerow([_csv_value(c, s, r, f) for c in cols])
+    for row in selection:
+        findings = row["findings"] or ([None] if include_ok else [])
+        for finding in findings:
+            values = [_csv_value(c, row["site"], row["result"], finding) for c in cols]
+            writer.writerow(["'" + v if isinstance(v, str) and v.lstrip().startswith(("=", "+", "-", "@"))
+                             and v != "-" else v for v in values])
     filename = "audit_errors_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".csv"
     ui.download(output.getvalue().encode("utf-8"), filename)
     ui.notify("CSV-таблица скачана (открывайте в Excel)", type="positive")
@@ -450,8 +437,9 @@ def layout(title):
     with ui.header().classes("audit-header"):
         ui.html(navigation("/quick", ai_status()), sanitize=False)
     with ui.row().classes("audit-subnav"):
-        for label, path in (("Обзор", "/quick"), ("Учреждения", "/sites"), ("Правила", "/rules"),
-                            ("Отчёты", "/report"), ("Параметры обхода", "/settings")):
+        for label, path in (("Обзор", "/quick"), ("Запуск", "/quick/run"), ("Отчёты", "/report"),
+                            ("Разбор с ИИ", "/quick/ai"), ("Учреждения", "/sites"), ("Правила", "/rules"),
+                            ("Параметры обхода", "/settings")):
             link = ui.link(label, path)
             if ui.context.client.request.url.path == path:
                 link.props('aria-current="page"')
@@ -469,152 +457,72 @@ def stat_card(label, value):
 # Дашборд
 # ============================================================
 
+def site_options(sites):
+    return {s["id"]: f'{s["name"]} · {s["url"]}' for s in sites}
+
+
 @ui.page("/quick")
 def dashboard():
-    layout("Обзор проверки")
-    progress = ui.label().props("role=status").classes("audit-subnav")
-    container = ui.column().classes("audit-container w-full gap-4 px-4")
+    layout("Экспресс-проверка сайтов")
+    sites = db.get_sites()
+    stats = reports.stats(reports.latest())
+    with ui.column().classes("audit-container w-full gap-4"):
+        with ui.row().classes("w-full gap-3"):
+            stat_card("В реестре", len(sites))
+            stat_card("Есть результат проверки", stats["total_sites"])
+            stat_card("Учреждений с критическими замечаниями", stats["critical_sites"])
+        with ui.element("div").classes("quick-actions"):
+            for title, description, action, path in (
+                ("Проверка по правилам", "Проверить сайты или сохранённые страницы. Подключение ИИ не требуется.", "Выбрать учреждения", "/quick/run"),
+                ("Отчёты", "Посмотреть замечания по учреждениям, выбрать фильтры и скачать результаты.", "Открыть отчёты", "/report"),
+                ("Разбор отчёта с ИИ", "Получить краткую сводку или план исправления по замечаниям алгоритма.", "Перейти к разбору", "/quick/ai")):
+                with ui.card().classes("p-5 gap-3"):
+                    ui.label(title).classes("text-h6")
+                    ui.label(description)
+                    ui.link(action, path).classes("quick-action-link")
 
-    async def start_audit_ui(offline):
-        if audit_lock.locked():
-            ui.notify("Проверка уже выполняется", type="warning")
-            return
-        sites = db.get_sites(active_only=True)
-        if offline:
-            sites = [site for site in sites if has_cache(site["id"])]
-        if not sites:
-            progress.set_text("Сначала выберите учреждение и нажмите «Проверить сайт».")
-            return
-        progress.set_text(f"Идёт проверка учреждений ({len(sites)}).")
-        await do_audit(offline, sites)
-        progress.set_text("Проверка завершена. Результаты обновлены.")
-        render()
 
-    def render():
-        container.clear()
-        stats = db.dashboard_stats()
-        with container:
-            sites = db.get_sites()
-            by_id = {site["id"]: site["name"] for site in sites}
-            with ui.card().classes("w-full p-5"):
-                ui.label("Проверить учреждение").classes("text-h6")
-                ui.label("Выберите школу или детский сад. Проверка сайта по правилам доступна без ИИ.")
-                choice = ui.select(by_id, label="Найти по названию", with_input=True).classes("w-full")
-                ui.button("Открыть учреждение", on_click=lambda: ui.navigate.to(f"/site/{choice.value}")).bind_enabled_from(choice, "value", backward=bool)
-            with ui.row().classes("audit-actions w-full gap-2 flex-wrap"):
-                ui.button("Проверить все учреждения", on_click=lambda: start_audit_ui(False)).props("color=primary icon=cloud_download")
-                ui.button("Повторить по кэшу", on_click=lambda: start_audit_ui(True)).props("color=teal icon=flash_on")
-                ui.button("Обновить данные", on_click=render).props("outline icon=refresh")
-                ui.button("Скачать HTML-отчет", on_click=export_html).props("color=green icon=description")
-                ui.button("Скачать CSV (Excel)", on_click=export_csv).props("color=orange icon=table_chart")
-
-            if not stats["has_run"]:
-                ui.label("Результаты появятся после первой проверки учреждения.").classes("text-grey-7 mt-4")
+@ui.page("/quick/run")
+def run_page():
+    layout("Проверка по правилам")
+    sites = db.get_sites()
+    with ui.column().classes("audit-container w-full gap-4"):
+        ui.label("Выберите одно или несколько учреждений. Проверка сайтов загружает свежие страницы и может занять несколько минут на учреждение.")
+        chosen = ui.select(site_options(sites), multiple=True, with_input=True, label="Название или адрес сайта").props("outlined use-chips").classes("w-full")
+        status = ui.label().props("role=status")
+        def count():
+            status.set_text(f"Выбрано учреждений: {len(chosen.value or [])}")
+        chosen.on_value_change(count)
+        async def run(offline):
+            selected = [s for s in db.get_sites() if s["id"] in (chosen.value or [])]
+            if not selected or audit_lock.locked():
+                status.set_text("Выберите учреждения." if not selected else "Сейчас уже идёт проверка.")
                 return
+            eligible = [s for s in selected if not offline or has_cache(s["id"])]
+            if not eligible:
+                status.set_text("Для выбранных учреждений нет сохранённых страниц. Запустите проверку сайтов.")
+                return
+            skipped = len(selected) - len(eligible)
+            status.set_text(f"Идёт проверка учреждений: {len(eligible)}.")
+            await do_audit(offline, eligible)
+            status.set_text(f"Проверка завершена. Обработано: {len(eligible)}. Пропущено без сохранённых страниц: {skipped}.")
+        with ui.row():
+            ui.button("Выбрать все", on_click=lambda: chosen.set_value(list(site_options(sites)))).props("flat")
+            ui.button("Проверить сайты", on_click=lambda: run(False))
+            ui.button("Проверить сохранённые страницы", on_click=lambda: run(True)).props("outline")
+        count()
+        ui.link("Посмотреть результаты", "/report")
 
-            with ui.row().classes("w-full gap-4"):
-                stat_card("Всего сайтов", stats["total_sites"])
-                stat_card("Средний балл", stats["avg_score"])
-                stat_card("Критичных сайтов", stats["critical_sites"])
-                last_run_time = stats["last_run"]["started_at"][:16].replace("T", " ") if stats["last_run"] else "-"
-                stat_card("Последний запуск", last_run_time)
-
-            sev = stats["severity_counts"]
-            with ui.row().classes("w-full gap-4"):
-                with ui.card().classes("flex-1 p-4"):
-                    ui.label("Ошибки по важности").classes("text-subtitle1 font-bold mb-2")
-                    ui.echart({"tooltip": {"trigger": "item"}, "series": [{"type": "pie", "radius": "70%", "data": [
-                        {"name": "CRITICAL", "value": sev.get("CRITICAL", 0)},
-                        {"name": "HIGH", "value": sev.get("HIGH", 0)},
-                        {"name": "MEDIUM", "value": sev.get("MEDIUM", 0)},
-                        {"name": "LOW", "value": sev.get("LOW", 0)},
-                    ]}]}).classes("h-72")
-                with ui.card().classes("flex-1 p-4"):
-                    ui.label("Проблемы по блокам").classes("text-subtitle1 font-bold mb-2")
-                    ui.echart({"tooltip": {"trigger": "axis"},
-                               "xAxis": {"type": "category", "data": [x["name"] for x in stats["agent_counts"]], "axisLabel": {"rotate": 30}},
-                               "yAxis": {"type": "value"},
-                               "series": [{"type": "bar", "data": [x["value"] for x in stats["agent_counts"]]}]}).classes("h-72")
-
-            with ui.card().classes("w-full p-4"):
-                ui.label("Рейтинг сайтов (от худшего к лучшему)").classes("text-subtitle1 font-bold mb-2")
-                ui.table(columns=[
-                    {"name": "site_name", "label": "Сайт", "field": "site_name", "align": "left"},
-                    {"name": "score", "label": "Балл", "field": "score"},
-                    {"name": "critical", "label": "Critical", "field": "critical"},
-                    {"name": "high", "label": "High", "field": "high"},
-                    {"name": "medium", "label": "Medium", "field": "medium"},
-                    {"name": "low", "label": "Low", "field": "low"},
-                ], rows=stats["top_bad"], row_key="site_name").classes("w-full")
-
-    render()
-
-
-# ============================================================
-# Сайты
-# ============================================================
 
 @ui.page("/sites")
 def sites_page():
-    layout("Сайты")
-    container = ui.column().classes("audit-container w-full gap-4 px-4")
+    layout("Учреждения")
+    with ui.column().classes("audit-container w-full"):
+        sites = db.get_sites()
+        selector = ui.select(site_options(sites), with_input=True, label="Название или адрес сайта").props("outlined").classes("w-full")
+        selector.on_value_change(lambda e: ui.navigate.to(f"/site/{e.value}") if e.value else None)
+        ui.link("Управление списком учреждений", "/admin#registry")
 
-    def render():
-        container.clear()
-        with container:
-            with ui.expansion("Добавить учреждение").classes("w-full"):
-                name = ui.input("Название").classes("w-full")
-                url = ui.input("URL").classes("w-full")
-                email = ui.input("E-mail учреждения (для отправки отчётов)").classes("w-full")
-                site_type = ui.select(["school", "kindergarten"], value="school", label="Тип учреждения").classes("w-full")
-
-                async def add_site():
-                    clean_url = url.value.strip()
-                    if not clean_url:
-                        ui.notify("Введите URL", type="negative")
-                        return
-                    if not clean_url.startswith("http"):
-                        clean_url = "https://" + clean_url
-                    parsed = urlparse(clean_url)
-                    if not parsed.hostname:
-                        ui.notify("Некорректный URL", type="negative")
-                        return
-                    db.add_site(name=name.value.strip() or parsed.hostname,
-                                url=clean_url, site_type=site_type.value,
-                                email=email.value.strip())
-                    ui.notify("Сайт добавлен!", type="positive")
-                    name.value, url.value, email.value = "", "", ""
-                    render()
-
-                ui.button("Добавить", on_click=add_site).props("color=primary icon=add")
-
-            with ui.card().classes("w-full p-4"):
-                ui.label("Список ресурсов").classes("text-subtitle1 font-bold mb-2")
-                sites = db.get_sites()
-                if not sites:
-                    ui.label("Пока нет добавленных сайтов.").classes("text-grey-7")
-                    return
-                for s in sites:
-                    with ui.row().classes("w-full items-center justify-between py-2 border-b"):
-                        with ui.column().classes("gap-0"):
-                            ui.label(s["name"]).classes("font-bold")
-                            ui.label(s["url"]).classes("text-caption text-grey-7")
-                            ui.label("Тип: " + s["type"] + " • E-mail: " + (s.get("email") or "не указан")).classes("text-caption text-grey-6")
-                        with ui.row():
-                            ui.link("Детали", "/site/" + str(s["id"])).props("color=primary").classes("mr-2")
-                            ui.button("Удалить", on_click=lambda s=s: delete_site(s["id"])).props("flat color=red")
-
-    def delete_site(site_id):
-        db.delete_site(site_id)
-        ui.notify("Сайт удален", type="info")
-        render()
-
-    render()
-
-
-# ============================================================
-# Карточка сайта
-# ============================================================
 
 @ui.page("/site/{site_id}")
 def site_detail(site_id: int):
@@ -627,7 +535,6 @@ def site_detail(site_id: int):
     layout(site["name"])
     progress = ui.label().props("role=status").classes("audit-subnav")
     container = ui.column().classes("audit-container w-full gap-4 px-4")
-    generating = False
 
     async def run_check(offline):
         if audit_lock.locked():
@@ -645,7 +552,7 @@ def site_detail(site_id: int):
 
         with container:
             with ui.row().classes("w-full gap-2 items-center flex-wrap"):
-                ui.link("← К списку сайтов", "/sites").classes("text-primary")
+                ui.link("← К учреждениям", "/sites").classes("text-primary")
                 linked_id = archive_id(site["url"])
                 if linked_id is not None:
                     ui.link("Сводная карточка учреждения", f"/archive#institution/{linked_id}")
@@ -671,10 +578,10 @@ def site_detail(site_id: int):
 
             with ui.row().classes("w-full gap-4"):
                 stat_card("Балл", result["score"])
-                stat_card("Critical", result["critical"])
-                stat_card("High", result["high"])
-                stat_card("Medium", result["medium"])
-                stat_card("Low", result["low"])
+                stat_card("Критических", result["critical"])
+                stat_card("Высокой важности", result["high"])
+                stat_card("Средней важности", result["medium"])
+                stat_card("Низкой важности", result["low"])
 
             try:
                 mj = json.loads(result.get("metrics_json") or "{}")
@@ -689,7 +596,7 @@ def site_detail(site_id: int):
 
             if result.get("llm_summary"):
                 with ui.card().classes("w-full p-4 bg-blue-50"):
-                    ui.label("LLM-сводка").classes("text-subtitle1 font-bold mb-2")
+                    ui.label("Сводка ИИ").classes("text-subtitle1 font-bold mb-2")
                     ui.label(result["llm_summary"]).classes("whitespace-pre-wrap text-grey-800")
 
             findings = db.get_site_findings(result["run_id"], site_id)
@@ -708,7 +615,8 @@ def site_detail(site_id: int):
                 if not findings:
                     ui.label("Проблем не найдено! Сайт в отличном состоянии.").classes("text-green-7 font-semibold")
                 else:
-                    rows = [{"id": f.get("id", i), "severity": f["severity"], "agent": f["agent"],
+                    rows = [{"id": f.get("id", i), "severity": reports.LEVELS.get(f["severity"], f["severity"]),
+                             "agent": reports.SECTIONS.get(f["agent"], f["agent"]),
                              "message": f["message"], "recommendation": f["recommendation"],
                              "page": f.get("url", "") or "—"} for i, f in enumerate(findings)]
                     with ui.table(columns=[
@@ -725,47 +633,7 @@ def site_detail(site_id: int):
                         ''')
                     ui.label("Столбец «Где проблема» — прямая ссылка на страницу сайта.").classes("text-caption text-grey-7")
 
-            with ui.card().classes("w-full p-4 bg-amber-50"):
-                ui.label("ИИ-объяснение ошибок простым языком").classes("text-subtitle1 font-bold mb-2")
-                explanation = llm.load_explanation(site_id)
-                if explanation:
-                    ui.label(explanation).classes("whitespace-pre-wrap text-grey-800")
-                else:
-                    ui.label("Объяснения еще нет. Нажмите кнопку — нейросеть объяснит ошибки простыми словами.").classes("text-grey-7")
-
-                async def generate(summary=False):
-                    nonlocal generating
-                    if generating:
-                        return
-                    generating = True
-                    try:
-                        settings = audit_settings()
-                        if settings["llm_enabled"] != "1":
-                            raise ValueError(ai_status() + ". Откройте настройки подключения.")
-                        progress.set_text("Ожидаем ответ модели…")
-                        text = await (llm.summarize if summary else llm.explain)(site, findings, settings)
-                        if not isinstance(text, str) or not text.strip():
-                            raise ValueError("Модель вернула пустой ответ.")
-                        if summary:
-                            db.save_summary(result["id"], text)
-                        else:
-                            llm.save_explanation(site_id, text)
-                        progress.set_text("Сводка сохранена." if summary else "Объяснение сохранено.")
-                        render()
-                    except Exception as error:
-                        progress.set_text("Не удалось получить ответ ИИ. " + str(error))
-                    finally:
-                        generating = False
-                reason = ai_status()
-                for caption, summary in (("Составить сводку с ИИ", True), ("Объяснить с помощью ИИ", False)):
-                    with ui.element("span") as wrapper:
-                        button = ui.button(caption, on_click=lambda summary=summary: generate(summary))
-                        if reason != "ИИ настроен":
-                            button.disable()
-                            wrapper.props("tabindex=0")
-                            ui.tooltip(reason + ". Откройте настройки подключения.")
-                if reason != "ИИ настроен":
-                    ui.link("Настроить ИИ", "/admin#model")
+            ui.link("Разобрать этот отчёт с ИИ", f"/quick/ai?site_id={site_id}")
 
             # ---------- Фото-аудит ----------
             with ui.card().classes("w-full p-4 bg-teal-50"):
@@ -990,48 +858,172 @@ def rules_page():
 
 @ui.page("/report")
 def report_page():
-    layout("Конструктор отчётов")
+    layout("Отчёты по алгоритмической проверке")
+    source = reports.latest()
+    sites = db.get_sites()
+    findings = [f for row in source for f in row["findings"]]
+    sections = {f["agent"]: reports.SECTIONS.get(f["agent"], f["agent"]) for f in findings}
+    codes = {f["code"]: reports.CHECKS.get(f["code"], f["message"].split(":")[0][:100]) for f in findings}
     saved_html, saved_csv, saved_ok = _get_report_config()
-
-    with ui.column().classes("audit-container w-full gap-4 px-4"):
-        ui.label("Отметьте галочками, какие блоки попадут в отчёт. «Сохранить по умолчанию» влияет на кнопки на Дашборде.").classes("text-grey-7")
-
-        html_checks = {}
+    with ui.column().classes("audit-container w-full gap-4"):
+        ui.label("Для каждого учреждения показан последний завершённый результат. Источник замечаний — алгоритм. Балл относится ко всей проверке сайта.")
         with ui.card().classes("w-full p-4"):
-            ui.label("Блоки HTML-отчёта").classes("text-subtitle1 font-bold mb-2")
-            for key, label in HTML_BLOCKS:
-                html_checks[key] = ui.checkbox(label, value=key in saved_html)
+            ids = ui.select(site_options(sites), multiple=True, with_input=True, label="Учреждения · название или URL").props("outlined use-chips").classes("w-full")
+            with ui.row().classes("w-full gap-3"):
+                kind = ui.select(reports.KINDS, label="Тип учреждения").props("outlined clearable").classes("flex-1 min-w-40")
+                section = ui.select(sections, label="Раздел проверки").props("outlined clearable").classes("flex-1 min-w-40")
+                level = ui.select(reports.LEVELS, label="Серьёзность").props("outlined clearable").classes("flex-1 min-w-40")
+                code = ui.select(codes, label="Тип замечания", with_input=True).props("outlined clearable").classes("flex-1 min-w-40")
+            with ui.expansion("Период и результат проверки").classes("w-full"):
+                with ui.row().classes("w-full"):
+                    since = ui.input("Проверено с").props("type=date outlined stack-label")
+                    until = ui.input("Проверено по").props("type=date outlined stack-label")
+                    outcome = ui.select({"issue":"Есть замечания", "clear":"Без замечаний"}, label="Результат").props("outlined clearable").classes("min-w-48")
+        def selection():
+            return reports.select(source, ids.value or [], kind.value, level.value, section.value, code.value,
+                                  since.value, until.value, outcome.value)
 
-        csv_checks = {}
-        with ui.card().classes("w-full p-4"):
-            ui.label("Колонки CSV-таблицы (Excel)").classes("text-subtitle1 font-bold mb-2")
-            for key, label in CSV_COLS:
-                csv_checks[key] = ui.checkbox(label, value=key in saved_csv)
-            ok_switch = ui.switch("Включать сайты без ошибок (строки «ОК»)", value=saved_ok)
+        with ui.expansion("Настроить состав файлов HTML и CSV").classes("w-full"):
+            html_checks, csv_checks = {}, {}
+            with ui.row():
+                with ui.column():
+                    ui.label("Разделы HTML")
+                    for key, label in HTML_BLOCKS:
+                        html_checks[key] = ui.checkbox(label, value=key in saved_html)
+                with ui.column():
+                    ui.label("Столбцы CSV")
+                    for key, label in CSV_COLS:
+                        csv_checks[key] = ui.checkbox(label, value=key in saved_csv)
+                    ok_switch = ui.checkbox("Включать сайты без замечаний", value=saved_ok)
 
-        def save_defaults():
-            db.save_settings({
-                "report_html_blocks": json.dumps([k for k in html_checks if html_checks[k].value], ensure_ascii=False),
-                "report_csv_cols": json.dumps([k for k in csv_checks if csv_checks[k].value], ensure_ascii=False),
-                "report_csv_ok": "1" if ok_switch.value else "0",
-            })
-            ui.notify("Конфигурация сохранена по умолчанию!", type="positive")
+            def save():
+                db.save_settings({"report_html_blocks": json.dumps(keys(html_checks)), "report_csv_cols": json.dumps(keys(csv_checks)),
+                                  "report_csv_ok": "1" if ok_switch.value else "0"})
+                ui.notify("Настройки выгрузки сохранены.")
+            ui.button("Сохранить состав по умолчанию", on_click=save).props("outline")
+        def keys(checks):
+            return [key for key, checkbox in checks.items() if checkbox.value]
+        def download(html):
+            chosen = keys(html_checks if html else csv_checks)
+            if not chosen:
+                ui.notify("Выберите хотя бы один раздел или столбец.", type="warning")
+                return
+            if html:
+                export_html(chosen, selection())
+            else:
+                export_csv(chosen, ok_switch.value, selection())
 
-        def gen_html_now():
-            export_html(blocks=[k for k in html_checks if html_checks[k].value])
+        content = ui.column().classes("w-full gap-3")
+        def draw():
+            content.clear()
+            rows = selection()
+            stats = reports.stats(rows)
+            with content:
+                if since.value and until.value and since.value > until.value:
+                    ui.label("Начальная дата позже конечной. Исправьте период.").props("role=alert")
+                    return
+                with ui.row().classes("w-full gap-3"):
+                    stat_card("Учреждений в выборке", len(rows))
+                    stat_card("Замечаний", stats["total_findings"])
+                    stat_card("Средний балл полной проверки", stats["avg_score"])
+                if not rows:
+                    ui.label("Нет завершённых проверок по выбранным условиям.")
+                    ui.link("Перейти к запуску", "/quick/run")
+                    return
+                with ui.row():
+                    ui.button("Скачать HTML", on_click=lambda: download(True)).props("outline")
+                    ui.button("Скачать CSV", on_click=lambda: download(False)).props("outline")
+                details = []
+                for row in rows:
+                    for f in row["findings"] or [{}]:
+                        details.append({"key": str(row["site"]["id"]) + "/" + str(f.get("id", 0)),
+                            "site_id": row["site"]["id"], "name": row["site"]["name"],
+                            "date": (row["result"]["finished_at"] or "")[:16].replace("T", " "),
+                            "level": reports.LEVELS.get(f.get("severity"), "—"),
+                            "section": sections.get(f.get("agent"), "—"), "message": f.get("message", "Без замечаний"),
+                            "next": f.get("recommendation", "")})
+                columns = [{"name": k, "field": k, "label": label, "align": "left", "sortable": True}
+                           for k, label in (("name", "Учреждение"), ("date", "Проверено"), ("level", "Серьёзность"),
+                           ("section", "Раздел"), ("message", "Замечание"), ("next", "Что исправить"))]
+                table = ui.table(columns=columns, rows=details, row_key="key", pagination=12).classes("quick-report w-full")
+                table.add_slot("body-cell-name", """<q-td :props="props"><a :href="'/site/' + props.row.site_id">{{props.value}}</a></q-td>""")
+        for widget in (ids, kind, section, level, code, since, until, outcome):
+            widget.on_value_change(draw)
+        draw()
 
-        def gen_csv_now():
-            export_csv(cols=[k for k in csv_checks if csv_checks[k].value], include_ok=ok_switch.value)
 
-        with ui.row().classes("gap-2 flex-wrap"):
-            ui.button("Сохранить по умолчанию", on_click=save_defaults).props("color=primary icon=save")
-            ui.button("Сформировать HTML сейчас", on_click=gen_html_now).props("color=green icon=description")
-            ui.button("Сформировать CSV сейчас", on_click=gen_csv_now).props("color=orange icon=table_chart")
+@ui.page("/quick/ai")
+def ai_report_page(site_id: int = 0):
+    layout("Разбор отчёта с ИИ")
+    rows = {row["site"]["id"]: row for row in reports.latest()}
+    with ui.column().classes("audit-container w-full gap-4"):
+        ui.label("Модель получает название учреждения и до 25 замечаний последней проверки, начиная с самых серьёзных.")
+        selected = ui.select(site_options([row["site"] for row in rows.values()]), value=site_id if site_id in rows else None,
+                             label="Учреждение с готовым отчётом", with_input=True).props("outlined clearable").classes("w-full")
+        panel = ui.column().classes("w-full")
+        busy = False
+        def draw():
+            panel.clear()
+            row = rows.get(selected.value)
+            with panel:
+                reason = ai_status()
+                configured = reason == "ИИ настроен"
+                if not configured:
+                    ui.label(reason)
+                    ui.link("Настроить подключение", "/admin#model")
+                if row is None:
+                    ui.label("Выберите учреждение." if rows else "Пока нет готовых отчётов.")
+                    ui.link("Перейти к алгоритмической проверке", "/quick/run")
+                else:
+                    result = row["result"]
+                    ui.label(f"Проверено {(result['finished_at'] or '')[:16].replace('T',' ')} · Замечаний: {len(row['findings'])}")
+                    ui.link("Открыть карточку учреждения", f"/site/{row['site']['id']}")
+                status = ui.label().props("role=status")
+                async def generate(summary):
+                    nonlocal busy
+                    if busy or not row:
+                        return
+                    busy = True
+                    selected.disable()
+                    try:
+                        settings = audit_settings()
+                        if settings["llm_enabled"] != "1":
+                            raise ValueError(ai_status())
+                        status.set_text("Ожидаем ответ модели…")
+                        answer = await (llm.summarize if summary else llm.explain)(row["site"], row["findings"], settings)
+                        if summary:
+                            db.save_summary(result["id"], answer)
+                        else:
+                            db.save_explanation(result["id"], answer)
+                        result["llm_summary" if summary else "ai_explanation"] = answer
+                        draw()
+                        ui.notify("Ответ сохранён в отчёте.", type="positive")
+                    except (ValueError, OSError) as error:
+                        status.set_text("Не удалось получить разбор. " + str(error))
+                    finally:
+                        selected.enable()
+                        busy = False
+                with ui.row():
+                    for title, summary in (("Краткая сводка с ИИ", True), ("План исправления с ИИ", False)):
+                        with ui.element("span") as wrapper:
+                            button = ui.button(title, on_click=lambda summary=summary: generate(summary))
+                            if not row or not configured:
+                                button.disable()
+                                wrapper.props("tabindex=0")
+                                ui.tooltip(reason if not configured else "Выберите готовый отчёт.")
+                if row:
+                    for label, value in (("Сводка ИИ", result.get("llm_summary")), ("План исправления", result.get("ai_explanation"))):
+                        if value:
+                            with ui.card().classes("w-full p-4"):
+                                ui.label(label).classes("text-h6")
+                                ui.label(value).classes("whitespace-pre-wrap")
+                    legacy = llm.load_explanation(row["site"]["id"])
+                    if legacy:
+                        with ui.expansion("Архивное пояснение · дата проверки неизвестна"):
+                            ui.label(legacy).classes("whitespace-pre-wrap")
+        selected.on_value_change(draw)
+        draw()
 
-
-# ============================================================
-# Настройки
-# ============================================================
 
 @ui.page("/settings")
 def settings_page():

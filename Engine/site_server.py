@@ -7,7 +7,7 @@ from dataclasses import asdict
 from pathlib import Path
 from keyring.errors import KeyringError
 
-from . import audit_worker, config, portal_jobs, retention, worker_schedule
+from . import audit_worker, config, portal_jobs, roster, retention, worker_schedule
 from .crawl_store import initialize_db
 from .factcheck_sources import add_allowed_source, get_allowed_sources, remove_allowed_source
 from .home_terms import CATEGORY_LABELS, add_term, get_terms, remove_term
@@ -34,7 +34,7 @@ def prepare_database():
 
 
 def admin_state(conn):
-    return {"organizations":[dict(row) for row in conn.execute("SELECT id,name,site_url FROM organization ORDER BY name,id")],
+    return {"organizations":roster.organizations(conn),
             "token":TOKEN,"settings":audit_worker.get_settings(conn),"retention":retention.get_policy(conn),
             "sources":get_allowed_sources(conn),"words":get_terms(conn),"word_labels":CATEGORY_LABELS,
             "provider":get_profile(conn).provider,"profiles":{k:asdict(get_profile(conn,k)) for k in DEFAULTS},
@@ -60,6 +60,16 @@ def start_work():
 
 
 def update_settings(conn, action, data):
+    if action == "roster":
+        if not WORK.acquire(blocking=False):
+            raise ValueError("Дождитесь завершения текущей проверки.")
+        try:
+            with audit_worker._cycle_lock(conn) as owned:
+                if not owned:
+                    raise ValueError("Идёт обновление реестра или обход учреждений.")
+                return roster.change(conn, data)
+        finally:
+            WORK.release()
     if action == "plan":
         return portal_jobs.preview(conn, data.get("ids"), data.get("mode"))
     if action == "analyze":

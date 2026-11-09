@@ -55,7 +55,7 @@ def _one_worker(conn):
 
 
 def _candidate_pages(conn, page_ids, org_ids, run_ids, latest_only, attachment_role):
-    filters, params = [], []
+    filters, params = ["p.id_organization IN (SELECT id FROM active_organization)"], []
     for column, values in (("b.page_id",page_ids),("p.id_organization",org_ids),("f.run_id",run_ids)):
         if values:
             filters.append(f"{column} IN (" + ",".join("?" for _ in values) + ")")

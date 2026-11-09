@@ -62,6 +62,9 @@ def init():
         )
         """)
 
+        if "ai_explanation" not in {r[1] for r in c.execute("PRAGMA table_info(run_sites)")}:
+            c.execute("ALTER TABLE run_sites ADD COLUMN ai_explanation TEXT")
+        c.execute("CREATE INDEX IF NOT EXISTS quick_site_runs ON run_sites(site_id,run_id DESC)")
         c.execute("""
         CREATE TABLE IF NOT EXISTS findings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,6 +79,7 @@ def init():
         )
         """)
 
+        c.execute("CREATE INDEX IF NOT EXISTS quick_run_findings ON findings(run_id,site_id)")
         c.execute("""
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
@@ -180,7 +184,7 @@ def update_site_email(site_id, email):
         c.execute("UPDATE sites SET email=? WHERE id=?", (email, site_id))
 
 
-def get_sites(active_only=False):
+def get_sites(active_only=True):
     query = "SELECT * FROM sites"
     if active_only:
         query += " WHERE active=1"
@@ -191,7 +195,7 @@ def get_sites(active_only=False):
 
 def get_site(site_id):
     with closing(conn()) as c, c:
-        row = c.execute("SELECT * FROM sites WHERE id=?", (site_id,)).fetchone()
+        row = c.execute("SELECT * FROM sites WHERE id=? AND active=1", (site_id,)).fetchone()
         return dict(row) if row else None
 
 
@@ -336,13 +340,18 @@ def get_last_site_result(site_id):
     with closing(conn()) as c, c:
         row = c.execute("""
             SELECT rs.* FROM run_sites rs JOIN runs r ON rs.run_id = r.id
-            WHERE rs.site_id=? ORDER BY r.id DESC LIMIT 1""", (site_id,)).fetchone()
+            WHERE rs.site_id=? AND r.status IN ('done','error') ORDER BY r.id DESC LIMIT 1""", (site_id,)).fetchone()
         return dict(row) if row else None
 
 
 def save_summary(result_id, text):
     with closing(conn()) as c, c:
         c.execute("UPDATE run_sites SET llm_summary=? WHERE id=?", (text, result_id))
+
+
+def save_explanation(result_id, text):
+    with closing(conn()) as c, c:
+        c.execute("UPDATE run_sites SET ai_explanation=? WHERE id=?", (text, result_id))
 
 
 def get_site_findings(run_id, site_id):

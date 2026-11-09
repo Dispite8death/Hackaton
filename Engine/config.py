@@ -53,6 +53,11 @@ CREATE TABLE IF NOT EXISTS organization (
     site_url TEXT NOT NULL UNIQUE,
     kind TEXT NOT NULL CHECK (kind IN ('school', 'kindergarten'))
 );
+CREATE TABLE IF NOT EXISTS inactive_organization (
+    organization_id INTEGER PRIMARY KEY REFERENCES organization(id) ON DELETE CASCADE
+);
+CREATE VIEW IF NOT EXISTS active_organization AS
+    SELECT o.* FROM organization o WHERE NOT EXISTS (SELECT 1 FROM inactive_organization i WHERE i.organization_id=o.id);
 CREATE TABLE IF NOT EXISTS page (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     url TEXT NOT NULL,

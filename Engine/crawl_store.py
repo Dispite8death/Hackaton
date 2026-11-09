@@ -80,7 +80,7 @@ def initialize_db(conn: sqlite3.Connection) -> None:
 
 def select_organizations(conn: sqlite3.Connection, selectors=None):
     """Resolve IDs or exact names from the project directory in the requested order."""
-    all_orgs = conn.execute("SELECT id, name, site_url, kind FROM organization ORDER BY id").fetchall()
+    all_orgs = conn.execute("SELECT id, name, site_url, kind FROM active_organization ORDER BY id").fetchall()
     if not all_orgs:
         raise ValueError("Список учреждений пуст. Сначала запустите Engine/importer.py")
     if selectors is None:

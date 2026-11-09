@@ -50,6 +50,52 @@ function showAiStatus(status) {
   budget.disabled=status!=="ИИ настроен";
   budget.parentElement.title=budget.disabled?status+". Настройте подключение, чтобы менять лимит вопросов ИИ.":"";
 }
+function wireRegistry() {
+  const examples={
+    json:['Массив объектов. Обязательные поля: name, kind, site_url.', '[{"name":"Школа № 1","kind":"school","site_url":"https://school.example"}]'],
+    csv:['Первая строка — заголовки. Разделитель — запятая или точка с запятой. Поля с разделителем заключайте в кавычки.', 'name,kind,site_url\nШкола № 1,school,https://school.example'],
+    txt:['Одна запись в строке: название & тип & ссылка.', 'Детский сад № 2 & детский сад & https://sad.example']
+  };
+  function schema(){
+    const fmt=byId("registry-format").value;
+    byId("registry-file").accept="."+fmt;
+    byId("registry-help").textContent=examples[fmt][0]+" Типы: school или школа, kindergarten или детский сад.";
+    byId("registry-schema").textContent=examples[fmt][1];
+  }
+  function draw(){
+    const q=byId("registry-search").value.trim().toLowerCase(),list=byId("registry-list");
+    list.replaceChildren();
+    for(const org of state.organizations.filter(o=>(o.name+" "+o.site_url).toLowerCase().includes(q))){
+      const li=document.createElement("li"),btn=document.createElement("button");btn.type="button";btn.textContent="Убрать";
+      li.append(document.createTextNode(org.name+" · "+(org.kind==="school"?"Школа":"Детский сад")+" · "+org.site_url+" "),btn);list.append(li);
+      btn.onclick=()=>change({operation:"remove",id:org.id});
+    }
+    byId("registry-count").textContent="В списке: "+state.organizations.length+". Показано: "+list.children.length+".";
+  }
+  async function change(payload){
+    const out=byId("registry-message");
+    try{
+      const saved=await call("roster",payload);
+      state.organizations=saved.organizations;
+      const ids=new Set(state.organizations.map(o=>o.id));for(const id of chosen) if(!ids.has(id)) chosen.delete(id);
+      renderOrgs();invalidatePlan();draw();
+      out.textContent=["add","import"].includes(payload.operation)?"Добавлено: "+saved.inserted+". Совпало по адресу или восстановлено: "+saved.matched+".":"Список обновлён. История проверок сохранена.";
+      return true;
+    }catch(e){out.textContent=e.message;return false;}
+  }
+  byId("registry-format").onchange=()=>{byId("registry-file").value="";schema();};
+  byId("registry-search").oninput=draw;
+  bind("registry-add","submit",async()=>{const form=byId("registry-add");if(await change({operation:"add",record:Object.fromEntries(new FormData(form))})) form.reset();});
+  bind("registry-import","submit",async()=>{const file=byId("registry-file").files[0];
+    if(file.size>2000000){byId("registry-message").textContent="Выберите файл до 2 МБ.";return;}
+    let content;
+    try{content=new TextDecoder("utf-8",{fatal:true}).decode(await file.arrayBuffer());}
+    catch(error){byId("registry-message").textContent="Не удалось прочитать файл в кодировке UTF-8.";return;}
+    await change({operation:"import",format:byId("registry-format").value,content});
+  });
+  byId("registry-clear").onclick=()=>{if(confirm("Очистить список в обоих режимах? История сохранится. Повторный импорт сайта вернёт его в список.")) change({operation:"clear",confirmed:true});};
+  schema();draw();
+}
 async function init() {
   state=await call("state");
   for (const [key,name] of Object.entries(fieldLabels)){
@@ -84,7 +130,7 @@ async function init() {
     }
     const provider=byId("provider").value,p={provider,endpoint:byId("endpoint").value,model:byId("model-id").value,timeout:Number(byId("timeout").value),response_mode:byId("response").value,disable_thinking:byId("thinking").checked};
     const saved=await call("profile",{profile:p,enabled:byId("ai-enabled").checked,secret:byId("secret").value});showAiStatus(saved.ai_status);state.profiles[provider]=p;byId("secret").value="";byId("message").textContent="Активный профиль сохранён";invalidatePlan();byId("benchmark-choice").hidden=true;byId("connection-result").textContent="";if(saved.ai_status==="ИИ настроен") await verifyModel();});
-  wireSelection();
+  wireSelection();wireRegistry();
 }
 const chosen = new Set();
 let currentPlan = null;
@@ -230,3 +276,5 @@ function wireSelection(){
 }
 
 init().catch(e=>byId("message").textContent=e.message);
+
+if (location.hash === "#registry") document.querySelector("#registry details").open = true;

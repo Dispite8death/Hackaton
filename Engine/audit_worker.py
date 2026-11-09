@@ -93,7 +93,7 @@ def _crawl(conn, settings, refresh_now):
     crawl_organization=_engine("loadPage").crawl_organization
     cadence=settings["revisit_days"]*86400
     retry=min(cadence,settings["interval_minutes"]*60)
-    rows=conn.execute("""SELECT o.* FROM organization o LEFT JOIN crawl_run r ON r.id=(
+    rows=conn.execute("""SELECT o.* FROM active_organization o LEFT JOIN crawl_run r ON r.id=(
         SELECT max(id) FROM crawl_run WHERE id_organization=o.id AND purpose='audit')
         WHERE (r.id IS NULL OR (r.state!='running' OR r.started_at<unixepoch()-86400)
             AND (? OR coalesce(r.finished_at,r.started_at) + CASE WHEN r.state IN ('failed','interrupted')
@@ -129,7 +129,7 @@ def _frontier(conn, settings):
         previous=0
     last=conn.execute("SELECT coalesce(max(id),0) FROM page").fetchone()[0]
     orgs=[(org,resolve_url(site,""),kind) for org,site,kind in conn.execute("""SELECT o.id,o.site_url,o.kind
-        FROM organization o WHERE EXISTS(SELECT 1 FROM page p WHERE p.id_organization=o.id AND p.id>? AND p.id<=?)
+        FROM active_organization o WHERE EXISTS(SELECT 1 FROM page p WHERE p.id_organization=o.id AND p.id>? AND p.id<=?)
         OR EXISTS(SELECT 1 FROM material_backfill b WHERE b.organization_id=o.id AND b.state='working'
                   AND b.lease_until<=unixepoch())
         ORDER BY o.id""",(previous,last))]
@@ -151,7 +151,7 @@ def _frontier(conn, settings):
                     AND a.page_id IS NULL))))<=unixepoch())""")
     # Fairly distribute a tick across institutions at the same priority.
     selection=conn.execute("""SELECT o.id,o.site_url,o.kind,min(b.priority) AS rank FROM material_backfill b
-        JOIN organization o ON o.id=b.organization_id WHERE b.state='pending' AND coalesce(b.lease_until,0)<=unixepoch()
+        JOIN active_organization o ON o.id=b.organization_id WHERE b.state='pending' AND coalesce(b.lease_until,0)<=unixepoch()
         AND NOT EXISTS (SELECT 1 FROM material_backfill w WHERE w.organization_id=b.organization_id AND w.state='working')
         GROUP BY o.id ORDER BY rank,(SELECT count(*) FROM material_backfill h WHERE h.organization_id=o.id
         AND h.state IN ('saved','failed')),o.id LIMIT ?""",(settings["frontier_pages"],)).fetchall()
@@ -196,7 +196,7 @@ def _factcheck(conn, settings):
     if not _engine("model_settings").setting(conn,"factcheck_auto",False):
         return {"processed":0,"enabled":False}
     runs=[row[0] for row in conn.execute("""SELECT DISTINCT f.run_id FROM crawl_fetch f JOIN page_passport p
-               ON p.page_id=f.page_id WHERE p.page_kind IN ('news_detail','event_detail') ORDER BY f.run_id""")]
+               ON p.page_id=f.page_id JOIN crawl_run r ON r.id=f.run_id JOIN active_organization o ON o.id=r.id_organization WHERE p.page_kind IN ('news_detail','event_detail') ORDER BY f.run_id""")]
     result=_engine("factcheck_batch").batch_check(conn,runs,limit=settings["factcheck_items"])
     return {key:value for key,value in result.items() if not key.endswith("_ids") or key=="processed_ids"}
 

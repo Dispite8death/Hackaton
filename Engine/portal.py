@@ -88,14 +88,19 @@ def create_app():
             return JSONResponse({"error":"Откройте настройки на этом компьютере"},403)
         try:
             size = int(request.headers.get("content-length", 0))
-            if not 0 < size <= 16000:
-                raise ValueError("Ожидается JSON до 16 КБ")
+            if not 0 < size <= (4_000_000 if action=="roster" else 16000):
+                raise ValueError("Превышен размер запроса или отсутствуют данные")
             data = await request.json()
             if not isinstance(data,dict):
                 raise ValueError("Ожидается объект JSON")
             def save():
                 with closing(config.connect_db()) as conn:
                     return site.update_settings(conn, action, data)
+            if action == "roster":
+                if quick.audit_lock.locked():
+                    raise ValueError("Дождитесь завершения алгоритмической проверки учреждений.")
+                async with quick.audit_lock:
+                    return await asyncio.to_thread(save)
             return await asyncio.to_thread(save)
         except (ValueError, KeyError, OSError, RuntimeError, TypeError) as exc:
             return JSONResponse({"error":str(exc)[:350]},400)
@@ -118,7 +123,7 @@ def create_app():
                                     headers={"Content-Disposition":'attachment; filename="audit-report.pdf"'})
                 if institution_id is None:
                     return dashboard_data.dashboard(conn,filters)
-                if not conn.execute("SELECT 1 FROM organization WHERE id=?", (institution_id,)).fetchone():
+                if not conn.execute("SELECT 1 FROM active_organization WHERE id=?", (institution_id,)).fetchone():
                     return JSONResponse({"error":"Учреждение не найдено"},404)
                 detail = dashboard_data.institution(conn,institution_id,filters)
                 row = detail.get("institution")

@@ -8,9 +8,19 @@ body{margin:0;background:#f4f6f9;color:#162c43;font-family:Inter,"Segoe UI",sans
 #org-list label{display:flex;gap:8px;align-items:baseline;padding:6px;margin:0;cursor:pointer}
 #org-list small{display:block;color:#52676d;font-weight:400;overflow-wrap:anywhere}
 .settings-shell [aria-pressed="true"]{background:#135e68;color:white}.settings-shell button:disabled{opacity:.55;cursor:not-allowed}
-</style><script src="/admin.js" defer></script><link rel="stylesheet" href="/navigation.css"></head><body><!--portal-navigation--><main class="settings-shell">
+.registry-toggle{cursor:pointer;font-weight:650;color:#135e68}#registry pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6f5;padding:10px}#registry h3{font-size:16px}#registry-list{max-height:20rem;overflow:auto;padding-left:1.25rem}#registry-list li{margin-bottom:6px;overflow-wrap:anywhere}</style><script src="/admin.js" defer></script><link rel="stylesheet" href="/navigation.css"></head><body><!--portal-navigation--><main class="settings-shell">
 <h1>Настройки аудита</h1>
 <p>Изменения доступны на компьютере, где запущена система.</p><output id="message" class="msg" aria-live="polite"></output>
+<section id="registry"><details><summary class="registry-toggle">Управление списком учреждений</summary>
+<p>Список применяется в обоих режимах аудита. Повторный импорт адреса обновляет название и тип учреждения.</p>
+<div class="fields"><form id="registry-add"><h3>Добавить учреждение</h3><label>Название<input name="name" required maxlength="600"></label>
+<label>Тип<select name="kind"><option value="school">Школа</option><option value="kindergarten">Детский сад</option></select></label>
+<label>Адрес сайта<input name="site_url" type="url" placeholder="https://school.example" required></label><button class="submit">Добавить</button></form>
+<form id="registry-import"><h3>Импорт из файла</h3><label>Формат<select id="registry-format"><option value="json">JSON</option><option value="csv">CSV</option><option value="txt">TXT</option></select></label>
+<label>Файл UTF-8<input id="registry-file" type="file" accept=".json" required></label>
+<p id="registry-help"></p><pre id="registry-schema"></pre><button class="submit">Импортировать файл</button></form></div>
+<output id="registry-message" role="status"></output><label>Найти в реестре<input id="registry-search" type="search" placeholder="Название или адрес сайта"></label>
+<p id="registry-count"></p><ul id="registry-list"></ul><button type="button" id="registry-clear">Очистить список</button></details></section>
 <section id="selected-audit"><h2>Проверка выбранных учреждений</h2>
 <div class="fields"><div id="scope" role="group" aria-label="Кого проверить"><button type="button" data-scope="one" aria-pressed="true">Одно учреждение</button><button type="button" data-scope="many" aria-pressed="false">Несколько учреждений</button></div>
 <label>Поиск по названию или адресу сайта<input id="org-query" type="search" autocomplete="off"></label></div>

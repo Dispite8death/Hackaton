@@ -15,7 +15,7 @@
       contacts:"Контакты",schedule:"Расписание",programs:"Программы",layout:"Оформление",factcheck:"Фактчекинг",structure:"Структура"},
     group:{content:"Содержание",publication:"Публикации",layout:"Оформление",photos:"Фото",attachments:"Вложения",navigation:"Навигация"}
   };
-  const facets = {detector:"Кто проверил",organization_id:"Учреждения",status:"Статус",severity:"Критичность",quality:"Уровень",
+  const facets = {criterion:"Тип замечания",detector:"Кто проверил",organization_id:"Учреждения",status:"Статус",severity:"Критичность",quality:"Уровень",
     category:"Категория",group:"Группа проверок",confidence:"Уверенность"};
   const known = ["kind", ...Object.keys(facets), "date_from","date_to","q"];
   const dateFmt = new Intl.DateTimeFormat("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Asia/Magadan"});
@@ -105,14 +105,15 @@
   }
   function downloadMenu() {
     const r=route();
-    const record=(title,obj)=>`<a href="${esc(pdf(obj))}" target="_blank" rel="noopener">${esc(title)}</a>`;
-    const chosen=[...selected];
+    const record=(title,obj)=>`<a href="${esc(pdf(obj))}" download="audit-report.pdf">${esc(title)}</a>`;
+    const chosen=[...selected].filter(id=>!filters.organization_id || filters.organization_id.includes(String(id)));
     byId("downloads").innerHTML=[
       record("По текущим фильтрам",r.id ? {...filters,organization_id:[r.id]} : filters),
-      chosen.length ? record("По отмеченным учреждениям ("+chosen.length+")",{organization_id:chosen}) :
+      chosen.length ? record("По отмеченным с текущими фильтрами ("+chosen.length+")",{...filters,organization_id:chosen}) :
         '<span class="disabled">Отмеченных учреждений нет</span>',
-      r.id ? record("По этому учреждению",{organization_id:[r.id]}) : "",
-      record("По всем учреждениям",{})
+      r.id ? record("По этому учреждению",{...filters,organization_id:[r.id]}) : "",
+      record("Все учреждения без фильтров",{}),
+      '<button type="button" id="pdf-filters">Настроить фильтры PDF…</button>'
     ].join("");
   }
   function updateControls() {
@@ -150,9 +151,9 @@
       const selectedValues=filters[key] || [];
       const list=optionList(key).map(item=>{
         const val=String(item.value);
-        return `<label data-option-text="${esc(String(item.label).toLocaleLowerCase("ru"))}"><input type="checkbox" data-set="${key}" value="${esc(val)}" ${selectedValues.includes(val)?"checked":""}> ${esc(item.label)}</label>`;
+        return `<label data-option-text="${esc((String(item.label)+" "+(item.url||"")).toLocaleLowerCase("ru"))}"><input type="checkbox" data-set="${key}" value="${esc(val)}" ${selectedValues.includes(val)?"checked":""}> ${esc(item.label)}</label>`;
       }).join("");
-      return `<details class="facet" data-facet="${key}" ${open.has(key)?"open":""}><summary>${esc(title)}${selectedValues.length?" · "+selectedValues.length:""}<i class="caret"></i></summary><div class="facet-options">${key==="organization_id"?'<input type="search" class="org-search" aria-label="Поиск в списке учреждений" placeholder="Найти в списке">':""}${list || '<p class="subtle">В выборке нет вариантов</p>'}</div></details>`;
+      return `<details class="facet" data-facet="${key}" ${open.has(key)?"open":""}><summary>${esc(title)}${selectedValues.length?" · "+selectedValues.length:""}<i class="caret"></i></summary><div class="facet-options">${key==="organization_id"?'<input type="search" class="org-search" aria-label="Поиск в списке учреждений" placeholder="Название или адрес сайта">':""}${list || '<p class="subtle">В выборке нет вариантов</p>'}</div></details>`;
     }).join("");
     const field=byId("facets").querySelector(".org-search");
     if (field && find) {field.value=find; filterOrganizations(field);}
@@ -339,7 +340,7 @@
       <td class="inst-name"><a class="institution-link" href="#institution/${Number(row.id)}">${esc(row.name)}</a><small class="cell-muted">${esc(label("kind",row.kind))}</small></td>
       <td class="score-cell num"><strong>${score(row.score)}</strong></td><td>${pill("quality",row.quality)}</td><td class="num">${percent(row.coverage)}</td>
       <td class="num">${num(row.counts?.issue??0)}</td><td class="num matrix-extra">${date(row.last_checked)}</td>
-      <td><a href="${esc(pdf({organization_id:[row.id]}))}" target="_blank" rel="noopener" aria-label="PDF · ${esc(row.name)}">PDF</a></td></tr>`).join("");
+      <td><a href="${esc(pdf({...filters,organization_id:[row.id]}))}" download="audit-report.pdf" aria-label="PDF · ${esc(row.name)}">PDF</a></td></tr>`).join("");
     return `<section class="list-panel"><div class="list-head"><h2>Реестр учреждений <span class="subtle">${num(list.length)}</span></h2>
       <div class="selection-tools"><span id="selected-count"></span><label>Сортировка <select class="sort" id="sort">${Object.entries(sortNames).map(([k,v])=>`<option value="${k}" ${sort===k?"selected":""}>${v}</option>`).join("")}</select></label></div></div>
       ${list.length?`<div class="table-wrap"><table class="inst-table"><thead><tr><th><input id="select-page" type="checkbox" aria-label="Отметить все учреждения на этой странице"></th>
@@ -465,6 +466,9 @@
       view=el.dataset.view;try { localStorage.setItem("audit-view",view); } catch {} refresh();
     } else if (el.hasAttribute("data-diagram")) {
       diagram=el.dataset.diagram;show();
+    } else if (el.id==="pdf-filters") {
+      byId("advanced").hidden=false;byId("toggle-filters").setAttribute("aria-expanded","true");
+      byId("advanced").scrollIntoView({block:"center"});byId("facets").querySelector("summary")?.focus();
     } else if (el.id==="toggle-filters") {
       const advanced=byId("advanced");
       advanced.hidden=!advanced.hidden;
