@@ -106,6 +106,13 @@ function wireRegistry() {
 }
 async function init() {
   state=await call("state");
+  if(state.demo){
+    byId("demo-tools").hidden=false;
+    bind("restore-demo","click",async()=>{await call("restore-demo",{});location.reload();});
+    for(const id of ["provider","endpoint","model-id","secret","sched-enable","sched-disable","sched-status","registry-clear","source-url"])byId(id).disabled=true;
+    for(const form of ["registry-add","registry-import","source-form"])
+      for(const input of byId(form).elements)input.disabled=true;
+  }
   if (!state.windows_schedule) {
     for (const id of ["sched-status","sched-enable","sched-disable"]) byId(id).hidden=true;
     byId("schedule-status").textContent="В Linux запустите sh start.sh --once для одного цикла или sh start.sh --loop для повторения с заданным интервалом.";

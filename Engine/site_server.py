@@ -9,6 +9,7 @@ from pathlib import Path
 from keyring.errors import KeyringError
 
 from . import audit_worker, config, portal_jobs, operation_log, roster, retention, worker_schedule
+from . import demo_settings
 from .crawl_store import initialize_db
 from .factcheck_sources import add_allowed_source, get_allowed_sources, remove_allowed_source
 from .home_terms import CATEGORY_LABELS, add_term, get_terms, remove_term
@@ -34,7 +35,7 @@ def prepare_database():
 
 def admin_state(conn):
     probe_key = "last_probe_" + portal_jobs.benchmark_key(get_profile(conn))
-    return {"organizations":roster.organizations(conn),"windows_schedule":os.name=="nt",
+    return {"organizations":roster.organizations(conn),"windows_schedule":os.name=="nt","demo":bool(demo_settings.directory()),
             "token":TOKEN,"settings":audit_worker.get_settings(conn),"retention":retention.get_policy(conn),
             "sources":get_allowed_sources(conn),"words":get_terms(conn),"word_labels":CATEGORY_LABELS,
             "provider":get_profile(conn).provider,"profiles":{k:asdict(get_profile(conn,k)) for k in DEFAULTS},
@@ -65,6 +66,18 @@ def start_work():
 
 
 def update_settings(conn, action, data):
+    demo_settings.validate(action, data)
+    if action == "restore-demo":
+        if not WORK.acquire(blocking=False):
+            raise ValueError("Дождитесь завершения текущей операции.")
+        try:
+            with audit_worker._cycle_lock(conn) as owned:
+                if not owned:
+                    raise ValueError("Идёт цикл проверки.")
+                demo_settings.baseline(conn, restore=True)
+        finally:
+            WORK.release()
+        return {"message":"Начальные настройки обоих инструментов восстановлены."}
     if action == "roster":
         if not WORK.acquire(blocking=False):
             raise ValueError("Дождитесь завершения текущей проверки.")

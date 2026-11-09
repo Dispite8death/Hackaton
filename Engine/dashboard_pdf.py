@@ -142,7 +142,7 @@ def _describe_filters(filters):
     return " · ".join(parts) or "Все учреждения и категории"
 
 
-def build_pdf(conn, filters=None, organization_ids=None):
+def build_pdf(conn, filters=None, organization_ids=None, *, include_quality=False):
     """Return PDF bytes without accessing any school, browser or external font service."""
     filters=_filters(filters)
     if organization_ids is not None:
@@ -170,8 +170,12 @@ def build_pdf(conn, filters=None, organization_ids=None):
                          f"Требуют сверки — {summary['counts']['review']}. Охват критериев — {_number(summary['coverage'])}%.",s["lead"]),
                       _p("Как читать оценку",s["h2"]),_p(data["grading"]["method"]+" "+data["grading"]["coverage"],s["small"]),
                       _p(data["grading"]["classification"]+" "+data["grading"]["scope"],s["small"])])
-        if len(orgs)>1:
-            story.extend([_p("Учреждения в выборке",s["h1"]),_ranking(orgs,s)])
+        if include_quality:
+            leaders = [org for org in orgs if org["quality"] in ("good", "excellent")]
+            story.extend([_p("Хорошо и отлично в выбранной группе",s["h1"]),
+                          _p("В таблицу вошли учреждения, соответствующие фильтрам отчёта. "
+                             "Место и балл отражают общую оценку за выбранный период.",s["small"])])
+            story.append(_ranking(leaders,s) if leaders else _p("В этой выборке таких учреждений нет.",s["body"]))
     byorg=defaultdict(list)
     for row in data["findings"]:
         byorg[row["organization_id"]].append(row)

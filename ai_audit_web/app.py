@@ -17,6 +17,7 @@ from . import vision, reports
 
 from .integration import archive_id, ai_status
 from Engine.portal_nav import navigation
+from Engine import demo_settings
 
 from . import operations
 from .operations import audit_lock
@@ -993,6 +994,8 @@ def settings_page():
         with ui.card().classes("w-full p-4"):
             ui.label("Настройки краулера (HTTP, без браузера)").classes("text-subtitle1 font-bold mb-2")
             extra_hosts = ui.textarea("Дополнительные разрешённые хосты (через запятую)", value=s.get("extra_hosts", "")).classes("w-full")
+            if demo_settings.directory():
+                extra_hosts.disable()
             max_pages = ui.number("Максимум страниц на один сайт", value=int(s.get("max_pages", "40")), min=1, max=200).classes("w-full mt-2")
             news_age = ui.number("Через сколько дней новость считается устаревшей",
                                  value=int(s.get("news_max_age_days", "14")), min=1, max=365).classes("w-full mt-2")
@@ -1010,7 +1013,7 @@ def settings_page():
                 ui.notify("Укажите размеры фотографий, например 714x952, 800x1067.", type="warning")
                 return
             db.save_settings({
-                "extra_hosts": extra_hosts.value.strip(), "max_pages": str(int(max_pages.value)),
+                "extra_hosts": s.get("extra_hosts","") if demo_settings.directory() else extra_hosts.value.strip(), "max_pages": str(int(max_pages.value)),
                 "news_max_age_days": str(int(news_age.value)),
                 "auto_detect_type": "1" if auto_type.value else "0",
                 "photo_target_sizes": target_sizes.value.strip(),

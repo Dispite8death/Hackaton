@@ -111,7 +111,7 @@ def create_app():
             def save():
                 with closing(config.connect_db()) as conn:
                     return site.update_settings(conn, action, data)
-            if action == "roster":
+            if action in ("roster", "restore-demo"):
                 if quick.audit_lock.locked():
                     raise ValueError("Дождитесь завершения алгоритмической проверки учреждений.")
                 async with quick.audit_lock:
@@ -134,7 +134,7 @@ def create_app():
             with closing(sqlite3.connect(Path(config.DB_PATH).resolve().as_uri()+"?mode=ro", uri=True)) as conn:
                 conn.row_factory = sqlite3.Row
                 if request.url.path == "/report.pdf":
-                    return Response(build_pdf(conn,filters),media_type="application/pdf",
+                    return Response(build_pdf(conn,filters,include_quality=query.get("include_quality")=="1"),media_type="application/pdf",
                                     headers={"Content-Disposition":'attachment; filename="audit-report.pdf"'})
                 if institution_id is None:
                     return dashboard_data.dashboard(conn,filters)

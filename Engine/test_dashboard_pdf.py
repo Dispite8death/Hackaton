@@ -7,6 +7,18 @@ import test_dashboard_data as fixtures
 
 
 class FilteredPDFTest(unittest.TestCase):
+    def test_quality_table_is_opt_in_and_scoped(self):
+        fixture = fixtures.DashboardCase()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        for show in (False, True):
+            data = build_pdf(fixture.conn, {"kind":"kindergarten"}, include_quality=show)
+            with pdfium.PdfDocument(data) as doc:
+                body = " ".join(page.get_textpage().get_text_bounded() for page in doc)
+            self.assertEqual("Хорошо и отлично в выбранной группе" in body, show)
+            self.assertNotIn("Школа Олимп", body)
+            self.assertIn("Детский сад Ландыш", body)
+
     def test_selected_cyrillic_report_offline(self):
         fixture = fixtures.DashboardCase()
         fixture.setUp()

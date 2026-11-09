@@ -12,6 +12,7 @@ body{margin:0;background:#f4f6f9;color:#162c43;font-family:Inter,"Segoe UI",sans
 .settings-shell [aria-pressed="true"]{background:#135e68;color:white}.settings-shell button:disabled{opacity:.55;cursor:not-allowed}
 .registry-toggle{cursor:pointer;font-weight:650;color:#135e68}#registry pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6f5;padding:10px}#registry h3{font-size:16px}#registry-list{max-height:20rem;overflow:auto;padding-left:1.25rem}#registry-list li{margin-bottom:6px;overflow-wrap:anywhere}</style><script src="/admin.js" defer></script><link rel="stylesheet" href="/navigation.css"></head><body><!--portal-navigation--><main class="settings-shell">
 <h1>Настройки аудита</h1>
+<section id="demo-tools" hidden><h2>Демонстрационная копия</h2><p>Доступна локальная Qwen. Можно менять параметры модели и проверок. Реестр, адреса источников и системное расписание закреплены на время показа.</p><button id="restore-demo">Вернуть начальные настройки обоих инструментов</button></section>
 <p>Изменения доступны на компьютере, где запущена система.</p><output id="message" class="msg" aria-live="polite"></output>
 <section id="registry"><details><summary class="registry-toggle">Управление списком учреждений</summary>
 <p>Список применяется в обоих режимах аудита. Повторный импорт адреса обновляет название и тип учреждения.</p>

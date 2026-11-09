@@ -20,4 +20,10 @@
 *.key
 .env*
 !/ai_audit_web/
+!/docs/
+!/output/
+/output/*
+!/output/pdf/
+/output/pdf/*
+!/output/pdf/*.pdf
 !/Запустить аудит.bat

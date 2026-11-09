@@ -100,7 +100,9 @@
     return `<span class="pill ${token}">${esc(label(key,value))}</span>`;
   }
   function pdf(obj) {
-    const value=params(obj);
+    const query=new URLSearchParams(params(obj));
+    if(byId("pdf-quality").checked) query.set("include_quality","1");
+    const value=query.toString();
     return "/report.pdf"+(value?"?"+value:"");
   }
   function downloadMenu() {
@@ -496,6 +498,7 @@
   },true);
   document.addEventListener("change",event=>{
     const el=event.target;
+    if(el.id==="pdf-quality"){downloadMenu();show();return;}
     if (el.dataset.chartFilter) {
       chartFilters[el.dataset.chartFilter]=el.value;show();
     } else if (el.dataset.set) {
